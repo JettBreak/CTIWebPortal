@@ -224,7 +224,7 @@ function showUserOverride() {
 			$(this).dialog('close')
 		}
 	};
-    modalDialog('override', 'Override Input', buttons, 300)
+	modalDialog('useroverride', 'Override Input', buttons, 300)
 }
 
 // --------------------------------------------------------------------

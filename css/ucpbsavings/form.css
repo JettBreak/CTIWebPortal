@@ -243,6 +243,22 @@ button:hover, button:focus {
 	gap: 12px;
 }
 
+#wrapper .customer-personal-overview {
+	display: flex;
+	align-items: flex-start;
+	gap: 15px;
+}
+
+#wrapper .customer-personal-photo {
+	flex: 0 0 100px;
+	margin: 0;
+}
+
+#wrapper .customer-personal-main {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
 #wrapper .customer-personal-column {
 	width: calc(50% - 6px);
 	flex: 1 1 0;
@@ -260,6 +276,14 @@ button:hover, button:focus {
 
 	#wrapper .customer-personal-columns {
 		display: block;
+	}
+
+	#wrapper .customer-personal-overview {
+		display: block;
+	}
+
+	#wrapper .customer-personal-photo {
+		margin: 0 0 15px;
 	}
 
 	#wrapper .customer-personal-column {

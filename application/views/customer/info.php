@@ -7,7 +7,9 @@
     </ul>
     <div class="tab_container">
         <div id="personalInfo" class="tab_content">
-            <div id="custPreview" class="imgWrapper floatLeft"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/></div>
+            <div class="customer-personal-overview">
+            <div id="custPreview" class="imgWrapper customer-personal-photo"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/></div>
+            <div class="customer-personal-main">
             <strong>Customer Name:</strong>
             <table width="80%">
                 <tr>
@@ -62,6 +64,7 @@
                         <td><input type="text" style="width:150px" value="<?php echo $tin; ?>" readonly/></td>
                     </tr>
                 </table>
+            </div>
             </div>
         </div>
         <div id="contactInfo" class="tab_content">

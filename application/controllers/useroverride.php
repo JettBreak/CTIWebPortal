@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Override extends CI_Controller {
+class Useroverride extends CI_Controller {
 	
     function index()
 	{
@@ -49,5 +49,5 @@ class Override extends CI_Controller {
 		));
 	}
 }
-/* End of file override.php */
-/* Location: ./application/controllers/override.php */
+/* End of file useroverride.php */
+/* Location: ./application/controllers/useroverride.php */

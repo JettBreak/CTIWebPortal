@@ -1,4 +1,4 @@
-<form id="overrideForm" method="post" action="override/submit">
+<form id="overrideForm" method="post" action="useroverride/submit">
     <input type="hidden" name="overridePW" id="overridePW"/>
     <table>
         <tr>

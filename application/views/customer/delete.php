@@ -9,7 +9,9 @@
         <div id="personalInfo" class="tab_content">
             <form id="custDelForm" method="post">
             <input type="hidden" name="cifseqno" value="<?php echo $cifseqno; ?>"/>
-            <div id="custPreview" class="imgWrapper floatLeft"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/></div>
+            <div class="customer-personal-overview">
+            <div id="custPreview" class="imgWrapper customer-personal-photo"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/></div>
+            <div class="customer-personal-main">
             <strong>Customer Name:</strong>
             <table width="80%">
                 <tr>
@@ -64,6 +66,7 @@
                         <td><input type="text" style="width:150px" value="<?php echo $tin; ?>" readonly/></td>
                     </tr>
                 </table>
+            </div>
             </div>
         </form>
         </div>

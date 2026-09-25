@@ -41,6 +41,11 @@
 $route['default_controller'] = 'portal';
 $route['404_override'] 		 = '';
 
+// "Override" is a built-in PHP attribute name on modern PHP versions.
+// Keep the legacy URL working while dispatching to the renamed controller.
+$route['override'] 			= 'useroverride';
+$route['override/(:any)'] 	= 'useroverride/$1';
+
 $route['customer/search/submit']		= 'customer/search/submit';
 $route['customer/search/cache']			= 'customer/search/cache';
 $route['customer/search/(:any)'] 		= 'customer/search/index/$1';

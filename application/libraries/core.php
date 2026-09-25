@@ -12,6 +12,30 @@
 class Core {
   private $session;
   private $userData;
+
+  /**
+   * Read a value from the optional authenticated-user session data.
+   */
+  private function getUserDataValue($key, $default = NULL)
+  {
+    if (is_array($this->userData) && array_key_exists($key, $this->userData)) {
+      return $this->userData[$key];
+    }
+
+    return $default;
+  }
+
+  /**
+   * Read a value from the optional institution session data.
+   */
+  private function getInstitutionValue($key, $default = NULL)
+  {
+    if (isset($_SESSION['inst']) && is_array($_SESSION['inst']) && array_key_exists($key, $_SESSION['inst'])) {
+      return $_SESSION['inst'][$key];
+    }
+
+    return $default;
+  }
   
   /**
    * Constructor
@@ -142,7 +166,7 @@ class Core {
    */
   function isSuperUser()
   {
-    return $this->userData['superUser'];
+    return $this->getUserDataValue('superUser', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -155,7 +179,7 @@ class Core {
    */
   function getONUSCODE()
   {
-    return $this->userData['onusCode'];
+    return $this->getUserDataValue('onusCode');
   }
   
   // --------------------------------------------------------------------
@@ -168,7 +192,7 @@ class Core {
    */
   function getFINSWITCH()
   {
-    return $this->userData['finswitch'];
+    return $this->getUserDataValue('finswitch');
   }
   
   // --------------------------------------------------------------------
@@ -181,7 +205,7 @@ class Core {
    */
   function getBANKCODE()
   {
-    return strval($this->userData['bnkCode']);
+    return strval($this->getUserDataValue('bnkCode', ''));
   }
   
   // --------------------------------------------------------------------
@@ -194,7 +218,7 @@ class Core {
    */
   function getBANKMNEM()
   {
-    return $this->userData['bnkMnem'];
+    return $this->getUserDataValue('bnkMnem');
   }
   
   // --------------------------------------------------------------------
@@ -247,8 +271,7 @@ class Core {
    */
   function isSSL()
   {
-    return (isset($_SESSION['inst']['https']) &&
-      $_SESSION['inst']['https']);
+    return (bool) $this->getInstitutionValue('https', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -261,8 +284,7 @@ class Core {
    */
   function iscardnogen()
   {
-    return (isset($_SESSION['inst']['iscardnogen']) &&
-      $_SESSION['inst']['iscardnogen']);
+    return (bool) $this->getInstitutionValue('iscardnogen', FALSE);
   }
   
 
@@ -321,7 +343,7 @@ class Core {
    */
   function displayLastLogIn()
   {
-    $secuOpt = $this->userData['secuOpts'];
+    $secuOpt = $this->getUserDataValue('secuOpts', '');
     
     return substr($secuOpt, 0, 1) === '1' ? TRUE : FALSE;
   }
@@ -336,7 +358,7 @@ class Core {
    */
   function isTeller()
   {
-    return $this->userData['isTeller'];
+    return $this->getUserDataValue('isTeller', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -349,7 +371,7 @@ class Core {
    */
   function hasProductCode()
   {
-    return $_SESSION['inst']['prCode'];
+    return $this->getInstitutionValue('prCode', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -362,8 +384,7 @@ class Core {
    */
   function isISOCustomer()
   {
-    return (isset($_SESSION['inst']['isoCust']) &&
-      $_SESSION['inst']['isoCust']);
+    return (bool) $this->getInstitutionValue('isoCust', FALSE);
   }
 
   // --------------------------------------------------------------------
@@ -376,8 +397,7 @@ class Core {
    */
   function isCYBL()
   {
-    return (isset($_SESSION['inst']['isCYBL']) &&
-      $_SESSION['inst']['isCYBL']);
+    return (bool) $this->getInstitutionValue('isCYBL', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -390,8 +410,7 @@ class Core {
    */
   function isRepV2()
   {
-    return (isset($_SESSION['inst']['reportv2']) &&
-      $_SESSION['inst']['reportv2']);
+    return (bool) $this->getInstitutionValue('reportv2', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -404,8 +423,7 @@ class Core {
    */
   function hasBatchCardUpload()
   {
-    return (isset($_SESSION['inst']['batchCardUpload']) &&
-      $_SESSION['inst']['batchCardUpload']);
+    return (bool) $this->getInstitutionValue('batchCardUpload', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -418,8 +436,7 @@ class Core {
    */
   function hasPOSCashOut()
   {
-    return (isset($_SESSION['inst']['POSCashOut']) &&
-      $_SESSION['inst']['POSCashOut']);
+    return (bool) $this->getInstitutionValue('POSCashOut', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -432,7 +449,7 @@ class Core {
    */
   function getSessionExp()
   {
-    return $this->userData['sessionExp'];
+    return $this->getUserDataValue('sessionExp');
   }
   
   // --------------------------------------------------------------------
@@ -445,7 +462,7 @@ class Core {
    */
   function getPasswordMinChar()
   {
-    return $this->userData['minChar'];
+    return $this->getUserDataValue('minChar');
   }
   
   // --------------------------------------------------------------------
@@ -488,7 +505,7 @@ class Core {
    */
   function isLoggedIn()
   {
-    return isset($this->userData['loggedIn']) && $this->userData['loggedIn'] === TRUE;
+    return $this->getUserDataValue('loggedIn', FALSE) === TRUE;
   }
   
   // --------------------------------------------------------------------
@@ -501,7 +518,7 @@ class Core {
    */
   function getLastLogIn()
   {
-    return $this->userData['lastLogin'];
+    return $this->getUserDataValue('lastLogin');
   }
   
   // --------------------------------------------------------------------
@@ -517,7 +534,7 @@ class Core {
   function getUserID()
   {
     //return $this->session->userdata('userID');
-    return $this->userData['userID'];
+    return $this->getUserDataValue('userID');
   }
   
   // --------------------------------------------------------------------
@@ -533,7 +550,7 @@ class Core {
   function getUserName()
   {
     //return $this->session->userdata('userName');
-    return $this->userData['userName'];
+    return $this->getUserDataValue('userName');
   }
   
   // --------------------------------------------------------------------
@@ -549,7 +566,7 @@ class Core {
   function getUserPW()
   {
     //return $this->session->userdata('userPW');
-    return $this->userData['userPW'];
+    return $this->getUserDataValue('userPW');
   }
   
   // --------------------------------------------------------------------
@@ -563,7 +580,7 @@ class Core {
   function getUserAllows()
   {
     //return $this->session->userdata('userAllows');
-    return $this->userData['userAllows'];
+    return $this->getUserDataValue('userAllows', '');
   }
   
   // --------------------------------------------------------------------
@@ -577,7 +594,7 @@ class Core {
   function getSecretQuestion()
   {
     //return $this->session->userdata('secretQ');
-    return $this->userData['secretQ'];
+    return $this->getUserDataValue('secretQ');
   }
   
   // --------------------------------------------------------------------
@@ -591,7 +608,7 @@ class Core {
   function getSessionID()
   {
     //return $this->session->userdata('sessionID');
-    return $this->userData['sessionID'];
+    return $this->getUserDataValue('sessionID');
   }
   
   // --------------------------------------------------------------------
@@ -605,7 +622,7 @@ class Core {
   function getInstName()
   {
     //return $this->session->userdata('instName');
-    return $this->userData['instName'];
+    return $this->getUserDataValue('instName');
   }
   
   // --------------------------------------------------------------------
@@ -619,7 +636,7 @@ class Core {
   function getUserGroup()
   {
     //return $this->session->userdata('userGroup');
-    return $this->userData['userGroup'];
+    return $this->getUserDataValue('userGroup');
   }
   
   // --------------------------------------------------------------------
@@ -633,7 +650,7 @@ class Core {
   function getAddress()
   {
     //return $this->session->userdata('address');
-    return $this->userData['address'];
+    return $this->getUserDataValue('address');
   }
   
   // --------------------------------------------------------------------
@@ -647,7 +664,7 @@ class Core {
   function getBranchID()
   {
     //return $this->session->userdata('branchID');
-    return $this->userData['branchID'];
+    return $this->getUserDataValue('branchID');
   }
   
   // --------------------------------------------------------------------
@@ -661,7 +678,7 @@ class Core {
   function getBranchCode()
   {
     //return $this->session->userdata('branchCode');
-    return $this->userData['branchCode'];
+    return $this->getUserDataValue('branchCode');
   }
   
   // --------------------------------------------------------------------
@@ -675,7 +692,7 @@ class Core {
   function getBranchName()
   {   
     //return $this->session->userdata('branchName');
-    return $this->userData['branchName'];
+    return $this->getUserDataValue('branchName');
   }
   
   // --------------------------------------------------------------------
@@ -689,7 +706,7 @@ class Core {
   function isCoreEncrypt()
   {   
     //return $this->session->userdata('branchName');
-    return isset($this->userData['coreencrypt']) && $this->userData['coreencrypt'];
+    return (bool) $this->getUserDataValue('coreencrypt', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -703,7 +720,7 @@ class Core {
   function getRegionCode()
   {   
     //return $this->session->userdata('regionCode');
-    return $this->userData['regionCode'];
+    return $this->getUserDataValue('regionCode');
   }
   
   // --------------------------------------------------------------------
@@ -717,7 +734,7 @@ class Core {
   function getAreaName()
   {   
     //return $this->session->userdata('areaName');
-    return $this->userData['areaName'];
+    return $this->getUserDataValue('areaName');
   }
   
   // --------------------------------------------------------------------
@@ -747,7 +764,7 @@ class Core {
   function isHeadOffice()
   {
     //return $this->session->userdata('isHead');
-    return $this->userData['isHead'];
+    return (bool) $this->getUserDataValue('isHead', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -761,7 +778,7 @@ class Core {
   function canMon()
   {
     //return $this->session->userdata('isMon');
-    return $this->userData['isMon'];
+    return (bool) $this->getUserDataValue('isMon', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -775,7 +792,7 @@ class Core {
   function canRep()
   {
     //return $this->session->userdata('isRep');
-    return $this->userData['isRep'];
+    return (bool) $this->getUserDataValue('isRep', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -789,8 +806,7 @@ class Core {
   function byteperbyte()
   {
     //return $this->session->userdata('isRep');
-    return (isset($_SESSION['inst']['bpb']) &&
-      $_SESSION['inst']['bpb']);
+    return (bool) $this->getInstitutionValue('bpb', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -803,8 +819,7 @@ class Core {
    */
   function allowPersoDL()
   {
-    return (isset($_SESSION['inst']['allowPersoDL']) &&
-      $_SESSION['inst']['allowPersoDL']);
+    return (bool) $this->getInstitutionValue('allowPersoDL', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -817,8 +832,7 @@ class Core {
    */
   function sftp()
   {
-    return (isset($_SESSION['inst']['sftp']) &&
-      $_SESSION['inst']['sftp']);
+    return (bool) $this->getInstitutionValue('sftp', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -832,7 +846,7 @@ class Core {
   function canUser()
   {
     //return $this->session->userdata('isUser');
-    return $this->userData['isUser'];
+    return (bool) $this->getUserDataValue('isUser', FALSE);
   }
   
   // --------------------------------------------------------------------
@@ -2300,11 +2314,8 @@ class Core {
     }*/
 
     //filter ISS modules
-    if(!$_SESSION['inst'])
-    {
-      // nothing  
-    } else {
-      if ($_SESSION['inst']['appType'] === 'ACQ') {
+    $appType = $this->getInstitutionValue('appType');
+    if ($appType === 'ACQ') {
         
         foreach ($navMenu as $pos => $sub) {
           if ($sub['type'] === 'ISS') {
@@ -2316,7 +2327,6 @@ class Core {
             }
           }
         }
-      }
     }
     return $navMenu;
   }
@@ -2553,7 +2563,7 @@ class Core {
           $menux .= '<li><a href="maintenance/brchlist/getcustomcardlist"><span>Export Cards</span></a></li>';/*
           $menux .= '<li><a href="maintenance/card/batchaccountlink"><span></span></a></li>';*/
         }
-        if ($isSuper || $_SESSION['isSuper']) {
+        if ($isSuper || !empty($_SESSION['isSuper'])) {
           $menux .= '<li><a href="#maintenance/loader"><span>Loader</span></a></li>';
         }
         $menux .= '</ul></div>';

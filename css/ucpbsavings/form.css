@@ -34,7 +34,11 @@ Copyright (c) 2010 CorewareTech
 }
 
 #wrapper.maintenance-view {
-	min-width: 500px;
+	width: fit-content;
+	min-width: 0;
+	max-width: calc(100vw - 32px);
+	box-sizing: border-box;
+	overflow-x: auto;
 }
 
 #wrapper table {

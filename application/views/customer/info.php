@@ -11,7 +11,7 @@
             <div id="custPreview" class="imgWrapper customer-personal-photo"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/></div>
             <div class="customer-personal-main">
             <strong>Customer Name:</strong>
-            <table width="80%">
+            <table width="100%">
                 <tr>
                     <td>Prefix:</td>
                     <td>Last Name:</td>
@@ -27,45 +27,45 @@
                     <td><input type="text" style="width:40px" value="<?php echo $suffix; ?>" readonly/></td>
                 </tr>
             </table>
-            <div class="divider customer-personal-columns">
-                <table class="customer-personal-column">
-                    <tr>
-                        <td width="40%">Gender:</td>
-                        <td colspan="3"><input type="text" style="width:140px" value="<?php echo $gender; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>Civil Status:</td>
-                        <td colspan="3"><input type="text" style="width:140px" value="<?php echo $civil; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>Date of birth:</td>
-                        <td><input type="text" style="width:140px" value="<?php echo $bDay; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>Place of birth:</td>
-                        <td><input type="text" style="width:140px" value="<?php echo $bPlace; ?>" readonly/></td>
-                    </tr>
-                </table>
-                <table class="customer-personal-column">
-                    <tr>
-                        <td>Nationality:</td>
-                        <td><input type="text" style="width:150px" value="<?php echo $nationality; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>Occupation:</td>
-                        <td><input type="text" style="width:150px" value="<?php echo $occupation; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>SSS:</td>
-                        <td><input type="text" style="width:150px" value="<?php echo $sss; ?>" readonly/></td>
-                    </tr>
-                    <tr>
-                        <td>TIN:</td>
-                        <td><input type="text" style="width:150px" value="<?php echo $tin; ?>" readonly/></td>
-                    </tr>
-                </table>
             </div>
-            </div>
+        </div>
+        <div class="divider customer-personal-columns">
+            <table class="customer-personal-column">
+                <tr>
+                    <td width="40%">Gender:</td>
+                    <td colspan="3"><input type="text" style="width:140px" value="<?php echo $gender; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>Civil Status:</td>
+                    <td colspan="3"><input type="text" style="width:140px" value="<?php echo $civil; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>Date of birth:</td>
+                    <td><input type="text" style="width:140px" value="<?php echo $bDay; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>Place of birth:</td>
+                    <td><input type="text" style="width:140px" value="<?php echo $bPlace; ?>" readonly/></td>
+                </tr>
+            </table>
+            <table class="customer-personal-column">
+                <tr>
+                    <td>Nationality:</td>
+                    <td><input type="text" style="width:150px" value="<?php echo $nationality; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>Occupation:</td>
+                    <td><input type="text" style="width:150px" value="<?php echo $occupation; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>SSS:</td>
+                    <td><input type="text" style="width:150px" value="<?php echo $sss; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>TIN:</td>
+                    <td><input type="text" style="width:150px" value="<?php echo $tin; ?>" readonly/></td>
+                </tr>
+            </table>
         </div>
     </div>
         <div id="contactInfo" class="tab_content">

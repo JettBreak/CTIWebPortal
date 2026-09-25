@@ -220,10 +220,10 @@ class ATM_model extends CI_Model {
 		$res1->free_result();
 		$res1->next_result();
 					
-		$query = "SELECT FOUND_ROWS() as rows";
+		$query = "SELECT FOUND_ROWS() AS total_rows";
 		$res2 = $this->db->query($query);
 		$res2 = $res2->row_array();
-		$res2 = $res2['rows'];
+		$res2 = $res2['total_rows'];
 		
 		return array('result' => $result, 'numrows' => $res2);
 	}

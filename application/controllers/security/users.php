@@ -74,10 +74,10 @@ class Users extends CI_Controller {
     
     if ($this->core->canUser()) {
       $initbrseqno = 0;
-      $data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+      $data['showToolbarFilters'] = TRUE;
     } else {
       $initbrseqno = $this->core->getBranchID();
-      $data['uiToolbar'] = NULL;
+      $data['showToolbarFilters'] = FALSE;
     }
     
     $data['initbrseqno'] = $initbrseqno;

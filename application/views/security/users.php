@@ -177,7 +177,9 @@ $(function() {
 	});
 	
 	getData(<?php echo $initgrpseqno; ?>, <?php echo $initbrseqno; ?>, 0);
-	<?php echo $uiToolbar; ?>
+	<?php if ($showToolbarFilters): ?>
+	$('.ui-toolbar:even').append($('#customToolbar .top').html());
+	<?php endif; ?>
 	
 	//default Action
 	/*$(TABCONTENT).hide(); //hide all content

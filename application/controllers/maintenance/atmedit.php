@@ -452,7 +452,7 @@ class ATMEdit extends CI_Controller {
       
       $row = $result->row_array();
       
-      if ($row['errno'] === '0') {
+      if (isset($row['errno']) && (int) $row['errno'] === 0) {
         $success = TRUE;
         $message = 'ATM entry updated successfully';
 

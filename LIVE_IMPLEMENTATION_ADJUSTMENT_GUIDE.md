@@ -84,14 +84,16 @@ Commits: `a8b8ec5`, `4d118ea`, `6287913`, `be99c28`, `635ce18`, `26f424e`, `cb43
 
 ### Customer and card interface corrections
 
-Commits: `a465eaa`, `f67bfdb`, `02408bc`, `ac57fa5`, `c0d3f0b`, `61ce726`
+Commits: `a465eaa`, `f67bfdb`, `02408bc`, `ac57fa5`, `c0d3f0b`, `61ce726`, `86cabd0`, `6734587`, `cb43d30`, `209ba2d`, `06108bc`, `d3a841f`, `1d57dae`, `4e6b1d8`, `0a12f6c`, `7db2914`
 
-- Reworked customer forms/details so the photo sits beside the personal information, identity fields use a two-column layout, and contact numbers sit beside the address. Added responsive stacking for narrow screens.
+- Customer Enrollment and Customer Update keep the photo beside the name fields, then place the divider and remaining personal details below that row. The instruction note is positioned at the upper right with 15px more top spacing; the personal-information row has 30px of top padding. The enrollment wrapper remains at its original 700px width and is capped to the viewport.
+- Customer Information uses the same photo/name row and full-width personal-details section. Its Personal Information, Contact Information, and Cards Owned panels are siblings so switching tabs can show each panel. Tab initialization and click handling are scoped to the customer view, the tab script syntax is valid, and navigation markup is no longer inserted into the Cards Owned panel's CSS class.
+- Added responsive stacking for customer photo/name rows and kept contact numbers beside the address.
 - Kept card-list status, card-type, and search controls on one toolbar row.
 - Kept area and department list footer controls visible after navigating back from create/edit views.
 - Applied maintenance wrapper sizing based on each view's intrinsic content, capped to the viewport with horizontal overflow available. The earlier blanket 500px minimum was replaced because it widened narrow views unnecessarily.
 
-**For the live site:** compare the actual live templates and shared styles before porting. Keep layout rules scoped to the relevant module; verify the smallest supported viewport and the widest table/form in each affected view. Do not impose a shared fixed minimum width across unrelated maintenance screens.
+**For the live site:** compare the actual live templates and shared styles before porting. Verify Enrollment and Customer Update at desktop and narrow widths, including the instruction note position, photo/name row, full-width divider and personal details, and the 700px enrollment wrapper. In Customer Information, open Personal Information, Contact Information, and Cards Owned on a normal customer with cards; also confirm approval records that omit Cards Owned still render correctly. Keep layout rules scoped to the relevant module; verify the widest table/form in each affected view. Do not impose a shared fixed minimum width across unrelated maintenance screens.
 
 ### Cache repository hygiene
 
@@ -111,7 +113,7 @@ Before releasing changes to a live implementation:
 - Verify login, failed login, password reset/change, standard logout, expired-session auto-logout, and access control when session data is absent.
 - Verify representative stored procedures both alone and consecutively on the same PDO connection; confirm all expected result sets and row counts.
 - Verify account override, card verification/issuance, terminal/POS edits, and maintenance saves with success and failure cases.
-- Verify customer layouts, card list filters, area/department list actions, and maintenance forms at expected screen sizes.
+- Verify Enrollment and Customer Update layouts, all Customer Information tabs (including Cards Owned), card list filters, area/department list actions, and maintenance forms at expected screen sizes.
 - Confirm cache directory permissions and that no generated cache/session files entered the release.
 - Report each guide item as **applied**, **not applicable**, or **blocked pending environment/behavior confirmation**. Include the changed files and verification evidence.
 

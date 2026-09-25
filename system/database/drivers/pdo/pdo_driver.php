@@ -45,6 +45,7 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	var $_count_string = "SELECT COUNT(*) AS ";
 	var $_random_keyword;
+	var $_last_query_was_call = FALSE;
 	
 	var $options = array();
 
@@ -190,13 +191,16 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	function _execute($sql)
 	{
+		$sql = $this->_prep_query($sql);
+
 		/*
 		 * Legacy callers often issue several stored procedure calls in a row
 		 * without explicitly freeing each result. MySQL PDO requires every
 		 * rowset from the previous statement to be consumed before the next
-		 * query can run, so release it here before replacing result_id.
+		 * query can run. Keep ordinary SELECT results available to callers
+		 * that read them after issuing follow-up count queries.
 		 */
-		if (is_object($this->result_id) && $this->result_id instanceof PDOStatement)
+		if ($this->_last_query_was_call && is_object($this->result_id) && $this->result_id instanceof PDOStatement)
 		{
 			try
 			{
@@ -221,7 +225,7 @@ class CI_DB_pdo_driver extends CI_DB {
 			}
 		}
 
-		$sql = $this->_prep_query($sql);
+		$this->_last_query_was_call = (bool) preg_match('/^\s*(?:\/\*.*?\*\/\s*)*CALL\b/i', $sql);
 		$result_id = $this->conn_id->query($sql);
 		
 		if (is_object($result_id))

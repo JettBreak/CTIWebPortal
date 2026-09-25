@@ -1,0 +1,108 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Contacts extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(MONATM_NO);
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/area_model');
+		$this->load->model('coresys/atm_model');
+		$this->load->library('shortxml');
+		
+		$atm   = $this->atm_model;
+		$core  = $this->core;
+		$input = $this->input;
+		$xml   = $this->shortxml;
+		
+		//for ATM list
+		if ($input->get('list', TRUE) === '1') {
+			if ($core->canMon()) {
+				$branchCode = $input->get('brcode');
+				$locCode = $input->get('loccode');
+			} else {
+				$branchCode = $core->getBranchCode();
+				$locCode = 0;
+			}
+			$status = $input->get('status');
+			
+			//get ATM list
+			$result  = $atm->getATMList($branchCode, $locCode, $status);	
+			$atmList = $core->showATMList($result);
+			$atmList = $core->compressOutput($atmList);
+			
+			$result->free_result();
+			$result->next_result();
+		} else {
+			$atmList = NULL;
+		}
+		//end
+		
+		//get ATM Info
+		
+		$terminalCode = $input->get('terminalcode');
+		
+		$result	= $atm->getATMContacts($terminalCode);
+		$row 	= $result->row_array();
+		$xml->setXML($row['xml']);
+		
+		$hName = $xml->getValue('HNAME') ? $xml->getValue('HNAME') : 'None';
+		$hTel = $xml->getValue('HTEL') ? $xml->getValue('HTEL') : 'None';
+		$nName = $xml->getValue('NNAME') ? $xml->getValue('NNAME') : 'None';
+		$nTel = $xml->getValue('NTEL') ? $xml->getValue('NTEL') : 'None';
+		$tName = $xml->getValue('TNAME') ? $xml->getValue('TNAME') : 'None';
+		$tTel = $xml->getValue('TTEL') ? $xml->getValue('TTEL') : 'None';
+		$oName = $xml->getValue('ONAME') ? $xml->getValue('ONAME') : 'None';
+		$oTel = $xml->getValue('OTEL') ? $xml->getValue('OTEL') : 'None';
+		
+		$details = $core->compressOutput('<style>
+			#tabContacts th {
+				font-weight: bold;
+				padding: 0 40px;
+			}
+			</style>
+        	<table>
+            	<thead>
+                	<tr>
+                    	<th>Concern</th>
+                        <th>Contact Person</th>
+                        <th>Contact No.</th>
+                    </tr>
+                </thead>
+                <tbody>
+					<tr>
+						<td class="label">Hardware:</td>
+						<td>'. $hName . '</td>
+						<td>'. $hTel .'</td>
+					</tr>
+					<tr>
+						<td class="label">Network:</td>
+						<td>'. $nName .'</td>
+						<td>'. $nTel .'</td>
+					</tr>
+					<tr>
+						<td class="label">Threshold:</td>
+						<td>'. $tName .'</td>
+						<td>'. $tTel .'</td>
+					</tr>
+					<tr>
+						<td class="label">Others:</td>
+						<td>'. $oName .'</td>
+						<td>'. $oTel .'</td>
+					</tr>
+                </tbody>
+            </table>');
+			
+		echo json_encode(array(
+			'success' => TRUE,
+			'atm' 	  => $atmList,
+			'details' => $details
+		));
+	}
+}

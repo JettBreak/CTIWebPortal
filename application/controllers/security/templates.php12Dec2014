@@ -1,0 +1,256 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Templates extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(USERTEMP_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+    function index()
+	{	
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('security/templates', $data);
+	}
+	
+	//cache template entry
+	function cache()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->library('coreconverters');
+		$this->cache->delete($this->core->getSessionID() .'template');
+		
+		$input = $this->input;
+		
+		$template = array(
+			'ID' => $input->post('ID', TRUE),
+			'description' => $input->post('description', TRUE),
+			'grpseqno' => $input->post('grpseqno', TRUE),
+			'allows' => $this->coreconverters->asciiHexToBin($input->post('allows', TRUE)),
+			'predefined' => $input->post('predefined', TRUE)
+		);
+		
+		$success = $this->cache->save($this->core->getSessionID() .'template', $template, CACHE_TTL);
+		
+		echo json_encode(array(
+			'success' => $success
+		));
+	}
+	
+	function delete()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$template = $this->input->post('description', TRUE);
+		$tmseqno = $this->input->post('tmseqno', TRUE);
+		$brseqno = $this->core->getBranchID();
+		$ipAddress = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit = $this->core->getUserID();
+		$override = '';
+		$sessionID = $this->core->getSessionID();
+		
+		$result = $this->user_model->deleteUserTemplate($tmseqno, $brseqno, $ipAddress, $workstation, $userAudit, $override, $sessionID);
+		
+		$row = $result->row_array();
+		
+		if ($row['errno'] > 0) {
+			$success = FALSE;
+			$message = 'Unable to delete <strong>['. $template .']</strong><br />Template already in use';
+		} else {
+			$success = TRUE;
+			$message = 'User template <strong>['. $template .']</strong><br />successfully removed';
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+	
+	/*function get()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$tmseqno = $this->input->post('tmseqno', TRUE);
+		
+		$result = $this->user_model->getUserTempAllows($tmseqno);
+		
+		if ($result->num_rows() > 0) {
+			$row = $result->row_array();
+			$allows = $row['allows'];
+		} else {
+			$allows = '0';
+		}
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'allows' => $allows
+		));
+	}*/
+	
+	function getData()
+	{
+		$this->load->model('coreapp/user_model');
+		$this->load->library('shortxml');
+		
+		$core = $this->core;
+		$xml = $this->shortxml;
+		
+		$grpseqno = $this->core->getUserGroup();
+		$result = $this->user_model->getUserTemplates($grpseqno);
+		
+		$details = array();
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row) {
+				$xml->setXML($row['xml1']);
+							
+				$details[] = array(
+					$row['tmseqno'],
+					$row['description'],
+					$row['grpdesc'],
+					$row['grpseqno'],
+					$row['allows'],
+					$xml->getValue('PREDEFINED') ? 'Y' : 'N'
+				);
+			}
+		}
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $details
+		));
+	}
+	
+	function updateusers()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/user_model');
+		
+		$tmseqno = $this->input->post('tmseqno', TRUE);
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$result = $this->user_model->updateAllUserTemplates($tmseqno, $userAudit, $sessionID);
+		
+		$grpseqno = $this->input->post('grpseqno', TRUE);
+		
+		$this->cache->delete($this->core->getSessionID() .'users'.$grpseqno);
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'message' => 'Users updated successfully'
+		));
+	}
+	
+	function previewx($id)
+	{
+		$data['src'] = 'security/templates/preview/'. $id;
+		$this->load->view('pdfviewer', $data);
+	}
+	
+	function preview($id)
+	{
+		$this->load->library('pdf');
+		
+		$pdf 	 = $this->pdf;
+		$core 	 = $this->core;
+		
+		$userName = $core->getUserName();
+		$instName = $core->getInstName();
+		$branchName = $core->getBranchName();
+		
+		$branchCode = $core->getBranchCode();
+			
+		// set document information
+		$pdf->SetCreator(PDF_CREATOR);
+		$pdf->SetAuthor($userName);
+		$pdf->SetTitle('User Access Template');
+		$pdf->SetSubject('Template');
+		$pdf->SetKeywords(NULL);
+		
+		// set default header data
+		//$pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE, PDF_HEADER_STRING);
+		$pdf->SetHeaderData(NULL);
+		
+		// set header and footer fonts
+		$pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+		$pdf->setUser($core->getUserName());
+		$pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+		
+		// set default monospaced font
+		$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+		
+		//set margins
+		$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		$pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+		$pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+		
+		//set auto page breaks
+		$pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+		
+		// ---------------------------------------------------------
+		
+		// Set font
+		// dejavusans is a UTF-8 Unicode font, if you only need to
+		// print standard ASCII chars, you can use core fonts like
+		// helvetica or times to reduce file size.
+		$pdf->SetFont('dejavusans', '', 7, '', true);
+		
+		// Add a page
+		// This method has several options, check the source code documentation for more information.
+		$pdf->AddPage('L', 'Letter');
+		
+		// Set some content to print
+		$html = '<style>
+		h1, h2, h3, h4, h5 {
+			text-align: center;
+		}
+		th {
+			text-transform: uppercase;
+			font-size: 7pt;
+			font-weight: bold;
+		}
+		</style>
+		<h2>'.$instName.'</h2>
+		<h1>USER ACCESS TEMPLATE</h1>
+		<table cellspacing="18" width="100%">
+			<tr>
+				<th>Branch</th>
+				<th>WDRWLS</th>
+				<th>WDL Amount</th>
+				<th>ADVCS</th>
+				<th>ADV Amount</th>
+				<th>RVCTR</th>
+				<th>WDL RVERSL</th>
+				<th>DEPS</th>
+				<th>BALINQ</th>
+				<th>FNDTRN</th>
+				<th>IBFT</th>
+				<th>STMREQ</th>
+				<th>CHKREQ</th>
+				<th>PAYS</th>
+			</tr>
+		</table>';
+		// Print text using writeHTMLCell()
+		$pdf->writeHTML($html, true, false, true, false, '');
+
+		$pdf->Output('preview.pdf', 'I');
+	}
+}

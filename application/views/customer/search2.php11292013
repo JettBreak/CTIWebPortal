@@ -1,0 +1,86 @@
+<form id="searchCustomerForm" method="post">
+    <div id="searchCustomerForm">
+        <h1>Search Customer</h1>
+        <div id="content">
+            <table width="100%">
+                <tr>
+                	<td width="140"><label for="custID">CIF Number: <span class="red">*</span></label></td>
+                    <td><input type="text" name="custID" id="custID" style="width:200px" maxlength="15" class="validate[required] numbersOnly"/></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="bottom">
+        <span class="buttons floatLeft">
+            <button id="submitBtn" value="customer/search2/submit">Search</button>
+		</span>
+		<span class="buttons floatRight">
+            <button type="reset">Reset</button>
+            <button class="closebtn">Close</button>
+		</span>
+	</div>
+</form>
+<script>
+$(function () {
+    var submitBtn = '#submitBtn',
+        resetBtn = 'button:reset',
+		customerID = '#custID',
+        form = $('form');
+		
+    form.validationEngine({
+        ajaxFormValidation: true,
+        onBeforeAjaxFormValidation: function () {
+            waitMessage('Searching Customer...');
+        },
+        onAjaxFormComplete: function (a, b, data, d) {
+            if (data.success === true) {
+                //redirect
+                //$(MSGBOX).dialog('close');
+				//window.location.hash = 'customer/edit';
+				//window.location.hash = 'customer/requestCustomer';
+                searchRedirect($(customerID).val());
+            } else {
+				messageBox(data.message);
+				$(MSGBOX).one('dialogbeforeclose', function () {
+					$(resetBtn).trigger('click');
+				});
+			}
+        },
+        scroll: false
+    });
+    form.validationEngine('attach');
+	
+    $(resetBtn).click(function () {
+        $(customerID).focus().val('');
+    });
+	
+});
+function searchRedirect(cifseqno) {
+    var type = 'newacct',
+        page = null;
+    switch (type) {
+    case 'newacct':
+        page = 'customer/requestCustomer/';
+        break;
+    }
+    $.ajax({
+        type: 'POST',
+        url: 'customer/search2/cache',
+        data: {
+            'cifseqno': cifseqno
+        },
+        dataType: 'json',
+        success: function (data) {
+            if (data.success === true) {
+                window.location.hash = page;
+            } else {
+                messageBox(data.message);
+                $(MSGBOX).one('dialogbeforeclose', function () {
+                    $(resetBtn).trigger('click');
+                });
+                //messageBox('An error has occured');
+            }
+        }
+    })
+}
+</script>

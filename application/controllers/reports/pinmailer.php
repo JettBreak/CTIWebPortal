@@ -1,0 +1,228 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class PINMailer extends CI_Controller {	
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(PINMAILERBATCHREP_NO);
+	}
+	
+	function index()
+	{
+		if ($this->input->get('norecord', TRUE) === 'true') {
+            $data['showMsg'] = '1';
+        } else {
+            $data['showMsg'] = '0';
+        }
+        
+        $data['title'] = 'PIN MAILER BATCH REPORT';
+        $data['date'] = date('m/d/Y');
+		$data['formAction'] = 'reports/pinmailer/preview';
+        $this->load->view('reports/pinmailer', $data);
+	}
+	
+	function preview()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/reports_model');
+		$this->load->library('pdf');
+		$this->load->library('shortxml');
+		
+		$reports = $this->reports_model;
+		$core 	 = $this->core;
+		$pdf 	 = $this->pdf;
+		$xml	 = $this->shortxml;
+		
+		$userName = $core->getUserName();
+		$instName = $core->getInstName();
+		
+		if ($core->canRep()) {
+			$branchCode = $this->input->post('branch', TRUE);
+			$branchName = $this->input->post('branchName', TRUE);
+		} else {
+			$branchCode = $core->getBranchCode();
+			$branchName = $core->getBranchName();
+		}
+		
+		$trxDate = $this->input->post('trxDate', TRUE);
+		$jobNo = $this->input->post('jobNo', TRUE);
+		
+		$dateSaveFormat = $core->formatDate('mdY', $trxDate);
+				
+		$userAudit  = $core->getUserID();
+		$sessionID  = $core->getSessionID();
+		
+		$result = $reports->getPMBatch($jobNo);
+		$tpt = $result->result_array();
+		
+		//echo print_r($tpt);
+		
+		//init array
+		$data = array();
+		
+		$contentAll = '';
+		
+		if ($result->num_rows() === 0) {
+			$contentAll = '<tr><td></td></tr><tr><td colspan="6" align="center"><h3><font color="red">"No Record Found"</font></h3></td></tr>';
+		}
+				
+		if (!$acctTypes = $this->cache->get($this->core->getSessionID() . 'acctTypes')) {
+			
+			$result->free_result();
+			$result->next_result();
+			$this->load->model('coreapp/card_model');	
+			$result = $this->card_model->getAccountType();
+			$acctTypes = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'acctTypes', $acctTypes, CACHE_TTL);
+		}	
+		
+		foreach ($tpt as $row) {
+			
+			//$jobNo = $row['jobno'];
+			
+			$xml->setXML($row['xml1'] . $row['xml2']);
+			
+			$cardNo = $row['prkey'];
+			if (!$cardNo) {
+				$cardNo = '-';	
+			}
+			
+			$brName = $row['brname'];
+			if (!$brName) {
+				$brName = '-';	
+			}
+			
+			$cardType = $row['description']; // card type
+			if (!$cardType) {
+				$cardType = '-';	
+			}
+			
+			$cardStat = $row['statdesc'];
+			if (!$cardStat) {
+				$cardStat = '-';	
+			}
+			
+			$embossName = trim($xml->getValue('MBOS'));
+			if (!$embossName) {
+				$embossName = '-';	
+			}
+			
+			$embossNo = $row['embosno'];
+			if (!$embossNo) {
+				$embossNo = '-';	
+			}
+			
+			$content = '<tr>
+				<td align="center">'. $cardNo .'</td>
+				<td align="center">'. $brName .'</td>
+				<td align="center">'. $cardType .'</td>
+				<td align="center">'. $cardStat .'</td>
+				<td align="center">'. $embossNo .'</td>
+				<td align="center">'. $embossName .'</td>
+			</tr>';
+			
+			$contentAll .= $content;
+		}
+		
+		/*$totals = '<tr align="right">
+			<td><b>TOTAL:</b></td>
+			<td>'. $core->currency($wdl) .'</td>
+			<td>'. $core->currency($trn) .'</td>
+			<td>'. $core->currency($pay) .'</td>
+			<td>'. $core->currency($dep) .'</td>
+			<td>'. $core->currency($adv) .'</td>
+			<td>'. $core->currency($load) .'</td>
+			<td>'. $core->currency($ibftreq) .'</td>
+			<td>'. $core->currency($ibftwdl) .'</td>
+			<td>'. $core->currency($ibfttrn) .'</td>
+		</tr>';*/
+		
+		
+		
+		// set document information
+		$pdf->SetCreator(PDF_CREATOR);
+		$pdf->SetAuthor($userName);
+		$pdf->SetTitle('PIN Mailer Batch Report');
+		$pdf->SetSubject('Card');
+		$pdf->SetKeywords(NULL);
+		
+		// set default header data
+		//$pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE, PDF_HEADER_STRING);
+		$pdf->SetHeaderData(NULL);
+		
+		// set header and footer fonts
+		$pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+		$pdf->setUser($core->getUserName());
+		$pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+		
+		// set default monospaced font
+		$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+		
+		//set margins
+		$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		$pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+		$pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+		
+		//set auto page breaks
+		$pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+		
+		// ---------------------------------------------------------
+		
+		// Set font
+		// dejavusans is a UTF-8 Unicode font, if you only need to
+		// print standard ASCII chars, you can use core fonts like
+		// helvetica or times to reduce file size.
+		$pdf->SetFont('helvetica', '', 11, '', true);
+		
+		// Add a page
+		// This method has several options, check the source code documentation for more information.
+		
+		$pdf->AddPage('L', 'Legal');
+		
+		// Set some content to print
+		$html = '<style>
+		th {
+			text-transform: uppercase;
+			font-weight: bold;
+			text-align: center;
+		}
+		</style>
+		<h2>'.$instName.'</h2>
+		<h1>PIN MAILER BATCH REPORT</h1>
+		<h3>'. $branchName .'</h3>
+		
+		<table cellspacing="10" width="100%">
+			<tr>
+				<th width="600">CARD NUMBER</th>
+				<th width="600">BRANCH</th>
+				<th width="600">CARD TYPE</th>
+				<th width="600">CARD STATUS</th>
+				<th width="600">EMBOSS BATCH</th>
+				<th width="600">EMBOSS NAME</th>
+			</tr>
+			<tr>
+				<td colspan="6">&nbsp;</td>
+			</tr>
+			<tr>
+				<td align="left" style="font-weight:bold;" colspan="6">JOB NO. '.$jobNo.'</td>
+			</tr>
+			<tr>
+				<td colspan="6">&nbsp;</td>
+			</tr>
+			'. $contentAll .'
+			<tr>
+				<td colspan="6">&nbsp;</td>
+			</tr>
+		</table>';
+		// Print text using writeHTMLCell()
+		$pdf->writeHTML($html, true, false, true, false, '');
+		
+		$pdf->Output('pinmailer_' . 'jobno' . $jobNo . '.pdf', 'I');
+	}
+	
+}

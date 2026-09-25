@@ -1,0 +1,108 @@
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24| START OF TRACE
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24| REQUESTID: 1556
+TRC:08.11.2017.09.22.24| CLASS: reportlist.POS.POSAcquirerBank
+TRC:08.11.2017.09.22.24| VOIDCODE: 998
+TRC:08.11.2017.09.22.24| VOIDDESC: SQL Error
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24| ERROR MESSAGE: Table 'coreapp_fusion.outletxxx' doesn
+TRC:08.11.2017.09.22.24| 't exist
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24| TRACE MESSAGE: 
+TRC:08.11.2017.09.22.24| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:08.11.2017.09.22.24| 0(Native Method)
+TRC:08.11.2017.09.22.24| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:08.11.2017.09.22.24| (NativeConstructorAccessorImpl.java:62)
+TRC:08.11.2017.09.22.24| sun.reflect.DelegatingConstructorAccessorImpl.newInst
+TRC:08.11.2017.09.22.24| ance(DelegatingConstructorAccessorImpl.java:45)
+TRC:08.11.2017.09.22.24| java.lang.reflect.Constructor.newInstance(Constructor
+TRC:08.11.2017.09.22.24| .java:422)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.Util.handleNewInstance(Util.java:406)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.Util.getInstance(Util.java:381)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:08.11.2017.09.22.24| ava:1030)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:08.11.2017.09.22.24| ava:956)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:08.11.2017.09.22.24| 3491)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:08.11.2017.09.22.24| 3423)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:20
+TRC:08.11.2017.09.22.24| 60)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:08.11.2017.09.22.24| java:2536)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:08.11.2017.09.22.24| java:2465)
+TRC:08.11.2017.09.22.24| com.mysql.jdbc.StatementImpl.executeQuery(StatementIm
+TRC:08.11.2017.09.22.24| pl.java:1383)
+TRC:08.11.2017.09.22.24| library.db.DBConnector.executeStandardSelect(DBConnec
+TRC:08.11.2017.09.22.24| tor.java:537)
+TRC:08.11.2017.09.22.24| library.param.InstitutionParameters.getPartnerInstitu
+TRC:08.11.2017.09.22.24| tion(InstitutionParameters.java:1010)
+TRC:08.11.2017.09.22.24| reportlist.POS.POSAcquirerBank.createPDF(POSAcquirerB
+TRC:08.11.2017.09.22.24| ank.java:1790)
+TRC:08.11.2017.09.22.24| library.reportclass.ReportGenerator.generateReport(Re
+TRC:08.11.2017.09.22.24| portGenerator.java:586)
+TRC:08.11.2017.09.22.24| library.reportclass.ReportGenerator.processReport(Rep
+TRC:08.11.2017.09.22.24| ortGenerator.java:243)
+TRC:08.11.2017.09.22.24| ReportSystem.main(ReportSystem.java:37)
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24| END OF TRACE
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.22.24|  
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55| START OF TRACE
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55| REQUESTID: 1559
+TRC:08.11.2017.09.28.55| CLASS: reportlist.POS.POSAcquirerBank
+TRC:08.11.2017.09.28.55| VOIDCODE: 998
+TRC:08.11.2017.09.28.55| VOIDDESC: SQL Error
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55| ERROR MESSAGE: Table 'coreapp_fusion.outletxxx' doesn
+TRC:08.11.2017.09.28.55| 't exist
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55| TRACE MESSAGE: 
+TRC:08.11.2017.09.28.55| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:08.11.2017.09.28.55| 0(Native Method)
+TRC:08.11.2017.09.28.55| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:08.11.2017.09.28.55| (NativeConstructorAccessorImpl.java:62)
+TRC:08.11.2017.09.28.55| sun.reflect.DelegatingConstructorAccessorImpl.newInst
+TRC:08.11.2017.09.28.55| ance(DelegatingConstructorAccessorImpl.java:45)
+TRC:08.11.2017.09.28.55| java.lang.reflect.Constructor.newInstance(Constructor
+TRC:08.11.2017.09.28.55| .java:422)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.Util.handleNewInstance(Util.java:406)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.Util.getInstance(Util.java:381)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:08.11.2017.09.28.55| ava:1030)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:08.11.2017.09.28.55| ava:956)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:08.11.2017.09.28.55| 3491)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:08.11.2017.09.28.55| 3423)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:20
+TRC:08.11.2017.09.28.55| 60)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:08.11.2017.09.28.55| java:2536)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:08.11.2017.09.28.55| java:2465)
+TRC:08.11.2017.09.28.55| com.mysql.jdbc.StatementImpl.executeQuery(StatementIm
+TRC:08.11.2017.09.28.55| pl.java:1383)
+TRC:08.11.2017.09.28.55| library.db.DBConnector.executeStandardSelect(DBConnec
+TRC:08.11.2017.09.28.55| tor.java:537)
+TRC:08.11.2017.09.28.55| library.param.InstitutionParameters.getPartnerInstitu
+TRC:08.11.2017.09.28.55| tion(InstitutionParameters.java:1010)
+TRC:08.11.2017.09.28.55| reportlist.POS.POSAcquirerBank.createPDF(POSAcquirerB
+TRC:08.11.2017.09.28.55| ank.java:1790)
+TRC:08.11.2017.09.28.55| library.reportclass.ReportGenerator.generateReport(Re
+TRC:08.11.2017.09.28.55| portGenerator.java:586)
+TRC:08.11.2017.09.28.55| library.reportclass.ReportGenerator.processReport(Rep
+TRC:08.11.2017.09.28.55| ortGenerator.java:243)
+TRC:08.11.2017.09.28.55| ReportSystem.main(ReportSystem.java:37)
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55| END OF TRACE
+TRC:08.11.2017.09.28.55|  
+TRC:08.11.2017.09.28.55|  

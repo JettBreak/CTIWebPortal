@@ -1,0 +1,1051 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Embossing extends CI_Controller {
+	private $progressFile, $queryStr;
+	private $coreencrypt = FALSE;
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+
+		$this->coreencrypt = $this->core->isCoreEncrypt();
+		
+		$this->queue = array();
+		//$this->progressFile = realpath(APPPATH .'../emboss/data.txt');
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->helper('file');
+
+		$this->cache->delete($this->core->getSessionID() .'processed');
+		//get last batch no.
+		$result = $this->card_model->getLastBatchNo();
+		
+		if ($result->num_rows() > 0) {
+			$row = $result->row_array();
+			$data['batchNo'] = intval($row['batchno']) + intval($row['stepcount']);
+		} else {
+			$data['batchNo'] = 0;
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		//card types
+		if (!$cardType = $this->cache->get($this->core->getSessionID() . 'cardType')) {
+			$result = $this->card_model->getCardType('N');
+			$cardType = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'cardType', $cardType, CACHE_TTL);
+		}
+		
+		if (!$cardTypeP = $this->cache->get($this->core->getSessionID() . 'cardTypeP')) {
+			$result = $this->card_model->getCardType('Y');
+			$cardTypeP = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'cardTypeP', $cardTypeP, CACHE_TTL);
+		}
+		
+		$data['cardType'] = '<option value="0">ALL</option>' .
+			'<optgroup id="generic">';
+		
+		foreach ($cardType as $row) {
+			$val  = $row['accttype'];
+			$desc = $row['description'];
+			$data['cardType'] .= '<option value="'. $val .'">'. $desc .'</option>';
+		}
+		
+		$data['cardType'] .= '</optgroup>';
+		
+		$data['cardType'] .= '<optgroup id="personalized" class="hidden">';
+		
+		foreach ($cardTypeP as $row) {
+			$val  = $row['accttype'];
+			$desc = $row['description'];
+			$data['cardType'] .= '<option value="'. $val .'">'. $desc .'</option>';
+		}
+		$data['cardType'] .= '</optgroup>';
+		//end
+		
+		//branches combobox
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				if (!$this->core->isHeadOffice() && $row['brseqno'] === $this->core->getBranchID()) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				$data['branches'] .= '<option value="'. $row['brseqno'] .'">'. $row['brcode'] . '-' . $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		
+		$data['date'] = date('m/d/Y');
+		$this->load->view('card/embossing', $data);
+	}
+	
+	function process()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->model('coreapp/branch_model');
+		$this->load->helper('file');
+		$this->load->library('shortxml');
+			
+		$xml 	 = $this->shortxml;	
+		$xmldata = $this->shortxml;
+		$card 	 = $this->card_model;
+		$brch 	 = $this->branch_model;
+		$input 	 = $this->input;
+		$core 	 = $this->core;
+		
+		$batchNo	= intval($input->post('batchNo', TRUE));
+		$batchNox	= $input->post('batchNox', TRUE);
+		$acctType 	= intval($input->post('cardType', TRUE));
+		$cardType 	= intval($input->post('generationType', TRUE));
+		$date 		= $input->post('date', TRUE);
+		$dtEnroll 	= $core->formatDate('Y-m-d', $date);
+		
+		if ($core->isHeadOffice()) {
+			$brseqno = intval($input->post('brseqno', TRUE));
+		} else {
+			$brseqno = intval($core->getBranchID());
+		}
+		
+		$userAudit  = $core->getUserID();
+		$sessionID 	= $core->getSessionID();
+
+		//validate session
+		/*$result = $card->checkLogin($userAudit, $sessionID);
+		$row = $result->row_array();
+		
+		$result->free_result();
+		$result->next_result();
+		
+		unset($result);*/
+
+		$result = $brch->getBranchCodeValue($brseqno);
+
+		$row = $result->row_array();
+
+		$brcodeX = strval($row['brcode']);
+
+		$result->free_result();
+		$result->next_result();
+		
+		$isGenerate = NULL;
+		
+		if ($batchNox === '') {
+			//$result = $card->getCardForEmbossing($acctType, $cardType, $dtEnroll, $brseqno, $userAudit, $sessionID);
+			$params = array($cardType);
+			$filter = '';
+
+			$content = '';
+			$progress = 0;
+			$limit = 500;
+			$varTotal = 0;
+			$totalProg = NULL;
+
+			array_push($params, $acctType);
+			array_push($params, $brseqno);
+			array_push($params, $dtEnroll.' 23:59:59');
+			array_push($params, $this->coreencrypt);
+
+			// get all for embossing cards
+			$paramsGetAll = $params;
+			array_push($paramsGetAll, -1); // limit
+			array_push($paramsGetAll, 0); // offset
+			
+			/*if ($cardType === 0) {
+				$filter .= ' AND a.cifseqno > 0 ';
+			} else {
+				$filter .= ' AND a.cifseqno = 0 ';
+			}*/
+			
+			/*if ($acctType !== 0) {
+				$filter .= ' AND a.accttype = ? ';
+				array_push($params, $acctType);
+			}*/
+			
+			/*$query = "SELECT a.prseqno,a.cifseqno,a.prkey,a.issuer,a.accttype,b.dtexpire,b.dtenroll,b.xml1,c.brid,c.brcode ".
+				"FROM prmaster a, prdetail b, branches c ".
+				"WHERE b.prseqno = a.prseqno AND ".
+				"a.brseqno = ? AND ".
+				"c.brseqno = a.brseqno AND ".
+				"a.status = 9 AND ".
+				"DATE(b.dtenroll) < '". $dtEnroll ." 23:59:59'" . $filter;*/
+			
+			$query  = "CALL sp_getcardinfobytoken(?,?,?,?,?,?,?)";
+
+			$result = $card->db->query($query, $paramsGetAll);
+			
+			$total = $result->num_rows();
+			if (intval($total) > 0) {
+				$resultArr = $result->result_array();
+				
+				$result->free_result();
+				$result->next_result();
+			
+				$result = $card->generateSeq('EMBS');
+				$row = $result->row_array();
+				
+				$batchNo = $row['embossno'];
+			} else {
+
+			}
+		} else {
+			//$result = $card->getCardEmbossingByBatch($batchNo, $brseqno, $userAudit, $sessionID);
+			$query = "SELECT a.prseqno,a.prkey,a.issuer,a.accttype,b.dtexpire,b.date(format)tenroll,b.xml1,a.brseqno,c.brid,c.brcode
+				FROM prmaster a, prdetail b, branches c
+				WHERE b.prseqno = a.prseqno AND
+				a.brseqno = ? AND
+				c.brseqno = a.brseqno
+				AND b.embosno = ?";
+				
+			$params = array($brseqno, $batchNo);
+			
+			$result = $card->db->query($query, $params);
+			
+			$total = $result->num_rows();
+			$resultArr = $result->result_array();
+		}
+		
+		$embType = $input->post('embossingType', TRUE); //text, csv, xml
+		
+		if ($total === 0) {
+			$embType = NULL;
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		
+		//save emb card status per accttype
+		$result = $card->db->query("SELECT accttype, sf_getXMLValue(xml1,'EMBNSTAT') as embstat FROM accttype WHERE prtype = 'CARD'");
+		
+		$embStatList = array();
+		
+		foreach ($result->result_array() as $row) {
+			$embStatList['x' . $row['accttype']] = intval($row['embstat']);
+		}
+		//end
+		
+		// pad to force the browser to starting parsing/executing
+		echo str_pad('<html><body>', 4096);
+		$haserror = FALSE;
+		switch ($embType)
+		{
+			case 'text':
+				$contentType = 'text/plain; charset="utf-8"';
+				
+				$content = '';
+				$content2= '';
+				$message = '';
+				$xcntr = 0;
+				$failedstatusupdate = 0;
+				
+				for ($i = 0; $i < $total; $i += $limit) {
+					$sql = $query;
+					$sql .= " LIMIT ?,?";
+					
+					$params[] = intval($i);
+					$params[] = $limit;
+					
+					$result = $card->db->query($sql, $params);
+					$lastResult = $result->result_array();
+					//echo $i . " - " . ($i + $limit) . "<br/>";
+					
+					$result->free_result();
+					$result->next_result();
+					
+					$this->queue = array();
+
+					foreach ($lastResult as $row) {
+						$xml->setXML($row['xml1']);
+						$cvvOut = '';
+						$cvvOut2= '';
+						
+						$prseqno = intval($row['prseqno']);
+						$acctType = $row['accttype'];
+						$brcode = $row['brcode'];
+						$prkey = $row['prkey'];
+						$cardNo = $xml->getValue('CARDNO');
+						
+						if (in_array('', array($prseqno, $acctType, $brcode, $prkey, $cardNo))) {
+							continue;
+						}
+						
+						$time = date('Y-M-d H:i:s');
+						$name = $xml->getValue('MBOS');
+						
+						if (strlen(trim($name)) === 0) {
+							$name = '#' . substr(' ', 17);
+						}
+
+						$embStatus = $embStatList['x'. $acctType];
+				
+						$cvvprkey = $prkey;
+
+						if (TRUE) {
+
+							$fp = NULL;
+							$rport = 3003;
+							$rhost = 'localhost';
+
+							try {
+								if (@fsockopen($rhost, $rport, $errno, $errstr, 10)) {
+									$fp = fsockopen($rhost, $rport, $errno, $errstr, 10);
+								} else {
+									$message = "Warning: Unable to connect to port [".$rport."]";
+									$success = FALSE;
+								}
+							} catch (Exception $e) {
+								
+								$message = 'Catch Error while connecting to port['.$rport.']';//$errno !== NULL ? $errno : $e;
+								$success = FALSE;
+							}
+
+							if (!$fp) {
+								$success = FALSE;
+								$message = "Warning: Unable to connect to port [".$rport."]";
+							} else {
+							
+								$out = '<MSGTYPE>50</><TRXCODE>704001</><PRTYPE1>CARD</><PRKEY1>'.$cvvprkey.'</><TPNODE>POS</>'."\x00";
+							
+								fwrite($fp, $out);
+							
+								$msg = '';
+
+								$starttime = time();
+
+								while (TRUE) {
+									$x = fgets($fp, 2);
+									$time = time() - $starttime;
+									if ($x == "\x00") {
+										$success = TRUE;
+										break;
+									} elseif ($time > 60) {
+										$success = FALSE;
+										$message = "Connection Timeout (timelapse: ".$time." Starttime: ".$starttime." Endtime: ".time().")";
+										break;
+									} else {
+										$success = TRUE;
+									}
+
+									$msg .= $x;
+								}
+
+								$xmlstring = $msg;
+								$xmldata->setXML($msg);
+								//$message = $xmlstring;
+								fclose($fp);
+							}
+
+							$queueSuccess = FALSE;
+							$failedstatusupdate = 0;
+							if ($success) {
+								$msgtype = intval($xmldata->getValue('MSGTYPE'));
+								if ( in_array($msgtype, array(53, 73)) ) {
+									$success = FALSE;
+									$message = $xmldata->getValue('SYSVDESC').$msgtype;
+									
+								} else {
+									//$success = $this->cache->save($this->core->getSessionID() .'cust', $custInfo, CACHE_TTL);
+
+									if (!$success) {
+										$message = 'Unable to save data.';
+									} else {
+										$message .= $xmlstring;
+
+										$queueSuccess = $this->_buildQuery($embStatus, $batchNo, $prseqno);
+										
+										if ($queueSuccess) {
+											$progress++;
+											if ($totalProg !== round($progress/$total * 100)) {
+												$totalProg = round($progress/$total * 100);
+																
+												echo str_pad('<script>parent.updateProgress('. $totalProg .');</script>'."\n", 1024);
+												flush();
+											}
+											$xcntr++;
+											//$queueSuccess = FALSE;
+											//usleep(1000);
+										} else {
+											$failedstatusupdate++;
+										}
+									}
+								}
+							}
+
+							if ($queueSuccess) {
+
+								$hsmcvv = $xmldata->getValue('HSMCVV');
+
+
+
+								// Emboss Serial No., lenght (6)
+								$cvvEmbSerial = str_pad($xcntr, 6, '0', STR_PAD_LEFT);
+								// 1st Separator, lenght (1)
+								$cvvSeparator1 = '$'; 
+								// Card Number, lenght (16)
+								$cvvCardNoP1 = substr($cvvprkey, 0, 4);
+								$cvvCardNoP2 = substr($cvvprkey, 4, 4);
+								$cvvCardNoP3 = substr($cvvprkey, 8, 4);
+								$cvvCardNoP4 = substr($cvvprkey, 12, 4);
+								// Card Number separator
+								$cvvCardNoSeparator = ' '; // single space
+								// 1st Spaces, lenght (7)
+								$cvvSpaces1 = str_pad('', 7, ' ', STR_PAD_LEFT);
+								// 2nd Separator, lenght (1)
+								$cvvSeparator2 = '*';
+								// Expiry Date lenght (4)
+								$cvvExpiryDate = date('ym', strtotime($row['dtexpire']));
+								// 2nd Spaces, lenght (5)
+								$cvvSpaces2 = str_pad('', 5, ' ', STR_PAD_LEFT);
+								// 3rd Separator, lenght (2)
+								$cvvSeparator3 = '!(';
+								// 3rd Spaces, lenght (20)
+								$cvvSpaces3 = str_pad('', 20, ' ', STR_PAD_LEFT);
+								// 4th Separator, lenght (1)
+								$cvvSeparator4 = '#';
+								// Name Embossed on card, lenght (26)
+								$cvvCardEmboss = str_pad(substr('', 0, 26), 26, ' ', STR_PAD_RIGHT);
+								// Address1, lenght (50)
+								$cvvAddress1 = str_pad('', 50, ' ', STR_PAD_RIGHT);
+								// Address2, lenght (50)
+								$cvvAddress2 = str_pad('', 50, ' ', STR_PAD_RIGHT);
+								// Address3, lenght (50)
+								$cvvAddress3 = str_pad('', 50, ' ', STR_PAD_RIGHT);
+								// City, lenght (50)
+								$cvvCity = str_pad('', 50, ' ', STR_PAD_RIGHT);
+								// Country, lenght (50)
+								$cvvCountry = str_pad('', 50, ' ', STR_PAD_RIGHT);
+								// Branch Code, lenght (10)
+								$cvvBranchCode = str_pad($row['brcode'], 10, ' ', STR_PAD_RIGHT);
+								// 1st End Sentinel, lenght (1)
+								$cvvEndSentinel1 = ':';
+								// 1st Start Sentinel, lenght (1)
+								$cvvStartSentinel1 = '%';
+
+								
+								// Track 1
+									// Format Code
+									$cvvTrack1Formatcode = 'B';
+									// Card Number
+									$cvvTrack1CardNumber = substr($cvvprkey, 0, 16);
+									// T1 1st Separator
+									$cvvTrack1Separator1 = '^';
+									// Name in Track 
+									$cvvTrack1NameNTrack = str_pad('', 26, ' ', STR_PAD_RIGHT);
+									// T1 2nd Separator
+									$cvvTrack1Separator2 = '^';
+									// T1 Expiry Date
+									$cvvTrack1ExpiryDate = date('ym', strtotime($row['dtexpire']));
+									// T1 Service Code
+									$cvvTrack1ServiceCde = '121';
+									// T1 PIN Verification
+									$cvvTrack1PINVerify  = str_pad('', 5, '0', STR_PAD_LEFT);
+									// T1 1st Zeroes
+									$cvvTrack1Zeroes1	 = str_pad('', 2, '0', STR_PAD_LEFT);
+									// T1 CVV
+									$cvvTrack1CVV	 	 = str_pad($hsmcvv, 3, '0', STR_PAD_LEFT);
+									// T1 2nd Zeroes
+									$cvvTrack1Zeroes2	 = str_pad('', 6, '0', STR_PAD_LEFT);
+								
+								// 2nd End Sentinel
+								$cvvEndSentinel2 = '?';
+								// 2nd Start Sentinel
+								$cvvStartSentinel2 = ':';
+
+								
+								// Track 2
+									// T2 Card Number
+									$cvvTrack2CardNumber = substr($cvvprkey, 0, 16);
+									// T2 1st Separator
+									$cvvTrack2Separator1 = '=';
+									// T2 Expiry Date
+									$cvvTrack2ExpiryDate = date('ym', strtotime($row['dtexpire']));
+									// T2 Service Code
+									$cvvTrack2ServiceCde = '121';
+									// T2 PIN Verification
+									$cvvTrack2PINVerify  = str_pad('', 5, '0', STR_PAD_LEFT);
+									// T2 CVV
+									$cvvTrack2CVV		 = str_pad($hsmcvv, 3, '0', STR_PAD_LEFT);
+
+								// 3rd End Sentinel
+								$cvvEndSentinel3 = '?';
+								// iCVV
+								$cvvICVV = str_pad('', 3, '0', STR_PAD_LEFT);
+								// Mobile Number
+								$cvvMobileNumber = str_pad('', 12, ' ', STR_PAD_LEFT);
+								// Nick Name
+								$cvvNickName = str_pad('', 15, ' ', STR_PAD_LEFT);
+								// Image 1
+								$cvvImage1 = str_pad('', 25, ' ', STR_PAD_LEFT);
+								// Image 2
+								$cvvImage2 = str_pad('', 25, ' ', STR_PAD_LEFT);
+								// Delivery Zipcode
+								$cvvDeliveryZipCode = str_pad('', 6, '0', STR_PAD_LEFT);
+								// JAI
+								$cvvJAI = str_pad('1', 2, '0', STR_PAD_LEFT);
+
+								$cvvOut .= $cvvEmbSerial.$cvvSeparator1.$cvvCardNoP1.$cvvCardNoSeparator.$cvvCardNoP2.$cvvCardNoSeparator.$cvvCardNoP3.$cvvCardNoSeparator.$cvvCardNoP4.$cvvSpaces1.$cvvSeparator2.$cvvExpiryDate.$cvvSpaces2;
+								$cvvOut .= $cvvSeparator3.$cvvSpaces3.$cvvSeparator4.$cvvCardEmboss.$cvvAddress1.$cvvAddress2.$cvvAddress3.$cvvCity.$cvvCountry.$cvvBranchCode.$cvvEndSentinel1.$cvvStartSentinel1;
+								$cvvOut .= $cvvTrack1Formatcode.$cvvTrack1CardNumber.$cvvTrack1Separator1.$cvvTrack1NameNTrack.$cvvTrack1Separator2.$cvvTrack1ExpiryDate.$cvvTrack1ServiceCde.$cvvTrack1PINVerify;
+								$cvvOut .= $cvvTrack1Zeroes1.$cvvTrack1CVV.$cvvTrack1Zeroes2.$cvvEndSentinel2.$cvvStartSentinel2.$cvvTrack2CardNumber.$cvvTrack2Separator1.$cvvTrack2ExpiryDate.$cvvTrack2ServiceCde;
+								$cvvOut .= $cvvTrack2PINVerify.$cvvTrack2CVV.$cvvEndSentinel3.$cvvICVV.$cvvMobileNumber.$cvvNickName.$cvvImage1.$cvvImage2.$cvvDeliveryZipCode.$cvvJAI;
+								$cvvOut .= "\r\n";
+
+								$cvvOut2 .= $cvvEmbSerial.$cvvSeparator1.$cvvDeliveryZipCode.$cvvTrack1CardNumber.$cvvNickName.$cvvImage1.$cvvImage2."\r\n";
+
+								$content .= $cvvOut;
+
+								$content2 .= $cvvOut2;
+
+							}
+						}
+					}
+					
+					$queue = $this->_getQuery();
+		
+					$card->db->trans_begin();
+					
+					if (count($queue) > 0) {
+						foreach ($queue as $x) {
+							$sql = $x[0];
+							$params = $x[1];
+							$card->db->query($sql, $params);
+						}
+					}
+					
+					if ($card->db->trans_status() === FALSE) {
+						$card->db->trans_rollback();
+					} else {
+						$card->db->trans_commit();
+					}
+				}
+
+				$result->free_result();
+				$result->next_result();
+
+				$acctdesc = $card->card_model->getCardTypeDesc(intval($acctType)); 
+				$acctrow = $acctdesc->row_array();
+				$acctname = str_replace(" ", "", trim($acctrow['acctname']));
+
+				$result->free_result();
+				$result->next_result();
+
+				if ($xcntr == 0) {
+					if ($failedstatusupdate > 0) {
+						$message = 'An error has occured while updating card status';
+					}
+
+					$content  = 'Unable to generate embossing file. message['.$message.']';
+					$content2 = 'Unable to generate embossing file. message['.$message.']';
+					$haserror = TRUE;
+				}
+
+				$fileName = $brcodeX .'_'. $acctname .'_'. date('mdY');
+				break;
+			
+			case 'csv':
+				$contentType = 'application/csv';
+				//$fileName = $brcodeX . $acctType .'EMB'. date('mdY') .'.csv';
+				
+				$header = array(
+					"BRNCH_CODE,C,10",
+					"CARDNO,C,18",
+					"TRACK2,C,31",
+					"DATE,C,17",
+					"NAME,C,25"
+				);
+				$content = implode(",", $header) . "\r\n";
+				$parameterbyoffset = NULL;
+				$cntr = 0;
+				$loopcnt = 0;
+				$x1 = 0;
+				$x2 = 0;
+				$x3 = 0;
+				for ($i = 0; $i <= $total; $i += $limit) {
+					
+					$paramsGetAllByOffset = $params;
+					array_push($paramsGetAllByOffset, $limit); // limit
+					array_push($paramsGetAllByOffset, 0); // offset
+
+					$query  = "CALL sp_getcardinfobytoken(?,?,?,?,?,?,?)"; 
+					$parameterbyoffset = json_encode($paramsGetAllByOffset);
+
+					$result = $card->db->query($query, $paramsGetAllByOffset);
+					$lastResult = $result->result_array();
+
+					$result->free_result();
+					$result->next_result();
+					
+					$this->queue = array();
+					
+					foreach ($lastResult as $row) {
+						$loopcnt++;
+						$xml->setXML($row['xml1']);
+						
+						$prseqno = $row['prseqno'];
+						$acctType = $row['accttype'];
+						$brCode = $row['brcode'];
+						$prkey = $this->coreencrypt ? $row['prkey1'] : $row['prkey'];
+						$dtExpire = $this->core->formatDate('m/d/Y', $row['dtexpire']);
+						$name = $xml->getValue('MBOS');
+						
+						if (in_array('', array($prseqno, $acctType, $brCode, $prkey))) {
+							continue;
+						}
+
+						if ($i == 0) {
+							$x1=1;
+						} elseif ($i == 500) {
+							$x2=1;
+						} elseif ($i == 1000) {
+							$x3=1;
+						}
+						
+						//$cn1 = substr($prkey, 0, 6);
+						$BIN = $xml->getValue('BIN');
+						//$cn2 = substr($prkey, 6, 3);
+						$number = substr($prkey, strlen($BIN) + strlen($brCode));
+						$cardNo = implode('	', array($BIN, $brCode, $number));
+						$trackNo = '0000770000000';
+						$cntr++;
+						
+						$data = array(
+							$cntr,
+							$brCode,
+							$cardNo,
+							$prkey .'='. $trackNo,
+							$dtExpire,
+							$name
+						);
+						
+						$content .= implode(",", $data) . "\r\n";
+						
+						$embStatus = $embStatList['x'. $acctType];
+	
+						$queueSuccess = $this->_buildQuery($embStatus, $batchNo, $prseqno);
+						
+						if ($queueSuccess) {
+							$progress++;
+							if ($totalProg !== round($progress/$total * 100)) {
+								$totalProg = round($progress/$total * 100);
+								
+								//if ($totalProg > 100) {
+								//	$totalProg = 99;
+								//}	
+
+								echo str_pad('<script>parent.updateProgress('. $totalProg .');</script>'."\n", 1024);
+								flush();
+							}
+							$queueSuccess = FALSE;
+							//usleep(1000);
+						}
+					}
+				
+					$queue = $this->_getQuery();
+		
+					$card->db->trans_begin();
+					
+					if (count($queue) > 0) {
+						foreach ($queue as $x) {
+							$sql = $x[0];
+							$paramsx = $x[1];
+							$card->db->query($sql, $paramsx);
+						}
+					}
+					
+					if ($card->db->trans_status() === FALSE) {
+						$card->db->trans_rollback();
+					} else {
+						$card->db->trans_commit();
+					}
+					
+				}
+				$content .= "Total: " . $total/* .' [] '.count($resultArr);
+				$content .= "\nParams: " . $parameterbyoffset;
+				$content .= "\nloopcnt: " . $loopcnt;
+				$content .= "\nx1: " . $x1;
+				$content .= "\nx2: " . $x2;
+				$content .= "\nx3: " . $x3*/;
+
+
+				$result->free_result();
+				$result->next_result();
+
+				$acctdesc = $card->card_model->getCardTypeDesc($acctType); 
+				$acctrow = $acctdesc->row_array();
+				$acctname = str_replace(" ", "", trim($acctrow['acctname']));
+
+				$result->free_result();
+				$result->next_result();
+
+				$fileName = $brcodeX . $acctname . date('mdY') .'.csv';
+				//$content = base64_encode($content);
+				break;
+				
+			case 'xml':
+				$contentType = 'text/xml"';
+				//$fileName = $brcodeX . $acctType .'EMB'. date('mdY') .'.xml';
+				
+				$content = '<?xml version="1.0" encoding="utf-8"?>';
+				$content .= "\n<processed>";
+				
+				for ($i = 0; $i < $total; $i += $limit) {
+					$sql = $query;
+					$sql .= " LIMIT ?,?";
+					
+					$params[] = intval($i);
+					$params[] = $limit;
+					
+					$result = $card->db->query($sql, $params);
+					$lastResult = $result->result_array();
+					//echo $i . " - " . ($i + $limit) . "<br/>";
+					
+					$result->free_result();
+					$result->next_result();
+					
+					$this->queue = array();
+					
+					foreach ($lastResult as $row) {
+						$xml->setXML($row['xml1']);
+						
+						$prseqno = $row['prseqno'];
+						$acctType = $row['accttype'];
+						$brCode = $row['brcode'];
+						$prkey = $row['prkey'];
+						$dtExpire = $this->core->formatDate('m/d/Y', $row['dtexpire']);
+						$name = $xml->getValue('MBOS');
+						
+						if (in_array('', array($prseqno, $acctType, $brCode, $prkey))) {
+							continue;
+						}
+						
+						$mbos = NULL;
+						if ($name !== '') {
+							$mbos = "\n\t\t<name>". $name ."</name>";
+						}
+						
+						$cn1 = substr($prkey, 0, 6);
+						$cn2 = substr($prkey, 6, 3);
+						$cn3 = substr($prkey, 9);
+						$cardNo = $cn1 .' '. $cn2 .' '. $cn3;
+						$content .= "\n\t<card>".
+							 "\n\t\t<branchcode>".$brCode."</branchcode>".
+							 "\n\t\t<cardno>".$cardNo."</cardno>".
+							 "\n\t\t<track2>". $prkey ."=0000770000000</track2>".
+							 "\n\t\t<dtexpire>". $dtExpire ."</dtexpire>".
+							 $mbos .
+							 "\n\t</card>";
+						
+						//$result = $card->getStatusForEmboss($acctType);
+						//$row = $result->row_array();
+						$embStatus = $embStatList['x'. $acctType];
+						
+						$queueSuccess = $this->_buildQuery($embStatus, $batchNo, $prseqno);
+						
+						if ($queueSuccess) {
+							$progress++;
+							if ($totalProg !== round($progress/$total * 100)) {
+								$totalProg = round($progress/$total * 100);
+												
+								echo str_pad('<script>parent.updateProgress('. $totalProg .');</script>'."\n", 1024);
+								flush();
+							}
+							$queueSuccess = FALSE;
+							//usleep(1000);
+						}
+					}
+				
+					$queue = $this->_getQuery();
+		
+					$card->db->trans_begin();
+					
+					if (count($queue) > 0) {
+						foreach ($queue as $x) {
+							$sql = $x[0];
+							$params = $x[1];
+							$card->db->query($sql, $params);
+						}
+					}
+					
+					if ($card->db->trans_status() === FALSE) {
+						$card->db->trans_rollback();
+					} else {
+						$card->db->trans_commit();
+					}
+				}
+				
+				$content .= "\n</processed>";
+
+				$result->free_result();
+				$result->next_result();
+
+				$acctdesc = $card->card_model->getCardTypeDesc(intval($acctType)); 
+				$acctrow = $acctdesc->row_array();
+				$acctname = str_replace(" ", "", trim($acctrow['acctname']));
+
+				$result->free_result();
+				$result->next_result();
+
+				$fileName = $brcodeX . $acctname . date('mdY') .'.xml';
+				break;
+			
+			default:
+				echo str_pad('<script>parent.noData('.json_encode($paramsGetAll).')</script>'."\n", 1024);
+				flush();
+						
+				exit();
+				break;
+		}
+
+		//if ($totalProg == 99) {
+			echo str_pad('<script>parent.updateProgress(100);</script>'."\n", 1024);
+			flush();
+		//}
+		//echo '</body></html>';
+		
+		$result = $this->branch_model->getBranchList();
+		$branches = $result->result_array();
+			
+		$result->free_result();
+		$result->next_result();
+
+		$branchcode = NULL;
+		foreach ($branches as $row) {
+			if ($brseqno == $row['brseqno']) {
+				$branchcode = $row['brcode'];
+			}
+		}
+
+		/*$monthfolder = DIRECTORY_SEPARATOR.'home'.DIRECTORY_SEPARATOR.'EmbossingFile'.DIRECTORY_SEPARATOR;
+
+
+		
+		if (!file_exists($monthfolder)) {
+		    mkdir($monthfolder, 0777, true);
+		}
+*/
+		//chmod($monthfolder, 0777);
+		//chmod(DIRECTORY_SEPARATOR.'home'.DIRECTORY_SEPARATOR.'EmbossingFile'.DIRECTORY_SEPARATOR.date('F Y'), 0777);
+		//chown($monthfolder, 'fusion');
+		//chown(DIRECTORY_SEPARATOR.'home'.DIRECTORY_SEPARATOR.'EmbossingFile'.DIRECTORY_SEPARATOR.date('F Y'), 'fusion');
+		//cache processed cards
+		$cacheProcessed = array(
+			'contentType' => $contentType,
+			'content' => $content,
+			//'content2' => $content2,
+			'fileName' => $fileName
+		);
+		$this->cache->save($this->core->getSessionID() .'processed', $cacheProcessed, CACHE_TTL);
+
+		//$this->load->library('zip');
+
+		//$data = array(	
+        //    $cacheProcessed['fileName'] . '_0101.txt' => $cacheProcessed['content'],
+        //    $cacheProcessed['fileName'] . '_0201.txt' => $cacheProcessed['content2']
+        //);
+		/*
+		$fileopen1 = fopen($monthfolder . $fileName . '_0101.txt', 'wb');
+		fwrite($fileopen1,$cacheProcessed['content']);
+		fclose($fileopen1);
+
+		$fileopen2 = fopen($monthfolder . $fileName . '_0201.txt', 'wb');
+		fwrite($fileopen2,$cacheProcessed['content2']);
+		fclose($fileopen2);
+*/
+		//$this->zip->add_data($data);
+	    //$this->zip->archive($monthfolder.DIRECTORY_SEPARATOR.date('dl').'_'.date('His').'.zip'); 
+		
+		/*header('Content-type: '. $contentType);
+		header('Content-Disposition: attachment; filename='. $fileName);
+		header('Pragma: no-cache');
+		header('Expires: 0');
+
+		echo $content;
+
+		if ($haserror) {
+			$success = FALSE;
+			$message = 'An error has occured. ['.$message.'].';
+		} else {
+			$success = TRUE;
+			$message = 'Card embossing completed!';
+		}
+
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));        */
+	}
+	
+	function _buildQuery($embStatus, $batchNo, $prseqno)
+	{
+		$this->load->library('core');
+		if ($this->core->hasBatchCardUpload()) {	
+			$v_asBGB = ", cifseqno = 1";
+		} else {
+			$v_asBGB = "";
+		}
+		$sql = "UPDATE prmaster SET ".
+				"status = ? ". $v_asBGB .
+				"WHERE prseqno = ? AND status = 9 LIMIT 1";
+		
+		$params = array($embStatus, $prseqno);
+			
+		$this->queue[] = array(
+			$sql, $params
+		);
+		
+		$sql = "UPDATE prdetail SET ".
+				"embosno = ?, dtemboss = NOW() ".
+				"WHERE prseqno = ? LIMIT 1";
+		
+		$params = array($batchNo, $prseqno);
+		
+		$this->queue[] = array(
+			$sql, $params
+		);
+		
+		return TRUE;
+	}
+	
+	function _getQuery()
+	{
+		return $this->queue;
+	}
+	
+	function verify()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$batchNo = intval($this->input->post('batchNo', TRUE));
+		
+		if ($this->core->isHeadOffice()) {
+			$brseqno = intval($this->input->post('brseqno', TRUE));
+		} else {
+			$brseqno = intval($this->core->getBranchID());
+		}
+		
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		/*$result = $this->card_model->getCardEmbossingByBatch(
+			$batchNo, $brseqno, $userAudit, $sessionID
+		);*/
+		
+		$query = "SELECT b.dtenroll
+			FROM prmaster a, prdetail b
+			WHERE b.prseqno = a.prseqno AND
+			a.brseqno = ?
+			AND b.embosno = ? LIMIT 1";
+			
+		$params = array($brseqno, $batchNo);
+		
+		$result = $this->card_model->db->query($query, $params);
+		
+		$row = $result->row_array();
+		
+		if ($result->num_rows() > 0) {
+			$success = TRUE;
+			$message = $this->core->formatDate('m/d/Y', $row['dtenroll']);
+		} else {
+			$success = FALSE;
+			$message = 'Batch No. not found';
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+	
+	/*function getProgress()
+	{
+		$this->load->helper('file');
+		$time = time();
+		while((time() - $time) < 20) {
+			// query memcache, database, etc. for new data
+			$data = file_get_contents($this->progressFile);
+		 	
+			if ($data === 'x') {
+				echo json_encode(array(
+					'success' => FALSE,
+					'message' => 'No data found for embossing'
+				));
+				exit();
+			}
+			
+			// if we have new data return it
+			if ($data !== '') {
+				if (intval($data) === 100) {
+					write_file($this->progressFile, '');
+				}
+				echo json_encode(array(
+					'success' => TRUE,
+					'progress' => intval($data)
+				));
+				break;
+			}
+		 
+			usleep(25000);
+		}
+	}*/
+	
+	function getProcessed()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		//$this->cache->clean();
+		if ($processed = $this->cache->get($this->core->getSessionID() . 'processed')) {
+			header('Content-type: '. $processed['contentType']);
+			header('Content-Disposition: attachment; filename='. $processed['fileName']);
+			header('Pragma: no-cache');
+			header('Expires: 0');
+
+			//$this->load->library('zip');
+
+	        //$data = array(	
+	        //  $processed['fileName'] . '_0101.txt' => $processed['content'],
+	        //  $processed['fileName'] . '_0201.txt' => $processed['content2']
+	        //);
+
+	        //$content = $processed['content'];
+			//$fp = fopen(/*$_SERVER['DOCUMENT_ROOT']*/'/home/fusion' .DIRECTORY_SEPARATOR.$processed['fileName'] . '_0101.txt',"wb");
+			//fwrite($fp,$content);
+			//fclose($fp);
+
+	        //$this->zip->add_data($data);
+	        //$this->zip->archive($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'pdf'.DIRECTORY_SEPARATOR.date('mdY').time().' EMBOSS'.'.zip'); 
+			
+			echo $processed['content'];
+		} else {
+			$this->load->helper('url');
+			redirect('#welcome');
+		}
+	}
+}

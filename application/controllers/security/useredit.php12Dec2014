@@ -1,0 +1,184 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class UserEdit extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(USERENTRY_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/user_model');
+		$this->load->library('shortxml');
+		$this->load->library('coreconverters');
+		
+		$xml = $this->shortxml;
+		
+		//$this->cache->clean();
+		$info = $_SESSION['user'];
+		if ($info) {
+			$userID = $info['ID'];
+			$userName = $info['name'];
+			$dtCreated = $info['dtCreated'];
+			$userStatus = $info['status'];
+			$groupID = $info['grpseqno'];
+			$position = $info['position'];
+			//$xml1 = $userInfo['xml1'];
+			$department = $info['department'];
+			$templateID = $info['tmseqno'];
+			$uallows = $info['allows'];
+			$ubrseqno = $info['brseqno'];
+		} else {
+			$this->load->helper('url');
+			redirect('welcome');
+			exit();
+		}
+		
+		$data['setPassAttr'] = ' class="hidden"';
+		$data['minChar'] = NULL;
+		$data['userGroups'] = '<input type="text" id="grpseqno" style="width:250px" value="'. $info['grpdesc'] .'"readonly/>';
+		
+		//get branches
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				if (!$this->core->canUser() && $row['brseqno'] === $this->core->getBranchID()) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				$brseqno = $row['brseqno'];
+				$selected = $ubrseqno === $brseqno ? ' selected' : NULL;
+				$data['branches'] .= '<option value="'. $brseqno .'"'. $selected .'>'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		//end
+		
+		//get departments
+		$result = $this->user_model->getDepartments();
+		
+		if ($result->num_rows() > 0) {
+			$data['departments'] = NULL;	
+			foreach ($result->result_array() as $row) {
+				$selected = ($department === $row['codeseqno'] ? ' selected' : NULL);
+				$data['departments'] .= '<option value="'. $row['codeseqno'] .'"'. $selected .'>'. $row['codevalue'] .'</option>';
+			}
+		} else {
+			$data['departments'] = '<option value="">No Departments Defined</option>';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//
+		
+		//templates
+		$grpseqno = $this->core->getUserGroup();
+		$result = $this->user_model->getUserTemplates($grpseqno);
+		
+		$data['templates'] = NULL;
+		//$data['allows'] = NULL;
+		$data['tmseqno'] = NULL;
+		$data['grpseqno'] = $groupID;
+		
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row) {
+				$xml->setXML($row['xml1']);
+				$tmseqno = $row['tmseqno'];
+				$desc = $row['description'];
+				$grpseqno = $row['grpseqno'];
+				$grpdesc = $row['grpdesc'];
+				$allows = $row['allows'] ? $this->coreconverters->asciiHexToBin($row['allows']) : '';
+
+				if ($xml->getValue('PREDEFINED') === 'Y') {
+					$predefined = ' predefined ';
+				} else {
+					$predefined = NULL;
+				}
+				
+				if ($templateID === $tmseqno) {
+					$selected = ' selected';
+				} else {
+					$selected = '';
+				}
+				
+				$data['templates'] .= '<option 
+					id="x'. $tmseqno .'" 
+					value="'. $tmseqno .'" 
+					grpseqno="'. $grpseqno .'" 
+					grpdesc="'. $grpdesc .'" 
+					allows="'. $allows .'"'. $predefined . $selected .'>'. $desc .'</option>';
+			}
+		}
+		
+		//treeview
+		$menu = $this->core->getNavMenu();
+		//$forbidden = $this->core->getForbiddenModules();
+		$allows = $this->coreconverters->asciiHexToBin($uallows);
+		
+		$data['menuList'] = '<ul id="navMenu">';
+		foreach ($menu as $pos => $sub) {
+			$checked = substr($allows, $pos - 1, 1) === '1' ? ' checked' : NULL;
+			
+			$data['menuList'] .= '<li><input type="checkbox" id="'.$pos.'" name="allows[]" value="'.$pos.'" class="category"'.$checked.'/><span class="category">'. $sub['name'] .'</span><ul>';
+			
+			foreach ($sub['subMenu'] as $posx => $submenu) {
+				if ( in_array($posx, array(PDFGEN_NO)) ) {
+					continue;
+				}
+				$checked = substr($allows, $posx - 1, 1) === '1' ? ' checked' : NULL;				
+				$data['menuList'] .= '<li><input type="checkbox" id="'.$posx.'" name="allows[]" value="'.$posx.'" class="'.$pos.'sub"'.$checked.'/>'. $submenu['name'] .'</li>';
+			}
+			
+			$data['menuList'] .= '</ul></li>';
+		}
+		$data['menuList'] .= '</ul>';
+		//treeview
+		
+		$data['title'] = 'Update User Entry';
+		$data['btnLabel'] = 'Update';
+		$data['userIDValue'] = $userID;
+		$data['userIDAttr'] = 'readonly';
+		$data['userNameValue'] = $userName;
+		$data['dtCreatedVisibility'] = NULL;
+		$data['dtCreated'] = $dtCreated;
+		$data['userStatus'] = $userStatus;
+		$data['userPosition'] = $position;
+		$data['waitMsg'] = 'Updating new user entry...';
+		$data['confirmMsg'] = 'Update user entry?';
+		$data['branch'] = $this->core->getBranchName();
+		$data['isUpdate'] = NULL;
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('security/userx', $data);
+	}
+}

@@ -1,0 +1,114 @@
+<form id="locationForm" method="post">
+<input type="hidden" name="isEdited" id="isEdited" value="0"/>
+<?php echo html_entity_decode($hiddenInput); ?>
+    <div id="location">
+        <h1><?php echo $title; ?></h1>
+        <div id="content"><span class="hint floatRight"><span class="red">*</span> - Required Fields</span>
+            <table width="100%">
+                <tr>
+                    <td width="150"><label for="location">Location: <span class="red">*</span></label></td>
+                    <td><input name="location" id="locName" style="width:250px" class="validate[required,minSize[3]] alphaNum" maxlength="25" value="<?php echo $location; ?>"/></td>
+                </tr>
+                 <tr>
+                    <td width="150"><label for="cityInput">City: <span class="red">*</span></label></td>
+                    <td><input name="cityInput" id="cityInput" style="width:250px" class="validate[required,minSize[3]] alphaNum" maxlength="13" value="<?php echo $city; ?>"/></td>
+                </tr>
+                <tr>
+                    <td><label for="regionCode">Area: <span class="red">*</span></label></td>
+                    <td><?php echo html_entity_decode($areaInput); ?></td>
+                </tr>
+                <tr>
+                    <td><label for="brCode">Branch: <span class="red">*</span></label></td>
+                    <td><?php echo html_entity_decode($brInput); ?></td>
+                </tr>
+                <tr>
+                    <td><label for="locationtype">Location Type: <span class="red">*</span></label></td>
+
+                    <td><select id="locationtype" name="locationtype" style="width:262px" class="validate[required]">
+                            <?php echo html_entity_decode($locationtType); ?>
+                        </select>
+					</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="bottom">
+    	<span class="buttons floatLeft">
+        	<button id="submitBtn" value="<?php echo $formAction; ?>">Submit</button
+            ><button type="reset">Reset</button>
+        </span>
+        <span class="buttons floatRight">
+        	<button id="backBtn">Back</button
+        	><button class="closebtn">Close</button>
+        </span>
+	</div>
+</form>
+<script>
+$(function () {
+    var submitBtn = '#submitBtn',
+		backBtn = '#backBtn',
+		location = '#locName',
+        form = $('form');
+		
+	var oldLocation = $(location).val();
+		
+    initSession('<?php echo $sessionExp; ?>');
+    form.validationEngine({
+        ajaxFormValidation: true,
+        onBeforeAjaxFormValidation: function () {
+            waitMessage('Submitting...');
+        },
+        onAjaxFormComplete: function (a, b, data, d) {
+			messageBox(data.message);
+			$(MSGBOX).one('dialogbeforeclose', function () {
+				if (data.success === true) {
+					window.location.hash = 'maintenance/locations';
+				} else {
+					form[0].reset();
+				}
+			});
+        },
+        scroll: false
+    });
+    form.validationEngine('attach');
+	
+	$(submitBtn).click(function (e) {
+        e.preventDefault();
+        if (form.validationEngine('validate') === true) {
+            messageBox('<?php echo $submitBtnMsg; ?>', 'Confirm', 'confirm', function () {
+                form.submit();
+            });
+        }
+    });
+	
+	$(backBtn).click(function () {
+		window.location.hash = 'maintenance/locations';
+		return false;
+	});
+	
+	$(location).focus().change(function() {
+		if (oldLocation !== this.value) {
+			$('#isEdited').val('1');
+		} else {
+			$('#isEdited').val('0');
+		}
+	});
+	
+	$('#regionCode').change(function () {
+		requests.push(
+			$.ajax({
+				type: 'GET',
+				url: 'maintenance/locations/getbranches',
+				async: false,
+				data: {
+					regionCode: this.value
+				},
+				//dataType: 'json',
+				success: function(data) {
+					$('#brCode').html(data);
+				}
+			})
+		);
+	});
+});
+</script>

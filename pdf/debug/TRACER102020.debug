@@ -1,0 +1,291 @@
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33| START OF TRACE
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33| REQUESTID: 2703
+TRC:10.06.2020.13.47.33| CLASS: reportlist.IPY.InstapayTransaction
+TRC:10.06.2020.13.47.33| VOIDCODE: 998
+TRC:10.06.2020.13.47.33| VOIDDESC: SQL Error
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33| ERROR MESSAGE: FUNCTION coresys_fusion.GetCardTokenKe
+TRC:10.06.2020.13.47.33| y does not exist
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33| TRACE MESSAGE: 
+TRC:10.06.2020.13.47.33| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.47.33| 0(Native Method)
+TRC:10.06.2020.13.47.33| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.47.33| (NativeConstructorAccessorImpl.java:62)
+TRC:10.06.2020.13.47.33| sun.reflect.DelegatingConstructorAccessorImpl.newInst
+TRC:10.06.2020.13.47.33| ance(DelegatingConstructorAccessorImpl.java:45)
+TRC:10.06.2020.13.47.33| java.lang.reflect.Constructor.newInstance(Constructor
+TRC:10.06.2020.13.47.33| .java:422)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.Util.handleNewInstance(Util.java:406)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.Util.getInstance(Util.java:381)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.47.33| ava:1030)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.47.33| ava:956)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.47.33| 3491)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.47.33| 3423)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:20
+TRC:10.06.2020.13.47.33| 60)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:10.06.2020.13.47.33| java:2542)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.PreparedStatement.executeInternal(Prep
+TRC:10.06.2020.13.47.33| aredStatement.java:1734)
+TRC:10.06.2020.13.47.33| com.mysql.jdbc.PreparedStatement.executeQuery(Prepare
+TRC:10.06.2020.13.47.33| dStatement.java:1885)
+TRC:10.06.2020.13.47.33| storedprocedures.IPYXXX.ibft0001(IPYXXX.java:59)
+TRC:10.06.2020.13.47.33| storedprocedures.IPYXXX.getResult(IPYXXX.java:16)
+TRC:10.06.2020.13.47.33| reportlist.IPY.InstapayTransaction.createPDF(Instapay
+TRC:10.06.2020.13.47.33| Transaction.java:107)
+TRC:10.06.2020.13.47.33| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.13.47.33| portGenerator.java:652)
+TRC:10.06.2020.13.47.33| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.13.47.33| ortGenerator.java:190)
+TRC:10.06.2020.13.47.33| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33| END OF TRACE
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.47.33|  
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03| START OF TRACE
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03| REQUESTID: 2705
+TRC:10.06.2020.13.48.03| CLASS: reportlist.IPY.InstapaySummary
+TRC:10.06.2020.13.48.03| VOIDCODE: 998
+TRC:10.06.2020.13.48.03| VOIDDESC: SQL Error
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03| ERROR MESSAGE: FUNCTION coresys_fusion.GetCardTokenKe
+TRC:10.06.2020.13.48.03| y does not exist
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03| TRACE MESSAGE: 
+TRC:10.06.2020.13.48.03| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.48.03| 0(Native Method)
+TRC:10.06.2020.13.48.03| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.48.03| (NativeConstructorAccessorImpl.java:62)
+TRC:10.06.2020.13.48.03| sun.reflect.DelegatingConstructorAccessorImpl.newInst
+TRC:10.06.2020.13.48.03| ance(DelegatingConstructorAccessorImpl.java:45)
+TRC:10.06.2020.13.48.03| java.lang.reflect.Constructor.newInstance(Constructor
+TRC:10.06.2020.13.48.03| .java:422)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.Util.handleNewInstance(Util.java:406)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.Util.getInstance(Util.java:381)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.48.03| ava:1030)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.48.03| ava:956)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.48.03| 3491)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.48.03| 3423)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:20
+TRC:10.06.2020.13.48.03| 60)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:10.06.2020.13.48.03| java:2542)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.PreparedStatement.executeInternal(Prep
+TRC:10.06.2020.13.48.03| aredStatement.java:1734)
+TRC:10.06.2020.13.48.03| com.mysql.jdbc.PreparedStatement.executeQuery(Prepare
+TRC:10.06.2020.13.48.03| dStatement.java:1885)
+TRC:10.06.2020.13.48.03| storedprocedures.IPYXXX.ibft0001(IPYXXX.java:59)
+TRC:10.06.2020.13.48.03| storedprocedures.IPYXXX.getResult(IPYXXX.java:16)
+TRC:10.06.2020.13.48.03| reportlist.IPY.InstapaySummary.createPDF(InstapaySumm
+TRC:10.06.2020.13.48.03| ary.java:90)
+TRC:10.06.2020.13.48.03| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.13.48.03| portGenerator.java:652)
+TRC:10.06.2020.13.48.03| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.13.48.03| ortGenerator.java:190)
+TRC:10.06.2020.13.48.03| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03| END OF TRACE
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.03|  
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15| START OF TRACE
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15| REQUESTID: 2706
+TRC:10.06.2020.13.48.15| CLASS: reportlist.IPY.InstapayRejectedTransaction
+TRC:10.06.2020.13.48.15| VOIDCODE: 998
+TRC:10.06.2020.13.48.15| VOIDDESC: SQL Error
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15| ERROR MESSAGE: FUNCTION coresys_fusion.GetCardTokenKe
+TRC:10.06.2020.13.48.15| y does not exist
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15| TRACE MESSAGE: 
+TRC:10.06.2020.13.48.15| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.48.15| 0(Native Method)
+TRC:10.06.2020.13.48.15| sun.reflect.NativeConstructorAccessorImpl.newInstance
+TRC:10.06.2020.13.48.15| (NativeConstructorAccessorImpl.java:62)
+TRC:10.06.2020.13.48.15| sun.reflect.DelegatingConstructorAccessorImpl.newInst
+TRC:10.06.2020.13.48.15| ance(DelegatingConstructorAccessorImpl.java:45)
+TRC:10.06.2020.13.48.15| java.lang.reflect.Constructor.newInstance(Constructor
+TRC:10.06.2020.13.48.15| .java:422)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.Util.handleNewInstance(Util.java:406)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.Util.getInstance(Util.java:381)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.48.15| ava:1030)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.SQLError.createSQLException(SQLError.j
+TRC:10.06.2020.13.48.15| ava:956)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.48.15| 3491)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:
+TRC:10.06.2020.13.48.15| 3423)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:20
+TRC:10.06.2020.13.48.15| 60)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.
+TRC:10.06.2020.13.48.15| java:2542)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.PreparedStatement.executeInternal(Prep
+TRC:10.06.2020.13.48.15| aredStatement.java:1734)
+TRC:10.06.2020.13.48.15| com.mysql.jdbc.PreparedStatement.executeQuery(Prepare
+TRC:10.06.2020.13.48.15| dStatement.java:1885)
+TRC:10.06.2020.13.48.15| storedprocedures.IPYXXX.ibft0002(IPYXXX.java:80)
+TRC:10.06.2020.13.48.15| storedprocedures.IPYXXX.getResult(IPYXXX.java:20)
+TRC:10.06.2020.13.48.15| reportlist.IPY.InstapayRejectedTransaction.createPDF(
+TRC:10.06.2020.13.48.15| InstapayRejectedTransaction.java:108)
+TRC:10.06.2020.13.48.15| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.13.48.15| portGenerator.java:652)
+TRC:10.06.2020.13.48.15| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.13.48.15| ortGenerator.java:190)
+TRC:10.06.2020.13.48.15| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15| END OF TRACE
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.15|  
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27| START OF TRACE
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27| REQUESTID: 2707
+TRC:10.06.2020.13.48.27| CLASS: reportlist.MBK.MobileBankingTransaction
+TRC:10.06.2020.13.48.27| VOIDCODE: 904
+TRC:10.06.2020.13.48.27| VOIDDESC: Null Error
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27| ERROR MESSAGE: null
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27| TRACE MESSAGE: 
+TRC:10.06.2020.13.48.27| library.param.InstitutionParameters.getTransactionLis
+TRC:10.06.2020.13.48.27| t(InstitutionParameters.java:812)
+TRC:10.06.2020.13.48.27| library.param.DataConversion.getTransactionList(DataC
+TRC:10.06.2020.13.48.27| onversion.java:183)
+TRC:10.06.2020.13.48.27| reportlist.MBK.MobileBankingTransaction.createPDF(Mob
+TRC:10.06.2020.13.48.27| ileBankingTransaction.java:880)
+TRC:10.06.2020.13.48.27| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.13.48.27| portGenerator.java:652)
+TRC:10.06.2020.13.48.27| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.13.48.27| ortGenerator.java:190)
+TRC:10.06.2020.13.48.27| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27| END OF TRACE
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.27|  
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40| START OF TRACE
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40| REQUESTID: 2708
+TRC:10.06.2020.13.48.40| CLASS: reportlist.MBK.MobileBankingSummary
+TRC:10.06.2020.13.48.40| VOIDCODE: 904
+TRC:10.06.2020.13.48.40| VOIDDESC: Null Error
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40| ERROR MESSAGE: null
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40| TRACE MESSAGE: 
+TRC:10.06.2020.13.48.40| library.param.InstitutionParameters.getTransactionLis
+TRC:10.06.2020.13.48.40| t(InstitutionParameters.java:812)
+TRC:10.06.2020.13.48.40| library.param.DataConversion.getTransactionList(DataC
+TRC:10.06.2020.13.48.40| onversion.java:183)
+TRC:10.06.2020.13.48.40| reportlist.MBK.MobileBankingSummary.createPDF(MobileB
+TRC:10.06.2020.13.48.40| ankingSummary.java:673)
+TRC:10.06.2020.13.48.40| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.13.48.40| portGenerator.java:652)
+TRC:10.06.2020.13.48.40| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.13.48.40| ortGenerator.java:190)
+TRC:10.06.2020.13.48.40| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40| END OF TRACE
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.13.48.40|  
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19| START OF TRACE
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19| REQUESTID: 2712
+TRC:10.06.2020.15.26.19| CLASS: reportlist.MBK.MobileBankingTransaction
+TRC:10.06.2020.15.26.19| VOIDCODE: 904
+TRC:10.06.2020.15.26.19| VOIDDESC: Null Error
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19| ERROR MESSAGE: null
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19| TRACE MESSAGE: 
+TRC:10.06.2020.15.26.19| library.param.InstitutionParameters.getTransactionLis
+TRC:10.06.2020.15.26.19| t(InstitutionParameters.java:812)
+TRC:10.06.2020.15.26.19| library.param.DataConversion.getTransactionList(DataC
+TRC:10.06.2020.15.26.19| onversion.java:183)
+TRC:10.06.2020.15.26.19| reportlist.MBK.MobileBankingTransaction.createPDF(Mob
+TRC:10.06.2020.15.26.19| ileBankingTransaction.java:880)
+TRC:10.06.2020.15.26.19| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.15.26.19| portGenerator.java:652)
+TRC:10.06.2020.15.26.19| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.15.26.19| ortGenerator.java:190)
+TRC:10.06.2020.15.26.19| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19| END OF TRACE
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.19|  
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40| START OF TRACE
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40| REQUESTID: 2713
+TRC:10.06.2020.15.26.40| CLASS: reportlist.MBK.MobileBankingSummary
+TRC:10.06.2020.15.26.40| VOIDCODE: 904
+TRC:10.06.2020.15.26.40| VOIDDESC: Null Error
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40| ERROR MESSAGE: null
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40| TRACE MESSAGE: 
+TRC:10.06.2020.15.26.40| library.param.InstitutionParameters.getTransactionLis
+TRC:10.06.2020.15.26.40| t(InstitutionParameters.java:812)
+TRC:10.06.2020.15.26.40| library.param.DataConversion.getTransactionList(DataC
+TRC:10.06.2020.15.26.40| onversion.java:183)
+TRC:10.06.2020.15.26.40| reportlist.MBK.MobileBankingSummary.createPDF(MobileB
+TRC:10.06.2020.15.26.40| ankingSummary.java:673)
+TRC:10.06.2020.15.26.40| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.06.2020.15.26.40| portGenerator.java:652)
+TRC:10.06.2020.15.26.40| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.06.2020.15.26.40| ortGenerator.java:190)
+TRC:10.06.2020.15.26.40| ReportSystem.main(ReportSystem.java:36)
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40| END OF TRACE
+TRC:10.06.2020.15.26.40|  
+TRC:10.06.2020.15.26.40|  
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28| START OF TRACE
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28| REQUESTID: 2753
+TRC:10.07.2020.17.00.28| CLASS: library.reportclass.ReportGenerator
+TRC:10.07.2020.17.00.28| VOIDCODE: 107
+TRC:10.07.2020.17.00.28| VOIDDESC: Class name not recognized
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28| ERROR MESSAGE: reportlist.IPY.InstapaySummaryNB
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28| TRACE MESSAGE: 
+TRC:10.07.2020.17.00.28| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:10.07.2020.17.00.28| :381)
+TRC:10.07.2020.17.00.28| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:10.07.2020.17.00.28| ava:331)
+TRC:10.07.2020.17.00.28| java.lang.Class.forName0(Native Method)
+TRC:10.07.2020.17.00.28| java.lang.Class.forName(Class.java:264)
+TRC:10.07.2020.17.00.28| library.reportclass.ReportGenerator.generateReport(Re
+TRC:10.07.2020.17.00.28| portGenerator.java:603)
+TRC:10.07.2020.17.00.28| library.reportclass.ReportGenerator.processReport(Rep
+TRC:10.07.2020.17.00.28| ortGenerator.java:190)
+TRC:10.07.2020.17.00.28| ReportSystem.main(ReportSystem.java:36)
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28| END OF TRACE
+TRC:10.07.2020.17.00.28|  
+TRC:10.07.2020.17.00.28|  

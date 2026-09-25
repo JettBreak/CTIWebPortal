@@ -1,0 +1,180 @@
+#welcomePage, #login, #setPW2 {
+	width: 350px;
+}
+
+#area, #brchList {
+	width: 550px;
+}
+
+#custSearch {
+	width: 450px;
+}
+
+#custInfo, #custNew, #custEdit, #atmMaintenance, #accountNew {
+	width: 700px;
+}
+
+#accountInfo {
+	width: 550px;
+}
+
+#accountImport {
+	width: 520px;
+}
+
+#cardEnrollment, #cardInfo {
+	width: 760px;
+}
+
+#cardRequest, #cardList, #cardGeneration, #userList {
+	width: 900px;
+}
+
+#cardUpload {
+	width: 380px;
+}
+
+#cardVerify, #userTemplate, #cardSearch, #batchOrder, #brch, #loaderEntry, #processEntry {
+	width: 450px;
+}
+
+#userGroups {
+	width: 470px;
+}
+
+#changeCIF, #locationList, #areaList, #deptList, #branchList, #genSettings, #userGroup, {
+	width: 500px;
+}
+
+#cardProductList {
+	width:500px;
+}
+
+#loaderList, #queueList {
+	width: 600px;
+}
+
+#protocolList, #drivertypeList, #driverlangList, #lunoList, #processcodeList, #fitListEntry {
+	width: 500px;
+}
+
+#protocol, #drivertype, #driverlang, #luno, #queue, #processcodeMdl {
+	width: 400px;
+}
+ 
+#mobileList, #pvkentry {
+	width:550px;
+}
+ 
+#pvkentry {
+	width:520px;
+}
+
+#prRules, #pvkList {
+	width: 900px;
+}
+
+#cardholderx {
+	width: 550px;
+}
+
+#cardholders, #processList, #voidCodeList, #fitList {
+	width: 755px;
+}
+
+#cardPersonalized, #department, #area, #issueLog, #voidCodeEntry {
+	width: 400px;
+}
+
+#cardEmbossing {
+	width: 580px;
+}
+
+#cardIssuance, #location {
+	width: 480px;
+}
+
+#cardTypeChange, #cardVerification, #accountLinking, #billsPayment {
+	width: 600px;
+}
+
+#accountAdd {
+	width: 510px;
+}
+
+#userEnroll {
+	width: 450px;
+}
+
+#billsForm {
+	width: 400px;
+}
+
+#mobileEnrollment {
+	width: 420px;
+}
+
+#enrollMobile, #changepw {
+	width: 450px;
+}
+
+#mobileInfo, #cardReplace {
+	width: 520px;
+}
+
+#cardStatusChange, #reportViewer {
+	width: 450px;
+}
+
+#cardbalance {
+	width: 500px;
+}
+
+#transactiondownload {
+	width: 750px;
+}
+
+#dailyActReport {
+	width: 300px;
+}
+
+#cardInventory {
+	width: 410px;
+}
+
+#setPW {
+	width: 420px;
+}
+
+#posMaintenance, #userTemplatex {
+	width: 580px;
+}
+
+#atmNew, #atmKey, #userTemplates, #issueList {
+	width: 650px;
+}
+
+#posNew, #atmKeyMgmt {
+	width: 500px;
+}
+
+#branchlogdownload, #serviceCharge {
+	width: 760px;
+}
+
+#branchLogReport {
+	width: 390px;
+}
+
+#atmMonitoring {
+	width: 950px;
+}
+
+#posMonitoring, #hostMonitoring {
+	min-width: 800px;
+	max-width: 900px;
+}
+
+#transactionMonitoring, #serviceCharges {
+	width: 1000px;
+}

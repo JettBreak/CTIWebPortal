@@ -1,0 +1,168 @@
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+/*
+|--------------------------------------------------------------------------
+| File and Directory Modes
+|--------------------------------------------------------------------------
+|
+| These prefs are used when checking and setting modes when working
+| with the file system.  The defaults are fine on servers with proper
+| security, but you may wish (or even need) to change the values in
+| certain environments (Apache running a separate process for each
+| user, PHP under CGI with Apache suEXEC, etc.).  Octal values should
+| always be used to set the mode correctly.
+|
+*/
+define('FILE_READ_MODE', 0644);
+define('FILE_WRITE_MODE', 0666);
+define('DIR_READ_MODE', 0755);
+define('DIR_WRITE_MODE', 0777);
+/*
+|--------------------------------------------------------------------------
+| File Stream Modes
+|--------------------------------------------------------------------------
+|
+| These modes are used when working with fopen()/popen()
+|
+*/
+
+define('FOPEN_READ',							'rb');
+define('FOPEN_READ_WRITE',						'r+b');
+define('FOPEN_WRITE_CREATE_DESTRUCTIVE',		'wb'); // truncates existing file data, use with care
+define('FOPEN_READ_WRITE_CREATE_DESTRUCTIVE',	'w+b'); // truncates existing file data, use with care
+define('FOPEN_WRITE_CREATE',					'ab');
+define('FOPEN_READ_WRITE_CREATE',				'a+b');
+define('FOPEN_WRITE_CREATE_STRICT',				'xb');
+define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
+
+/*
+|--------------------------------------------------------------------------
+| Core FS Fusion Portal
+|--------------------------------------------------------------------------
+*/
+define('DB1', 				'coreapp');
+define('DB2', 				'coresys');
+define('CURRENTVER', 		'v1.01.01');
+define('APPNAME', 			'Core FS Fusion Portal');
+define('APPSEQNO', 			8);
+define('BANK_NETWORK', 		'BNET'); //FINSWITCH
+define('BANK_CODE',			'0650');
+define('ONUS_CODE',			'SAVE');
+define('NODE_TYPE',			'2,6');
+define('IBFTPTR',			8882);
+
+define('TEMP_UPLOADS', 		'uploads');
+define('VALID_IMG_FORMATS', 'jpeg|jpg|gif|png');
+define('VALID_CSV_FORMATS', 'csv');
+define('MAX_IMG_SIZE',		100);
+define('MAX_IMG_WIDTH',		200);
+define('MAX_IMG_HEIGHT',	200);
+
+define('MAX_CARD_REQ',	10);
+define('TEMP_PATH',		'uploads'. DIRECTORY_SEPARATOR);
+
+define('CACHE_TTL',		900);//15 mins
+define('SESSION_LENGTH', 0);//15 mins
+//menu Nos.
+
+//Customer management
+define('CUSTMGMT_NO', 1);
+define('CUSTINFO_NO', 2);
+define('CUSTNEW_NO', 31);
+define('CUSTEDIT_NO', 32);
+//Account management
+define('ACCNTMGMT_NO', 3);
+define('ACCNTNEW_NO', 4);
+define('ACCNTEDIT_NO', 60);
+define('ACCNTVERIFY_NO', 59);
+define('ACCNTINFO_NO', 5);
+define('ACCNTCHNGESTAT_NO', 93);
+//Card management
+define('CARDMGMT_NO', 7);
+define('CARDENROLLMENT_NO', 50);
+define('CARDVERIFICATION_NO', 51);
+define('CARDORDER_NO', 10);
+define('CARDGENERATION_NO', 25);
+define('CARDEMBOSSING_NO', 39);
+define('CARDUPLOAD_NO', 30);
+define('CARDISSUANCE_NO', 9);
+define('CARDINFO', 8);
+define('ACCNTLINKING_NO', 23);
+define('BILLSPAYMENT_NO', 58);
+define('MOBILEENROLL_NO', 22);
+define('MOBILESEARCH_NO', 'Unassigned');
+define('MOBILEINFO_NO', 'Unassigned');
+define('REPLACEMENTREQ_NO', 11);
+define('CHANGECARDSTAT_NO', 24);
+define('GENDEFPIN', 87);
+define('RESETPIN', 88);
+
+//Mobile Management
+define('MOBILEMGMT_NO', 222);
+//Monitoring
+define('MONITORING_NO', 13);
+define('MONATM_NO', 14);
+define('MONPOS_NO', 15);
+define('MONTRANS_NO', 16);
+define('MONHOST_NO', 16);
+//Reports
+define('PDFGEN_NO', 127);
+define('REPORTS_NO', 19);
+define('ATMAVAILABILITY_NO', 53);
+define('APPROVEDTRXACQPERTERM_NO', 40);
+define('REJECTEDTRXACQPERTERM_NO', 41);
+define('TRXPERTERM_NO', 42);
+define('OTHERCARDHOLDERATOURTERM_NO', 84);
+define('DAILYCARDACT_NO', 29);
+define('REPCARDINV_NO', 20);
+define('REPBRANCHLOG_NO', 27);
+define('BARTSFILE_NO', 45);
+define('APPROVEDTRXISSPERBRANCH_NO', 61);
+define('REJECTEDTRXISSPERBRANCH_NO', 62);
+define('APPROVEDTRXONUSPERBRANCH_NO', 63);
+define('REJECTEDTRXONUSPERBRANCH_NO', 64);
+define('APPROVEDTRXONUSPERTERM_NO', 65);
+define('REJECTEDTRXONUSPERTERM_NO', 66);
+define('APPROVEDOURCHATOURTERM_NO', 67);
+define('REJECTEDOURCHATOURTERM_NO', 68);
+define('APPROVEDOURCHATOTHERBRANCH_NO', 69);
+define('REJECTEDOURCHATOTHERBRANCH_NO', 70);
+define('DAILYSETTLEMENTPERBANK_NO', 71);
+define('DAILYSETTLEMENTPERBRANCH_NO', 72);
+define('DAILYBILLSTRANSACTIONS_NO', 73);
+define('APPROVEDOURCHATOTHERTERM_NO', 74);
+define('REJECTEDOURCHATOTHERTERM_NO', 85);
+define('ISSIBFTTRX_NO', 75);
+define('TRANSFEREEIBFTTRX_NO', 76);
+define('ALLIBFTTRX_NO', 77);
+define('POSTRX_NO', 78);
+define('POSLOANPAY_NO', 89);
+define('POSLOANPAYACQ_NO', 90);
+define('AUTOLOADTRX_NO', 79);
+define('BILLSPAYMENTREP_NO', 43);
+define('PINMAILERBATCHREP_NO', 86);
+define('APPROVEDMOBILEBNKNGREP_NO', 91);
+define('REJECTEDMOBILEBNKNGREP_NO', 92);
+//Maintenance
+define('MAINTENANCE_NO', 17);
+define('GENERALSETTINGS_NO', 54);
+define('USERTEMP_NO', 37);
+define('USERENTRY_NO', 38);
+define('USERGROUPS_NO', 57);
+define('SVCCHARGES_NO', 56);
+define('MAINTENANCEATM_NO', 35);
+define('ISSUELIST_NO', 52);
+define('ATMKEYMGMT_NO', 44);
+define('MAINTENANCEPOS_NO', 36);
+define('AREA_NO', 46);
+define('DEPT_NO', 47);
+define('BRANCH_NO', 48);
+define('LOCATION_NO', 49);
+define('CHANGEPW_NO', 18);
+define('ALLOWSSETUP_NO', 80);
+define('ALLOWSDEFAULT_NO', 81);
+define('SRVCCODES_NO', 82);
+define('LIMITSDEFONLN_NO', 83);
+
+/* End of file constants.php */
+/* Location: ./application/config/constants.php */

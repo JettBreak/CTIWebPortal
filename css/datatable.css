@@ -1,0 +1,224 @@
+/*
+Coreware Technologies, Inc.
+http://www.corewaretech.com
+
+Coreware Theme
+Author: Franz Evangelista
+Copyright (c) 2010 CorewareTech
+*/
+
+@charset "utf-8";
+
+/* DataTable Styles */
+
+.dataTable {
+	width: 100%;
+}
+.paging_full_numbers .ui-button {
+    margin: 0;
+    padding: 2px 6px;
+}
+.ui-buttonset .ui-button {
+    margin-right: -0.1em !important;
+}
+.ui-toolbar {
+    padding: 3px 10px;
+}
+.dataTables_wrapper table {
+	font-size: 11px;
+	border-collapse: collapse !important;
+	border-spacing: 0 !important;
+}
+.dataTables_scrollHeadInner, .dataTables_scrollBody {
+	background: #333;
+}
+.dataTables_scrollHeadInner {
+	border-top: none !important;
+	border-bottom: none !important;
+}
+div.dataTables_scroll { 
+	clear: both;
+}
+.dataTables_wrapper table th {
+	white-space: nowrap;
+	border-top: none !important;
+	border-right: 1px solid #333 !important;
+	border-bottom: none !important;
+	border-left: 1px solid #333 !important;
+	padding: 2px 20px 2px 5px;
+}
+.dataTables_wrapper table td {
+	white-space: nowrap;
+	border-left: 1px solid #111;
+	border-right: 1px solid #111;
+	padding: 0 4px;
+}
+.dataTables_wrapper thead th div.DataTables_sort_wrapper span {
+	margin: 2px -18px 0 0;
+    float: right;
+}
+.dataTables_wrapper tbody tr, .dataTables_wrapper thead tr {
+	cursor: pointer;
+}
+.dataTables_processing {
+    background-color: #555;
+    border: 1px solid #333;
+    color: #fff;
+	width: 150px;
+    height: 30px;
+    margin-left: -75px;
+    margin-top: -15px;
+    padding: 14px 0 2px;
+    text-align: center;
+	position: absolute;
+    top: 50%;
+	left: 50%;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	z-index: 9999;
+}
+.dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_custom, .dataTables_paginate {
+	margin: 4px 0;
+	font-size: 11px;
+	font-weight: normal;
+}
+.dataTables_info {
+	margin: 6px 0 !important;
+}
+.dataTables_length {
+    float: left;
+}
+.dataTables_filter {
+    float: right;
+}
+.dataTables_type select {
+	width: 150px;
+}
+.dataTables_filter input {
+	width: 100px;
+}
+.dataTables_info {
+	padding: 1px 0;
+    float: left;
+}
+.dataTables_paginate {
+	font-size: 10px;
+	padding: 1px 0;
+    float: right;
+}
+.dataTables_custom {
+	/*padding: 4px 0;*/
+	width: auto;
+}
+.dataTables_custom span.info {
+	margin: 0 0 0 20px;
+}
+.dataTables_custom span.info span.label {
+	margin: 0 5px;
+}
+table.display td.center {
+    text-align: center;
+}
+.dataTables_empty {
+    text-align: center;
+}
+/* autocomplte */
+.ui-autocomplete a, .ui-autocomplete a:link, .ui-autocomplete a:active, .ui-autocomplete a:visited {
+	color: #000;
+}
+.ui-autocomplete {
+	max-height: 150px;
+	overflow-y: auto;
+	/* prevent horizontal scrollbar */
+	overflow-x: hidden;
+	/* add padding to account for vertical scrollbar */
+	padding-right: 20px;
+}
+/* IE 6 doesn't support max-height
+ * we use height instead, but this forces the menu to always be this tall
+ */
+* html .ui-autocomplete {
+	height: 150px;
+}
+.ui-autocomplete-category {
+	font-weight: bold;
+}
+.dataTables_wrapper tbody tr.odd {
+    background-color: #222;
+}
+.dataTables_wrapper tbody tr.even {
+    background-color: #1a1a1a;
+}
+.dataTables_wrapper tbody tr:hover {
+	background: #fc3 !important;
+	color: #000 !important;
+}
+.dataTables_wrapper tbody tr.rowSelected {
+	background: #ccc !important;
+	color: #000 !important;
+}
+.dataTables_type {
+	margin: 0 20px;
+	float: right;
+}
+#wrapper .ui-corner-tl,
+#wrapper .ui-corner-tr,
+#wrapper .ui-corner-bl,
+#wrapper .ui-corner-br,
+#wrapper .ui-corner-top,
+#wrapper .ui-corner-bottom,
+#wrapper .ui-corner-left,
+#wrapper .ui-corner-all { 
+	-moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+}
+.dataTables_wrapper tr.redRow.even {
+	background-color: #500;
+}
+.dataTables_wrapper tr.redRow.odd {
+	background-color: #700;
+}
+.dataTables_wrapper tr.blueRow.even {
+	background-color: #005;
+}
+.dataTables_wrapper tr.blueRow.odd {
+	background-color: #007 ;
+}
+.dataTables_wrapper tr.orangeRow.even {
+	background-color: #f80;
+	color: #000;
+}
+.dataTables_wrapper tr.orangeRow.odd {
+	background-color: #f90 ;
+	color: #000;
+}
+.dataTables_wrapper tr.maroonRow.even {
+	background-color: #b03060;
+}
+.dataTables_wrapper tr.maroonRow.odd {
+	background-color: #c32148;
+}
+.dataTables_wrapper tr.yellowRow.even {
+	background-color: #ff0;
+	color: #000;
+}
+.dataTables_wrapper tr.yellowRow.odd {
+	background-color: #ff6;
+	color: #000;
+}
+.dataTables_wrapper tr.purpleRow.even {
+	background-color: #606;
+}
+.dataTables_wrapper tr.purpleRow.odd {
+	background-color: #609;
+}
+.centerAlign {
+	text-align: center;
+}
+.rightAlign {
+	text-align: right;
+}
+.leftAlign {
+	text-align: left;
+}

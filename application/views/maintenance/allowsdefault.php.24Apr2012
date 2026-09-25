@@ -1,0 +1,170 @@
+<form id="allowsDefaultForm" method="post">
+<div style="width:360px">
+    <h1>Allows Default</h1>
+    <div id="content">
+    	<table width="100%">
+        	<tr>
+            	<td width="120"><label for="prtype">Product Type:</label></td>
+                <td>
+                	<select name="prtype" id="prtype" style="width:200px">
+						<?php echo html_entity_decode($prTypes); ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+            	<td width="120"><label for="accttype">Account Type:</label></td>
+                <td>
+                	<select name="accttype" id="accttype" style="width:200px">
+						<?php echo html_entity_decode($acctTypes); ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+            	<td colspan="2">
+                	<?php echo html_entity_decode($tranAllows); ?>
+                </td>
+            </tr>
+            <tr>
+            	<td colspan="2" id="chkBoxControl">
+                	<a title="Checks the entire tree below" href="#" id="checkAll">Check All</a> |
+                    <a title="Unchecks the entire tree below" href="#" id="unCheckAll">Uncheck All</a> |
+                    <a title="Toggle the checkboxes below" href="#" id="toggleCheck">Toggle Check</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id="bottom">
+	<span class="buttons floatLeft">
+		<button id="submitBtn">Save</button
+        ><button id="updateAllBtn">Update All Allows</button>
+	</span>
+	<span class="buttons floatRight">
+    	<button class="closebtn">Close</button>
+    </span>
+</div>
+</form>
+<style>
+.box {
+	overflow:auto;
+	border:1px solid #333;
+}
+</style>
+<script>
+$(function() {
+	var form = $('form');
+	var prtype = '#prtype';
+	var accttype = '#accttype';
+
+	$(prtype).change(function () {
+		var opt = $(accttype);
+		
+		opt.find('option').hide().removeAttr('selected');
+		
+		var selected = opt.find('option[grouptype="' + this.value + '"]');
+		
+		selected.removeAttr('style');
+		selected.first().attr('selected', true);
+	});
+	
+	$(prtype).change(function () {
+		$('.box').hide();
+		$('#' + this.value).show();
+		
+		allows = $(accttype).find(':selected').attr('defaultallows');
+		popAllows(allows);
+	});
+	
+	
+	$(accttype).change(function () {
+		allows = $(this).find(':selected').attr('defaultallows');
+		popAllows(allows);
+	});
+	
+	$('#submitBtn').click(function (e) {
+		messageBox('Save changes?', 'Confirm', 'confirm', function () {
+			//serialize AJAX request
+			requests.push(
+				$.ajax({
+					type: 'POST',
+					url: 'maintenance/allowsdefault/save',
+					data: form.serialize(),
+					dataType: 'json',
+					beforeSend: function() {
+						waitMessage('Updating...');
+					},
+					success: function(data) {
+						messageBox(data.message);
+					}
+				})
+			);
+		});
+		e.preventDefault();
+	});
+	
+	$('#updateAllBtn').click(function (e) {
+		var pType = $(prtype).find('option:selected').text();
+		var aType = $(accttype).find('option:selected').text();
+		
+		messageBox('Warning! This will replace all existing<br /><strong>[' + pType + ' - ' + aType + ']</strong><br /> allows. Continue anyway?', 'Confirm', 'confirm', function () {
+			//serialize AJAX request
+			requests.push(
+				$.ajax({
+					type: 'POST',
+					url: 'maintenance/allowsdefault/save',
+					data: form.serialize(),
+					dataType: 'json',
+					beforeSend: function() {
+						waitMessage('Updating...');
+					},
+					success: function(data) {
+						messageBox(data.message);
+					}
+				})
+			);
+		});
+		e.preventDefault();
+	});
+	
+	$('input, select').change(function (e) {
+		$(MSGBOX).dialog('close');
+	});
+	
+	function popAllows(allows) {
+		var allows = 'x' + allows;
+		
+		var	chk = $('#' + $(prtype).val()).find(':checkbox');
+		chk.removeAttr('checked');
+		
+		for (i=1; i <= allows.length; i++) {
+			var a = allows.substring(i,i+1);
+			var b = $('#' + $(prtype).val() + 'bit' + i);
+			
+			if (a==='1') {
+				b.attr('checked', true);
+			} else {
+				b.removeAttr('checked');
+			}
+		}
+	}
+	
+	$(prtype).triggerHandler('change');
+	
+	var chk = $('.box input:checkbox');
+	
+	$('#checkAll').click(function(e) {
+		chk.not(':disabled').attr('checked', 'checked');
+		e.preventDefault();
+	});
+	
+	$('#unCheckAll').click(function(e) {
+		chk.removeAttr('checked');
+		e.preventDefault();
+	});
+	
+	$('#toggleCheck').click(function(e) {
+		chk.not(':disabled').attr('checked', !chk.attr('checked'));
+		e.preventDefault();
+	});
+});
+</script>

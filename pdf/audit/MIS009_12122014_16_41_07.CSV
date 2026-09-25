@@ -1,0 +1,17 @@
+[UCPB SAVINGS BANK]
+[Audit Log Report]
+[12/12/2014]
+[ - ]
+,,,,,,,,,,Approved,
+Time,Ref. Num,UserID,Module,Field,Detail,From,To,Status,Workstation,UserID,Time
+14:12:21,10396,ressiead,USER,Login,"",,,Failed,10.252.236.227,,
+14:12:36,10397,ressiead,USER,Login,"",,,Success,10.252.236.227,,
+14:13:13,10399,ressiead,CARD,Card status,"",For Activation,Active,Success,10.252.236.227,,
+14:28:21,10400,ressiead,USER,Logout,"User logout: ressiead",,,Success,10.252.236.227,,
+14:37:14,10402,ressiead,USER,Login,"",,,Success,10.252.236.227,,
+14:52:14,10403,ressiead,USER,Logout,"User logout: ressiead",,,Success,10.252.236.227,,
+16:40:29,10405,osdteam,USER,Login,"",,,Failed,10.252.236.224,,
+16:40:39,10406,osdteam,USER,Login,"",,,Success,10.252.236.224,,
+16:40:43,10407,osdteam,GSET,General Settings,"Open Module",,,Success,10.252.236.224,,
+16:40:55,10408,osdteam,REPO,Generate Report,"Report Name:  Audit Log Report",,,Success,10.252.236.224,,
+16:41:07,10409,osdteam,REPO,Generate Report,"Report Name:  Audit Log Report",,,Success,10.252.236.224,,

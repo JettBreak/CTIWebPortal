@@ -1,0 +1,128 @@
+<form id="updateAllLimitsForm" action="maintenance/updatealllimits/submit" method="post" enctype="multipart/form-data" target="formTarget">
+<input type="hidden" name="limitseqno" value="<?php echo $limitseqno; ?>"/>
+<input type="hidden" name="brseqno" value="<?php echo $brseqno; ?>"/>
+<input type="hidden" name="accttype" value="<?php echo $accttype; ?>"/>
+<table width="100%" id="trxTable">
+	<thead>
+    	<tr>
+        	<th width="100">Transactions</th>
+            <th width="20"><span target="amt">Amount</span></th>
+            <th width="20"><span target="ctr">Counter</span></th>
+            <th width="20"><span target="min">Min Trans.</span></th>
+            <th width="20"><span target="max">Max Trans.</span></th>
+            <th width="20"><span target="cyc">Cycle</span></th>
+        </tr>
+    </thead>
+    <tbody>
+    	<?php echo html_entity_decode($limits); ?>
+    </tbody>
+    <tfoot>
+    	<tr>
+        	<td colspan="6">&nbsp;</td>
+        </tr>
+    	<tr>
+        	<td colspan="6"><input type="checkbox" name="includeNon"/> Include product with no default limit
+            	<div class="floatRight">
+                    <a title="Checks the entire tree below" href="#" id="checkAll">Check All</a> |
+                    <a title="Unchecks the entire tree below" href="#" id="unCheckAll">Uncheck All</a> |
+                    <a title="Toggle the checkboxes below" href="#" id="toggleCheck">Toggle Check</a>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+</table>
+</form>
+<iframe id="formTarget" name="formTarget" class="hidden"></iframe>
+<style>
+input[type="checkbox"] {
+	position: relative;
+	top: 1px;
+}
+#trxTable span:hover {
+	cursor: pointer;
+}
+#trxTable tbody tr:nth-child(even) {
+	background-color: #3a3a3a;
+}
+#trxTable tbody tr:nth-child(odd) {
+	background-color: #444;
+}
+</style>
+<script>
+$(function() {
+	//check subcategory
+	var table = '#trxTable';
+	var headers = table + ' thead span';
+	
+    initSession('<?php echo $sessionExp; ?>');
+	$(headers).click(function(e) {
+		var eq = $(headers).index($(this)) + 1;
+		
+		$(table).find('tbody tr').each(function() {
+			var chk = $(this).find('td').eq(eq).find('input');
+			chk.attr('checked', !chk.attr('checked'));
+		});
+	});
+	
+	$(table + ' tbody span').click(function() {
+		var chk = $(this).parents('tr').find('input:checkbox');
+		
+		chk.attr('checked', !chk.attr('checked'));
+	});
+	
+	var chk = $(table).find('tbody input:checkbox');
+	
+	$('#checkAll').click(function(e) {
+		chk.not(':disabled').attr('checked', 'checked');
+		e.preventDefault();
+	});
+	
+	$('#unCheckAll').click(function(e) {
+		chk.removeAttr('checked');
+		e.preventDefault();
+	});
+	
+	$('#toggleCheck').click(function(e) {
+		chk.not(':disabled').attr('checked', !chk.attr('checked'));
+		e.preventDefault();
+	});
+	
+	/*$('#updateAllLimitsForm').submit(function (e) {
+	
+		var type = $(this).attr('method');
+		var action = $(this).attr('action');
+		var params = $(this).serialize();
+		
+		//serialize AJAX request
+		requests.push(
+			$.ajax({
+				type: type,
+				url: action,
+				data: params,
+				dataType: 'json',
+				beforeSend: function() {
+					waitMessage('Processing...');
+				},
+				success: function(data) {
+					if (data.success) {
+						messageBox(data.message);
+					} else {
+						messageBox(data.message);
+					}
+				}
+			})
+		);
+		
+		e.preventDefault();
+	});*/
+});
+
+function updateProgress(progress) {
+	//console.log(progress);
+	$('#pmsg').text(progress + '%');
+	
+	$('#pbar').progressbar({
+		value: progress
+	});
+}
+</script>

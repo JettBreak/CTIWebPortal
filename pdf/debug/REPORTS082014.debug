@@ -1,0 +1,96 @@
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11| START OF TRACE
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11| REQUESTID: 476
+TRC:08.11.2014.09.58.11| CLASS: library.globalclass.reportclass.ReportGenerato
+TRC:08.11.2014.09.58.11| r
+TRC:08.11.2014.09.58.11| VOIDCODE: 107
+TRC:08.11.2014.09.58.11| VOIDDESC: Class name not recognized
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11| ERROR MESSAGE: reportlist.ATM.
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11| TRACE MESSAGE: 
+TRC:08.11.2014.09.58.11| java.net.URLClassLoader$1.run(URLClassLoader.java:202
+TRC:08.11.2014.09.58.11| )
+TRC:08.11.2014.09.58.11| java.security.AccessController.doPrivileged(Native Me
+TRC:08.11.2014.09.58.11| thod)
+TRC:08.11.2014.09.58.11| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:08.11.2014.09.58.11| :190)
+TRC:08.11.2014.09.58.11| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:08.11.2014.09.58.11| ava:301)
+TRC:08.11.2014.09.58.11| java.lang.Class.forName0(Native Method)
+TRC:08.11.2014.09.58.11| java.lang.Class.forName(Class.java:171)
+TRC:08.11.2014.09.58.11| library.globalclass.reportclass.ReportGenerator.gener
+TRC:08.11.2014.09.58.11| ateReport(ReportGenerator.java:140)
+TRC:08.11.2014.09.58.11| library.globalclass.reportclass.ReportGenerator.proce
+TRC:08.11.2014.09.58.11| ssReport(ReportGenerator.java:109)
+TRC:08.11.2014.09.58.11| ReportSystem.main(ReportSystem.java:25)
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11| END OF TRACE
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.09.58.11|  
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43| START OF TRACE
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43| REQUESTID: 477
+TRC:08.11.2014.10.59.43| CLASS: library.globalclass.reportclass.ReportGenerato
+TRC:08.11.2014.10.59.43| r
+TRC:08.11.2014.10.59.43| VOIDCODE: 107
+TRC:08.11.2014.10.59.43| VOIDDESC: Class name not recognized
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43| ERROR MESSAGE: reportlist.ATM.
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43| TRACE MESSAGE: 
+TRC:08.11.2014.10.59.43| java.net.URLClassLoader$1.run(URLClassLoader.java:202
+TRC:08.11.2014.10.59.43| )
+TRC:08.11.2014.10.59.43| java.security.AccessController.doPrivileged(Native Me
+TRC:08.11.2014.10.59.43| thod)
+TRC:08.11.2014.10.59.43| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:08.11.2014.10.59.43| :190)
+TRC:08.11.2014.10.59.43| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:08.11.2014.10.59.43| ava:301)
+TRC:08.11.2014.10.59.43| java.lang.Class.forName0(Native Method)
+TRC:08.11.2014.10.59.43| java.lang.Class.forName(Class.java:171)
+TRC:08.11.2014.10.59.43| library.globalclass.reportclass.ReportGenerator.gener
+TRC:08.11.2014.10.59.43| ateReport(ReportGenerator.java:140)
+TRC:08.11.2014.10.59.43| library.globalclass.reportclass.ReportGenerator.proce
+TRC:08.11.2014.10.59.43| ssReport(ReportGenerator.java:109)
+TRC:08.11.2014.10.59.43| ReportSystem.main(ReportSystem.java:25)
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43| END OF TRACE
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.10.59.43|  
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47| START OF TRACE
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47| REQUESTID: 478
+TRC:08.11.2014.11.00.47| CLASS: library.globalclass.reportclass.ReportGenerato
+TRC:08.11.2014.11.00.47| r
+TRC:08.11.2014.11.00.47| VOIDCODE: 107
+TRC:08.11.2014.11.00.47| VOIDDESC: Class name not recognized
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47| ERROR MESSAGE: reportlist.POS.
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47| TRACE MESSAGE: 
+TRC:08.11.2014.11.00.47| java.net.URLClassLoader$1.run(URLClassLoader.java:202
+TRC:08.11.2014.11.00.47| )
+TRC:08.11.2014.11.00.47| java.security.AccessController.doPrivileged(Native Me
+TRC:08.11.2014.11.00.47| thod)
+TRC:08.11.2014.11.00.47| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:08.11.2014.11.00.47| :190)
+TRC:08.11.2014.11.00.47| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:08.11.2014.11.00.47| ava:301)
+TRC:08.11.2014.11.00.47| java.lang.Class.forName0(Native Method)
+TRC:08.11.2014.11.00.47| java.lang.Class.forName(Class.java:171)
+TRC:08.11.2014.11.00.47| library.globalclass.reportclass.ReportGenerator.gener
+TRC:08.11.2014.11.00.47| ateReport(ReportGenerator.java:140)
+TRC:08.11.2014.11.00.47| library.globalclass.reportclass.ReportGenerator.proce
+TRC:08.11.2014.11.00.47| ssReport(ReportGenerator.java:109)
+TRC:08.11.2014.11.00.47| ReportSystem.main(ReportSystem.java:25)
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47| END OF TRACE
+TRC:08.11.2014.11.00.47|  
+TRC:08.11.2014.11.00.47|  

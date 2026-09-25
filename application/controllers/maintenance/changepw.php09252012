@@ -1,0 +1,74 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class ChangePW extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(CHANGEPW_NO);
+	}
+	
+	function index()
+	{
+		$data['minChar'] = $this->core->getPasswordMinChar();
+		$data['secretQuestions'] = NULL;
+		foreach ($this->core->getSecretQuestions() as $question) {
+			$selected = $this->core->getSecretQuestion() === $question ? ' selected' : NULL;
+			$data['secretQuestions'] .= '<option '.$selected.'>'. $question .'</option>';
+		}
+		
+		$this->load->view('maintenance/changepw', $data);
+	}
+	
+	function verify()
+	{
+		$userID = $this->core->getUserID();
+		$currentPW = $this->core->getUserPW();
+		$xxx = $this->core->encrypt($userID, $this->input->post('currentPW', TRUE));
+		
+		if ($xxx === $currentPW) {
+			$verified = '1';
+		} else {
+			$verified = '0';
+		}
+			
+		echo $verified;
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/user_model');
+		$this->load->library('session');
+		
+		$brseqno = $this->core->getBranchID();
+		$ipAddress = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit = $userID = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		$userPW = $this->core->encrypt($userAudit, $this->input->post('newPassword', TRUE));
+		
+		$secretQ = $this->input->post('secretQuestion', TRUE);
+		$secretA = $this->input->post('secretAnswer', TRUE);
+		
+		$changeSecretQ = FALSE;
+		if ($secretA !== '') {
+			$secretA = $this->core->encrypt($userID, sha1($this->input->post('secretAnswer', TRUE)));
+			$changeSecretQ = TRUE;
+		}
+		
+		$result = $this->user_model->setUserPass($userID, $userPW, FALSE, $secretQ, $secretA, $changeSecretQ, $brseqno, $ipAddress, $workstation, $userAudit, $sessionID);
+		
+		
+		$row = $result->row_array();
+		$this->session->set_userdata(array(
+			'userPW' => $userPW,
+			'secretQ' => $secretQ
+		));
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'message' => $row['errmsg']
+		));
+	}
+}

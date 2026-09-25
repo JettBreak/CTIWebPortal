@@ -1,0 +1,16 @@
+//Main Configuration
+DB_ADDRESS=localhost
+DB_PORT=3306
+DB_NAME1=coresys_fusion
+DB_NAME2=coreapp_fusion
+DB_NAME3=CoreSecurity
+DB_NAME4=CoreReport
+
+AUTOMAIL=0
+HOSTMAIL=
+PORTMAIL=
+
+//WARNING: If set to zero, will get data to coresys ONLY
+//         and will disregard the processed data
+ISCOREREPORT=1
+

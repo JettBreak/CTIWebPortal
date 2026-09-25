@@ -1,0 +1,222 @@
+<form id="accountLinkingForm" method="post">
+    <div id="accountLinking">
+        <h1>Account Linking</h1>
+        <div id="content">
+            <table width="100%">
+                <tr>
+                    <td width="100">Card Number:</td>
+                    <td colspan="3"><input type="text" style="width:170px" value="<?php echo $cardNo; ?>" readonly/></td>
+                </tr>
+                <tr>
+                    <td>Card Status:</td>
+                    <td><input type="text" style="width:170px" value="<?php echo $cardStatus; ?>" readonly/></td>
+                    <td>Card Type:</td>
+                    <td><input type="text" style="width:150px" value="<?php echo $cardType; ?>" readonly/></td>
+                </tr>
+                <tr>
+                	<td>Customer Name:</td>
+                    <td colspan="3"><input type="text" style="width:400px" value="<?php echo $custName; ?>" readonly/></td>
+                </tr>
+            </table>
+        </div>
+        <table class="dataTable">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Account Type</th>
+                    <th>Account No.</th>
+                    <th>Authorization Type</th>
+                    <th>Primary</th>
+                    <th>pseqnoLink</th>
+                    <th>accType</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div id="bottom">
+    	<span class="buttons floatLeft">
+            <button id="addBtn" disabled>Add Account</button
+            ><button id="removeBtn" disabled>Unlink Account</button
+            ><button id="setPrimaryBtn" disabled>Set Primary</button>
+        </span>
+        <span class="buttons floatRight">
+            <button id="refreshBtn">Refresh</button
+            ><button class="closebtn">Close</button>
+        </span>
+	</div>
+</form>
+<style>
+.dataTables_scrollBody{
+	min-height:50px !important;
+	max-height:150px !important;
+}
+</style>
+<script>
+$(function () {
+    var addBtn = '#addBtn',
+        removeBtn = '#removeBtn',
+        refreshBtn = '#refreshBtn',
+		setPrimaryBtn = '#setPrimaryBtn',
+		accntDesc = '#accntDesc',
+		prKey = '#prKey',
+		params = {},
+		form = $('#accountLinkingForm')
+	initSession('<?php echo $sessionExp; ?>');
+	
+    oTable = $(DATATABLE).dataTable({
+        bRetrieve: true,
+        bJQueryUI: true,
+        aaSorting: [],
+		aoColumns: [
+			null,
+			null,
+			null,
+			null,
+			null,
+			{ bVisible: false },
+			{ bVisible: false },
+		],
+        sScrollY: '100%',
+        sScrollX: '100%',
+        sPaginationType: 'full_numbers',
+        fnInitComplete: function () {
+			getData();
+			//this.fnAdjustColumnSizing(); //fix misaligned columns
+            $(addBtn).removeAttr('disabled');
+        },
+        fnRowCallback: function (nRow, aData, iDisplayIndex) {
+            $('td:eq(0), td:eq(4)', nRow).attr('align', 'center');
+			$(nRow).unbind('click').click(function() {			
+				
+				$('tbody tr').removeClass('rowSelected');
+				$(this).addClass('rowSelected');
+				
+				params = {
+					prseqno: <?php echo $prseqno; ?>,
+					cardNo: '<?php echo $cardNo; ?>',
+					prptr: aData[0],
+					prKey: aData[2], //account number
+					accntDesc: aData[1], //account desc
+					pseqnoLink: aData[5],
+					primary: aData[4],
+					acctType: aData[6]
+				}
+				
+				$(removeBtn + ',' + setPrimaryBtn).removeAttr('disabled');
+			});
+			
+			$('tbody tr').removeClass('rowSelected');
+			$(removeBtn + ',' + setPrimaryBtn).attr('disabled', 'disabled');
+            return nRow;
+        }
+    });
+    $('.dataTables_length').html('<strong>Accounts Linked:</strong>').css({
+		'font-size': '12px',
+		'margin-top': '4px'
+	});
+	
+    //$.fn.dataTableExt.iApiIndex = 0;
+    //oTable.fnSetColumnVis(5, false);
+	
+    $(addBtn).click(function () {
+        window.location.hash = 'card/accountadd';
+        return false
+    });
+	
+	
+	form.bind('submit', function (e) {
+		requests.push(
+			$.ajax({
+				type: 'POST',
+				url: form.attr('action'),
+				data: params,
+				dataType: 'json',
+				beforeSend: function() {
+					waitMessage(form.attr('waitmsg'));
+				},
+				success: function(data) {
+					if (data.success === true) {
+						messageBox(data.message);
+						params = {};
+					}
+						getData(true);
+				}
+			})
+		);
+		e.preventDefault();
+	});
+	
+    $(removeBtn).click(function (e) {
+		if (params) {		
+			 messageBox('Do you want to remove account<br /><strong>[' + params.prKey + ']</strong> from this card?', 'Confirm', 'confirm', function() {
+				form.attr({
+					action: 'card/accountlinking/remove',
+					waitmsg: 'Removing account link...'
+				});
+				
+				$(MSGBOX).dialog('close');
+				showUserOverride();
+			});
+		} else {
+			messageBox('Please select an item from the list');
+		}
+		e.preventDefault();
+    });
+	
+	$(setPrimaryBtn).click(function (e) {
+		if (params) {		
+			 messageBox('Set Account Number <br /><strong>[' + params.prKey + ']</strong> as primary?', 'Confirm', 'confirm', function() { 
+				form.attr({
+					action: 'card/accountlinking/setprimary',
+					waitmsg: 'Setting primary account...'
+				});
+				
+				$(MSGBOX).dialog('close');
+				showUserOverride();
+			});
+		} else {
+			messageBox('Please select an item from the list');
+		}
+		e.preventDefault();
+    });
+	
+    $(refreshBtn).click(function (e) {
+		getData();
+        e.preventDefault();
+    });
+});
+
+function getData(isRemove)
+{
+	requests.push(
+		$.ajax({
+			url: 'card/accountlinking/getdata',
+			type: 'GET',
+			dataType: 'json',
+			beforeSend: function () {
+				abortAJAXRequests();
+				if (isRemove !== true) {
+					waitMessage('Retrieving accounts linked...');
+				}
+			},
+			error: function () {
+		
+			},
+			success: function (data) {	
+					oTable.fnClearTable(0);
+					oTable.fnAddData(data.aaData);
+					oTable.fnDraw();
+					oTable.fnAdjustColumnSizing();
+			},
+			complete: function () {
+				if (isRemove !== true) {
+					$(MSGBOX).dialog('close');
+				}
+				$('#removeBtn, #setPrimaryBtn').attr('disabled', 'disabled');
+			}
+		})
+	)
+}
+</script>

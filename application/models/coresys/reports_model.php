@@ -1,0 +1,372 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Reports_model extends CI_Model {
+	
+	private $fileVersion = '1.10.00';
+	private $db, $security;
+	
+	function __construct()
+	{
+		$this->db = $this->load->database(DB2, TRUE);
+		$this->security = $this->coresecurity;
+		//sets the current database
+		$this->security->_initDb($this->db);
+		
+		$this->load->library('version');
+
+		$file = basename(__DIR__) . '/' . basename(__FILE__);
+
+		$verified = $this->version->validate($file, $this->fileVersion);
+
+		if (!$verified) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Module is out of date ('.$file.'). Please contact software administrator.'
+			));
+			exit();
+		}
+	}
+	
+	//$branchCode, $transDate, $cardHolder
+	function getTransactionLog()
+	{	
+		$query = "CALL sp_gettransactionlog(?,?,?,?,?)";	
+		return $this->db->query($query, func_get_args());
+	}	
+	
+	//$brseqno, $date, $status, $trxcode
+	function getBranchLog()
+	{
+		$query = "CALL sp_getbranchlog(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getProcessList()
+	{
+		$query = "CALL sp_getprocesslist()";
+		return $this->db->query($query);
+	}
+	
+	function getTrxListForReport()
+	{
+		$query = "CALL sp_getTrxListForReport()";
+		return $this->db->query($query);
+	}
+	
+	//$reportLog, $branchCode, $datefrom, $dateto
+	function getSumAcquirerPerTerminal()
+	{
+		$query = "CALL sp_getsumacquirerperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, finswitch, $dateFrom, $dateTo
+	function getSumIssuerPerBranch()
+	{
+		$query = "CALL sp_getsumissuerperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, onuscode, $dateFrom, $dateTo
+	function getSumOnUsPerBranch()
+	{
+		$query = "CALL sp_getsumonusperbranch(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, onuscode, $dateFrom, $dateTo
+	function getRejectedSumOnUsPerBranch()
+	{
+		$query = "CALL sp_getrejectedsumonusperbranch(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSumOnUsPerTerminal()
+	{
+		$query = "CALL sp_getsumonusperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedSumOnUsPerTerminal()
+	{
+		$query = "CALL sp_getrejectedsumonusperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatOtherTerminal()
+	{
+		$query = "CALL sp_getourrchatotherterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatOtherTerminal()
+	{
+		$query = "CALL sp_getrejectedourrchatotherterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatOtherBranch()
+	{
+		$query = "CALL sp_getourrchatatotherbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatOtherBranch()
+	{
+		$query = "CALL sp_getrejectedourrchatatotherbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatAtOurTerminal()
+	{
+		$query = "CALL sp_getourrchatatourterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+		
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatAtOurTerminal()
+	{
+		$query = "CALL sp_getrejectedourrchatatourterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+			
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSettlementList()
+	{
+		$query = "CALL  sp_getsettlementlist(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+			
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSettlementListPerBranch()
+	{
+		$query = "CALL sp_getsettlementlistperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+		
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTTransferee()
+	{
+		$query = "CALL sp_getibfttransferee(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+					
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTTransactions()
+	{
+		$query = "CALL sp_getibfttransactions(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}		
+				
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTIssuerTransaction()
+	{
+		$query = "CALL sp_getibftissuertransaction(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getBillsPaymentTransactions()
+	{
+		$query = "CALL sp_getbillspaymenttransactions(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}						
+	//$reportLog, $branchCode, termtype, finswitch, $dateFrom, $dateTo
+	function getRejectedSumIssuerPerBranch()
+	{
+		$query = "CALL sp_getrejectedsumissuerperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $DateTO
+	function getRejectedSumAcquirerPerTerminal()
+	{
+		$query = "CALL sp_getrejectedsumacquirerperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $finswitch, $dateFrom, $DateTO
+	function getTransactionPerTerminal()
+	{
+		$query = "CALL sp_gettransactionperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $ONUS_CODE, $dateFrom, $DateTO
+	function getOtherCHAtOurTerminal()
+	{
+		$query = "CALL sp_getotherchatourterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $dateTO
+	function getPOSTransactionsPerBranch()
+	{
+		$query = "CALL sp_getpostransactionsperbranch(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $dateTO
+	function getPOSLoanPayment()
+	{
+		$query = "CALL sp_getposloanpaymentperbranch(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $ONUS_CODE $dateFrom, $dateTO
+	function getAutoloadTransperTerminal()
+	{
+		$query = "CALL sp_getautoloadtransperterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBARTS()
+	{
+		$query = "CALL sp_gettransactionforbarts(?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+	
+	//$prkey
+	function getIssoCode()
+	{
+		$query = "SELECT isocode from prrulesx where prkey = ? LIMIT 1;";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$isocode
+	function getPosCode()
+	{
+		$query = "SELECT xml1 from fitlistx where isocode = ?";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBBPRdps()
+	{
+		$query = "SELECT logseqno, termtype, isscode, acqcode, dtlog, termcode, prkey1, acct1, acct2, instcode, chname, amtath, chname,tpseqno,chseqno,mnemonic, xml1,xml2,xml3,xml4,xml5,xml6, CoreSecurity.GetDataFromToken(TokenID) AS cardx FROM logtranx a, trxlistx b WHERE a.trxcode = b.trxcode 
+		AND date(dtlog) = ? 
+		AND isscode NOT IN (?)
+		AND termtype IN (?,'ATM','POS')
+		AND chname IN (?, 'ONUS')
+		AND msgtype in (51, 52) 
+		AND b.trxtype1 = 'PAY' 
+		ORDER BY dtlog, logseqno";
+		
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBBPRsum()
+	{
+		$query = "SELECT instcode, SUM(amtath) as totamt, COUNT(*) as totctr,
+		xml1, xml2, xml3, xml4, xml5, xml6
+		FROM logtranx a, trxlistx b
+		WHERE a.trxcode = b.trxcode 
+		AND date(dtlog) = ? 
+		AND isscode NOT IN (?)
+		AND termtype IN (? ,'ATM','POS')
+		AND chname IN (?, 'ONUS')
+		AND msgtype in (51, 52) 
+		AND b.trxtype1 = 'PAY'
+		GROUP BY CAST(instcode AS SIGNED)
+		ORDER BY dtlog, logseqno";
+		
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//brcode
+	function getATMListForReports()
+	{
+		$query = "CALL sp_getATMListForReports(?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getATMAvailabilityList()
+	{
+		$query = "CALL sp_getATMAvailabilityList(?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	 //instcode
+	function getInstDesc()
+	{
+		$query = "SELECT instcode, description FROM bpayinst WHERE instcode = ?";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getFitName()
+	{
+		$query = "SELECT isocode, isomnem FROM fitlistx WHERE isocode = ?";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getreportslist()
+	{
+		$query = "SELECT ReportID, Description, ReportType FROM Report;";
+		return $this->db->query($query, func_get_args());
+	}
+
+	function getreportinfo()
+	{
+		$query = "SELECT ReportID, Description FROM Report WHERE ReportID = ?;";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getreporttype()
+	{
+		$query = "SELECT ReportProcessTypeID, Description FROM ReportProcessType;";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getreporttypeinfo()
+	{
+		$query = "SELECT ReportProcessTypeID, Description FROM ReportProcessType WHERE ReportProcessTypeID = ?;";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getreportrequest()
+	{
+		$query = "SELECT a.ReportRequestID, a.DateRequested AS DateRequested, a.Parameter AS parameter, a.ReportID, a.Logseqno, b.Description AS Reportname FROM ReportRequest a 
+		LEFT JOIN Report b ON (a.ReportID = b.ReportID) /*UNION ALL SELECT a.EventRequestID as ReportRequestID, a.DateRequested AS DateRequested, 'XXX' AS parameter, a.EventID as ReportID, a.logseqno, b.Description AS Reportname FROM EventRequest a 
+		LEFT JOIN Event b ON (a.EventID = b.EventID)*/ ORDER BY 2 DESC;";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getrequestinfo()
+	{
+		$query = "SELECT a.ReportRequestID, a.DateRequested AS DateRequested, a.Parameter AS parameter, 
+		a.ReportID, c.ReportStatus, d.description AS statdesc, d.ReportStatus, a.Logseqno, b.Description AS Reportname FROM ReportRequest a
+		LEFT JOIN Report b ON (a.ReportID = b.ReportID) 
+		LEFT JOIN ReportJob c ON (a.ReportRequestID = c.ReportRequestID)
+		LEFT JOIN ReportStatus d ON (c.ReportStatus = d.ReportStatus) WHERE a.ReportRequestID = ?;";
+		return $this->db->query($query, func_get_args());
+	}
+
+	function removereportrequest()
+	{
+		$query = "CALL sp_removereports(?,".APPSEQNO.",?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+
+	function getprocinfo()
+	{
+		$query = "SELECT DateStarted, DateFinished, TotalRecord, CurrentRecord FROM EventJob WHERE EventRequestID = ?";
+		return $this->db->query($query, func_get_args());
+	}
+	//$msgType, $brseqno, $sysVCode, $prKey, $prKey, $userID, $workstation, $xml
+	function insertAuditLogclixx()
+	{
+		$query = "CALL coreapp_fusion.sp_insertlogclixx(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+}
+/* End of file reports_model.php */
+/* Location: ./application/models/coreapp/reports_model.php */

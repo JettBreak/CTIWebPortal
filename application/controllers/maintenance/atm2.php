@@ -1,0 +1,133 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class ATM extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(MAINTENANCEATM_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		//branches combobox
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		foreach ($branches as $row) {
+			$data['branches'] .= '<option value="'. $row['brcode'] .'">'. $row['brname'] .'</option>';
+		}
+		
+		if ($this->core->canMon()) {
+			$data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+		} else {
+			$data['uiToolbar'] = NULL;
+		}
+		
+		$this->load->view('maintenance/atm', $data);
+	}
+	
+	function getData()
+	{
+		$this->load->model('coresys/atm_model');
+		
+		if ($this->core->canMon()) {
+			$branchCode = $this->input->get('branch', TRUE);
+		} else {
+			$branchCode = $this->core->getBranchCode();
+		}
+		
+		$result = $this->atm_model->getATMList($branchCode, 0, '-1');
+		
+		$details = array();
+		if ($result->num_rows() > 0) {
+			$success = TRUE;
+			foreach ($result->result_array() as $row)
+			{
+				$details[] = array(
+					$row['termcode'],
+					$row['description'],
+					$row['statdesc'] ? $row['statdesc'] : $row['status'] .'-Unknown' //if NULL display Unknown
+				);
+			}
+		} else {
+			$success = FALSE;
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'details' => $details
+		));
+	}
+	
+	function getDeno()
+	{
+		$this->load->model('coresys/atm_model');
+
+		$progCode = $this->input->post('progCode', TRUE);
+		$progLang = $this->input->post('progLang', TRUE);
+		
+		$result = $this->atm_model->getTerminalDenomination($progCode, $progLang);
+		
+		$aaData = array();
+		foreach ($result->result_array() as $row) {
+			$parmData = $row['parmdata'];
+			
+			$curr = substr($parmData, 0, 3);
+			$deno = $this->core->currency(substr($parmData, 6, 12) / 100);
+			$cass = substr($parmData, 4, 1);
+			
+			$aaData[] = array(
+				$curr,
+				$deno,
+				$cass
+			);
+		}
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'aaData' => $aaData
+		));
+	}
+	
+	function remove()
+	{
+		$this->load->model('coresys/atm_model');
+		
+		$termCode = $this->input->post('termCode', TRUE);
+		
+		$this->atm_model->deleteATMTerminal($termCode);
+		
+		echo json_encode(array(
+			'removed' => TRUE,
+			'termCode' => $termCode
+		));
+	}
+	
+}

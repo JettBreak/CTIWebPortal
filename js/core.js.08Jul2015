@@ -1,0 +1,1076 @@
+/**
+ * Core JS Functions
+ *
+ * @author		Franz S. Evangelista
+ * @copyright	Copyright (c) 2005 - 2011, Coreware Technologies, Inc.
+ * @since		Version 1.0
+ */
+
+// --------------------------------------------------------------------
+
+/**
+ * String Repeat
+ *
+ */
+String.prototype.repeat = function(num) {
+	return new Array(isNaN(num)? 1 : ++num).join(this);
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Filter Prefixes
+ *
+ * Filters customer prefixes according to gender
+ *
+ * @param	string
+ * @return	void
+ */
+function filterPrefixes(gender, selected) {
+	opts = {
+		'Male': ['Mr.', 'Dr.', 'Fr.', 'Rev.', 'Atty.', 'Prof.', 'Hon.'],
+		'Female': ['Mrs.', 'Ms.', 'Miss', 'Dr.', 'Atty.', 'Prof.', 'Hon.']
+	}
+	
+	var newOpts = '';
+    $(opts[gender]).each(function (index, value) {
+		var attr = selected === value ? ' selected' : ''; //set default selected
+        newOpts += '<option'+ attr +'>'+ value +'</option>';
+    });
+	$('#custPrefix').html(newOpts);
+}
+// --------------------------------------------------------------------
+
+/**
+ * Zero Padder
+ *
+ * Pads n with zeros on the left, digits is minimum length of output
+ * zeroPad(3, 5); returns "005"
+ * zeroPad(2, 500); returns "500"
+ *
+ * @param	string
+ * @param	int
+ * @return	string
+ */
+function zeroPad(digits, n) {
+	n = n.toString();
+	while (n.length < digits) {
+		n = '0' + n;
+	}
+	return n;
+}
+// --------------------------------------------------------------------
+
+/**
+ * Currency Formatter
+ *
+ * This function formats the string to currency e.g "1000" => "1,000.00"
+ *
+ * @param	string
+ * @return	string
+ */
+function formatCurrency(num) {
+    num = num.toString().replace(/\$|\,/g, '');
+    
+	if (isNaN(num)) {
+		num = "0";
+	}
+	
+    sign = (num == (num = Math.abs(num)));
+    num = Math.floor(num * 100 + 0.50000000001);
+    cents = num % 100;
+    num = Math.floor(num / 100).toString();
+    
+	if (cents < 10) {
+		cents = "0" + cents;
+	}
+	
+    for (var i = 0; i < Math.floor((num.length - (1 + i)) / 3); i++)
+    num = num.substring(0, num.length - (4 * i + 3)) + ',' + num.substring(num.length - (4 * i + 3));
+    return (((sign) ? '' : '-') + num + '.' + cents);
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Show Zones
+ *
+ * displays Get Zone modal form 
+ *
+ * @return	void
+ */
+function showZones() {
+    var btn = {};
+    btn['OK'] = function () {
+        retrieveZone()
+    };
+    btn['Cancel'] = function () {
+        $(this).dialog('close');
+    };
+    modalDialog('zones', 'Search Location', btn, 500);
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Search Customer
+ *
+ * displays Customer Search modal form 
+ *
+ * @return	void
+ */
+function searchCustomer() {
+	var btn = {};
+	btn['Search'] = function () {
+		$('#customersForm').submit();
+    };
+    /*btn['OK'] = function () {
+        retrieveCustomer()
+    };*/
+    btn['Cancel'] = function () {
+        $(this).dialog('close')
+    };
+	if ($(DIALOG).length === 0) {
+    	modalDialog('customers', 'Search Customer', btn, 430);
+	}
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Show Floating Menu
+ *
+ * displays floating menu
+ *
+ * @return	void
+ */
+function initFloatMenu() {
+    var menu = $('#floatMenu');
+	
+    menu.accordion({
+        active: false,
+        autoHeight: false,
+        collapsible: true,
+        header: 'span.menu'
+    });
+	
+    var panel = $('.panel');
+	
+    panel.toggle(function () {
+		
+        menu.animate({
+            left: -menu.width()
+        }, {
+            duration: 500,
+            queue: false
+        });
+		
+        panel.attr('title', 'Show Panel');
+		
+    }, function () {
+		
+        menu.animate({
+            left: 0
+        }, {
+            duration: 500,
+            queue: false
+        });
+		
+        panel.attr('title', 'Hide Panel');
+    });
+    menu.show();
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Logout
+ *
+ * logs out user, clears header information and closes all modal dialogs
+ *
+ * @return	void
+ */
+function logOut() {
+    window.location.hash = 'logout';
+	
+    $('#xInfo').html('<tr><td>&nbsp;</td></tr>');
+	autoAdjustSection();
+	
+    $('nav').remove();
+	$('#tellerMenu').fadeOut();
+    if ($(DIALOG).length > 0) {
+        $(DIALOG).dialog('close')
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Show User Override
+ *
+ * displays User Override modal form
+ *
+ * @return	void
+ */
+function showUserOverride() {
+    var buttons = {
+		OK: function() {
+			$('#overrideForm').submit();
+		},
+		Cancel: function() {
+			$(this).dialog('close')
+		}
+	};
+    modalDialog('override', 'Override Input', buttons, 300)
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Abort AJAX Requests
+ *
+ * @return	void
+ */
+function abortAJAXRequests() {
+	if (requests.length > 0) {
+		for (var i = 0; i < requests.length; i++) {
+			if (requests[i]) {
+				requests[i].abort();
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Right Click Disabler
+ *
+ * @return	void
+ */
+function disableContextMenu() {
+    document.oncontextmenu = function () {
+        return false
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * URL Encoder
+ *
+ * @return	void
+ */
+function urlEncode(a) {
+    a = (a + '').toString();
+    return encodeURIComponent(a).replace(/!/g, '%21').replace(/'/g, '%27').replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\*/g, '%2A').replace(/%20/g, '+')
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Table Row Color Changer
+ *
+ * returns row color according to message type or void code
+ * vCodes = check constants.js
+ *
+ * @param	int
+ * @param	string
+ * @return	string	row color
+ */
+function getRowColor(msgType, vCode) {
+	var color = null;
+	//greater than -1 means true.. check http://api.jquery.com/jQuery.inArray/
+	if ($.inArray(msgType, [23, 53, 63, 73, 83, 103]) > -1) {
+		color = 'redRow';
+	}
+	if ($.inArray(msgType, [20, 50, 60, 70, 80, 100]) > -1) {
+		color = 'blueRow';
+	}
+	if ($.inArray(msgType, [71, 72]) > -1) {
+		color = 'orangeRow';
+	}
+	if (vCode) {
+		if ((vCodes !== []) && $.inArray(vCode, vCodes) > -1) {
+			color = 'purpleRow';
+		}
+	}
+	
+	return color;
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Table Row Color Changer (ATM Supplies)
+ *
+ * returns row color according to status code
+ *
+ * @param	int
+ * @return	string	row color
+ */
+function getRowColorSupplies(statCode) {
+	var color = null;
+
+	switch (statCode) {
+		case 2:
+			color = 'yellowRow';
+			break;
+		case 3:
+			color = 'maroonRow';
+			break;
+		case 4:
+			color = 'redRow';
+			break
+	}
+	return color;
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Image Preloader
+ *
+ * preloads image array
+ *
+ * @param	array
+ * @return	void
+ */
+function preload(a) {
+    $(a).each(function () {
+        $('<img/>')[0].src = this
+    })
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (letters only)
+ *
+ * allowed inputs (A-Z, a-z, delete, backspace, tab, enter, space
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function lettersOnly(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n == 8): //backspace
+		case (n == 9): //tab
+		case (n == 13): //enter
+		case (n == 32): //space
+		case ((n >= 65) && (n <= 90)): //A-Z
+		case ((n >= 97) && (n <= 122)): //a-z
+			return true;
+			break;
+		default:
+			return false;
+			break;	
+	}
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (numbers only)
+ *
+ * allowed inputs (0-9, delete, backspace, tab, enter, space
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function numbersOnly(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n == 8): //backspace
+		case (n == 9): //tab
+		case (n == 13): //enter
+		//case (n == 32): //space
+		case ((n >= 48) && (n <= 57)): //0-9
+			return true;
+			break;
+		default:
+			return false;
+			break;	
+	}
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (integers only)
+ *
+ * allowed inputs (0-9, period, delete, backspace, tab, enter
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function integersOnly(n) {
+    switch (true) {
+		case (n === 0): //delete //tab
+		case (n == 8): //backspace
+		case (n == 9): //tab
+		case (n == 13): //enter
+		//case (n == 32): //space
+		case (n == 46): //.
+		//case (n == 44): //,
+		case ((n >= 48) && (n <= 57)): //0-9
+			return true;
+			break;
+		default:
+			return false;
+			break;	
+	}
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (alphanumeric only)
+ *
+ * allowed inputs (A-Z, a-z, 0-9, delete, backspace, tab, enter, space
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function alphaNumericOnly(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n === 8): //backspace
+		case (n === 9): //tab
+		case (n === 13): //enter
+		case (n === 32): //space
+		case ((n >= 48) && (n <= 57)): //0-9
+		case ((n >= 65) && (n <= 90)): //A-Z
+		case ((n >= 97) && (n <= 122)): //a-z
+			return true;
+			break;
+		default:
+			return false;
+			break
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (alphanumeric only)
+ *
+ * allowed inputs (A-Z, a-z, 0-9, delete, backspace, tab, enter, space
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function alphaNumericOnlyCustom(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n === 8): //backspace
+		case (n === 9): //tab
+		case (n === 13): //enter
+		case (n === 32): //space
+		case ((n >= 48) && (n <= 57)): //0-9
+		case ((n >= 65) && (n <= 90)): //A-Z
+		case ((n >= 97) && (n <= 122)): //a-z
+		case (n === 241): //ñ
+		case (n === 209): //Ñ
+		case (n === 39): // '
+		case ((n >= 44) && (n <= 46)): // , - .
+			return true;
+			break;
+		default:
+			return false;
+			break
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (alphanumeric only, no spaces)
+ *
+ * allowed inputs (A-Z, a-z, 0-9, delete, backspace, tab, enter
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function alphaNumericOnlyNoSp(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n === 8): //backspace
+		case (n === 9): //tab
+		case (n === 13): //enter
+		case ((n >= 48) && (n <= 57)): //0-9
+		case ((n >= 65) && (n <= 90)): //A-Z
+		case ((n >= 97) && (n <= 122)): //a-z
+			return true;
+			break;
+		default:
+			return false;
+			break
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Input Filter (hex only, no spaces)
+ *
+ * allowed inputs (A-F, a-f, 0-9, delete, backspace, tab, enter
+ *
+ * @param	int		charcode
+ * @return	boolean
+ */
+function hexOnly(n) {
+    switch (true) {
+		case (n === 0): //delete
+		case (n === 8): //backspace
+		case (n === 9): //tab
+		case (n === 13): //enter
+		case ((n >= 48) && (n <= 57)): //0-9
+		case ((n >= 65) && (n <= 70)): //A-F
+		case ((n >= 97) && (n <= 102)): //a-f
+			return true;
+			break;
+		default:
+			return false;
+			break
+    }
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * Session Expiry Handler
+ *
+ */
+
+var sesstimer;
+
+function initSession(sessionLength) {
+	clearTimeout(sesstimer);
+	
+	var len = parseInt(sessionLength) * 60 * 1000;
+	if (len > 0) {
+		console.log('Session started... will expire in ' + sessionLength + ' minutes.');
+		
+		function sessionExp() {
+			$.ajax({
+				url: 'logout',
+				success: function () {
+					messageBox('Your session has expired. Please relogin');
+					$(MSGBOX).one('dialogbeforeclose', logOut);
+					setTimeout(logOut, 10000);
+				}
+			});
+		}
+		
+		sesstimer = setTimeout(sessionExp, len);
+	}
+}
+// --------------------------------------------------------------------
+
+/**
+ * Auto Adjust Section Tag
+ *
+ */
+ 
+function autoAdjustSection() {
+	/*$('section').css({
+		top: $('header').height() + 20 + 'px'
+	});*/
+	$('section').stop().animate({
+		top: $('header').height() + 20
+	}, 300);
+}
+
+// --------------------------------------------------------------------
+
+/**
+ * "document.ready"
+ *
+ */
+$(function () {
+
+    $(WRAPPER + ' input').live('focusin', function () {
+        if ($(MSGBOX).length > 0) {
+            $(MSGBOX).dialog('close');
+        }
+        if ($(DIALOG).length > 0) {
+            $(DIALOG).dialog('close');
+            $('form').validationEngine('hideAll')
+        }
+    });
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Input Box White Spaces Remover
+	 *
+	 * Trims input box e.g "Text      " => "Text"
+	 *
+	 */
+    $('input').live('focusout', function () {
+        this.value = $.trim(this.value);
+    });
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Logout Button Live Event
+	 *
+	 */
+    $('#logout').live('click', function () {
+        messageBox('Are you sure you want to logout?', 'Logout', 'confirm', function () {
+            $(MSGBOX).dialog('close');
+            if ($(WRAPPER).is(':hidden') === true) {
+                $(WRAPPER).show()
+            }
+            logOut();
+        });
+        return false;
+    });
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Back Button Fix
+	 *
+	 */
+    $(window).bind('hashchange', function () {
+        if ((window.location.hash === '#login') || (window.location.hash === '#logout') || (window.location.hash === '#setpw') || (window.location.hash === '#forgotpw')) {
+            if ($('#instName').text() !== '') {
+                window.location.hash = '';
+            }
+        }
+        return false;
+    });
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Dynamic Form Close Live Event 
+	 *
+	 * hides current opened form, aborts all AJAX requests, hides floating menu, clears intervals
+	 *
+	 */
+    $('.closebtn').live('click', function () {
+        $(DIALOG + ',' + MSGBOX).dialog('close');
+        if (window.location.hash !== '#welcome') {
+            var panel = $('.panel');
+            var menu = $('#floatMenu');
+            menu.animate({
+                left: 0,
+            }, {
+                duration: 500,
+                queue: false
+            });
+            panel.attr('title', 'Hide Panel');
+            panel.toggle(function () {
+                menu.animate({
+                    left: -menu.width()
+                }, {
+                    duration: 500,
+                    queue: false
+                });
+                panel.attr('title', 'Show Panel');
+            }, function () {
+                menu.animate({
+                    left: 0
+                }, {
+                    duration: 500,
+                    queue: false
+                });
+                panel.attr('title', 'Hide Panel');
+            })
+        }
+        abortAJAXRequests();
+        if ($('form').length) {
+            $('form').validationEngine('hideAll');
+        }
+        $(WRAPPER).fadeOut();
+        clearInterval(intervals);
+        return false;
+    });
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Window Resize Event
+	 *
+	 */
+	 
+    $(window).resize(function () {
+        $('form').validationEngine('hideAll');
+		autoAdjustSection();
+    });
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Buttons Live Events
+	 *
+	 * changes form action according to button value
+	 *
+	 */
+    $(WRAPPER).find('button').live({
+		'click': function () {
+			//form action = button value
+			$('form').attr('action', this.value);
+		},
+		'focusout': function () {
+			//close all dialog boxes
+			/*if ($(MSGBOX).length > 0) {
+				$(MSGBOX).dialog('close');
+			}*/
+		}
+	});
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Input Filters Live Events
+	 *
+	 */
+    $('input.numbersOnly').live('keyup keypress', function (e) {
+        return numbersOnly(e.which)
+    });
+	$('input.integersOnly, input.currencyOnly').live('keyup keypress', function (e) {
+        return integersOnly(e.which)
+    });
+	$('input.integersOnly').live('focusout', function(e) {
+		if (this.value !== '') {
+			return this.value = this.value.replace(/^0+/, '');
+		}
+	});
+    $('input.lettersOnly').live('keyup keypress', function(e) {
+        return lettersOnly(e.which)
+    });
+    $('input.alphaNum').live('keyup keypress', function(e) {
+        return alphaNumericOnly(e.which)
+    });
+
+    $('input.alphaNumCustom').live('keyup keypress', function(e) {
+        return alphaNumericOnlyCustom(e.which)
+    });
+	$('input.alphaNumNoSp').live('keyup keypress', function(e) {
+        return alphaNumericOnlyNoSp(e.which)
+    });
+	$('input.hexOnly').live('keyup keypress', function(e) {
+        return hexOnly(e.which)
+    });
+	//currency
+	$('input:not([readonly]).currencyOnly').live('focusout', function(e) {
+		if (this.value === '') {
+			this.value = '0.00';
+		} else {
+			this.value = formatCurrency(this.value);
+		}
+	}).live('focusin', function(e) {
+		if (this.value === '0.00') {
+			this.value = '';
+		} else {
+			this.value = this.value.replace(/,/gi, '');
+		}
+	});
+	// --------------------------------------------------------------------
+
+	/**
+	 * Paste Disabler
+	 *
+	 * affects all inputs with type="text" property
+	 *
+	 */
+	$('input:text').live('paste', function() {
+		return false;
+	});
+	//$('input[readonly]').attr('onFocus', '');
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * Input Min Max Control
+	 *
+	 * affects all inputs with "step" attribute
+	 * sets input min max on focusout according to attr value
+	 *
+	 */
+	$('input[step]').live('focusout', function () {
+		var maxInput = $(this).attr('max');
+		var minInput = $(this).attr('min');
+		var val = parseInt(this.value);
+		
+		if (val < minInput || this.value === '') {
+			return this.value = minInput;
+		}
+		
+		if (val > maxInput) {
+			return this.value = maxInput;
+		}
+	});
+	
+	// --------------------------------------------------------------------
+
+	/**
+	 * AJAX Setup
+	 *
+	 * overrides jquery default AJAX setup
+	 *
+	 */
+    $.ajaxSetup({
+        timeout: TIMEOUT
+    });
+});
+
+// --------------------------------------------------------------------
+
+/**
+ * On AJAX Error Trigger
+ *
+ */
+$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+	
+	//parse error handler
+	if (event.type === 'ajaxError') {
+		//location.reload(true);
+	}
+	
+	if (jqXHR.statusText === 'timeout') {
+		messageBox('Connection timed out. Please try again later.', 'Error');
+		$(MSGBOX).one('dialogbeforeclose', function () {
+			window.location.hash = 'welcome';
+		});
+	} else {
+		try {
+			var json = $.parseJSON(jqXHR.responseText);
+			if ((json.success === false)) {
+				messageBox(json.message, json.heading)
+			}
+		} catch (e) {}
+	}
+    	/*data.error(function (a, b, c) {
+        if (b == 'timeout') {
+            messageBox('Connection timed out. Please try again later.', 'Error');
+            if ($(WRAPPER + ' h1').text() === 'Loading') {
+                window.location.hash = 'welcome'
+            }
+        }
+    })*/
+});
+
+// --------------------------------------------------------------------
+
+/**
+ * On AJAX Start Trigger
+ *
+ * aborts all AJAX requests
+ *
+ */
+$(document).ajaxStart(function() {
+	abortAJAXRequests();
+    //$('section').css('cursor', 'wait');
+});
+
+// --------------------------------------------------------------------
+
+/**
+ * On AJAX Success Trigger
+ *
+ * if invalid session, force logout
+ *
+ */
+$(document).ajaxSuccess(function(event, XMLHttpRequest, ajaxOptions) {
+    try {
+        var data = $.parseJSON(XMLHttpRequest.responseText);
+        if ((data.success === false) && (data.errorno == 8)) {
+            messageBox(data.message);
+			$(MSGBOX).one('dialogbeforeclose', logOut);
+        }
+    } catch (e) {
+	}
+    requests = [];
+});
+/*$(document).ajaxComplete(function(event, XMLHttpRequest, ajaxOptions) {
+    $('section').css('cursor', 'default');
+	//$('button:hover, a:hover, .terminal:hover').css('cursor', 'pointer');
+});*/
+
+// --------------------------------------------------------------------
+
+/**
+ * Password Strength Plugin
+ *
+ */
+(function (A) {
+    A.extend(A.fn, {
+        pstrength: function (B) {
+            var B = A.extend({
+                verdects: ['Very weak', 'Weak', 'Medium', 'Strong', 'Very strong'],
+                colors: ['#f00', '#c06', '#f60', '#3c0', '#3f0'],
+                scores: [10, 15, 30, 40],
+                common: ['password', 'god', '123456', '123', 'liverpool', 'letmein', 'qwerty', 'monkey'],
+                minchar: 6
+            }, B);
+            return this.each(function () {
+                var C = A(this).attr('id');
+                A(this).after('<div class="pstrength-info" id="' + C + '_text"></div>');
+                A(this).after('<div class="pstrength-bar" id="' + C + '_bar" style="margin-top:5px;border:1px solid white;font-size:1px;height:5px;width:0px;display:none"></div>');
+                A(this).keyup(function () {
+                    $('.pstrength-bar, .pstrength-info').show();
+                    A.fn.runPassword(A(this).val(), C, B)
+                })
+            })
+        },
+        runPassword: function (D, F, C) {
+            nPerc = A.fn.checkPassword(D, C);
+            var B = '#' + F + '_bar';
+            var E = '#' + F + '_text';
+            if (nPerc == -200) {
+                strColor = '#f00';
+                strText = 'Unsafe password word!';
+                A(B).css({
+                    width: '0%'
+                })
+            } else {
+                if (nPerc < 0 && nPerc > -199) {
+                    strColor = '#ccc';
+                    strText = 'Too short';
+                    A(B).css({
+                        width: '5%'
+                    })
+                } else {
+                    if (nPerc <= C.scores[0]) {
+                        strColor = C.colors[0];
+                        strText = C.verdects[0];
+                        A(B).css({
+                            width: '10%'
+                        })
+                    } else {
+                        if (nPerc > C.scores[0] && nPerc <= C.scores[1]) {
+                            strColor = C.colors[1];
+                            strText = C.verdects[1];
+                            A(B).css({
+                                width: '25%'
+                            })
+                        } else {
+                            if (nPerc > C.scores[1] && nPerc <= C.scores[2]) {
+                                strColor = C.colors[2];
+                                strText = C.verdects[2];
+                                A(B).css({
+                                    width: '50%'
+                                })
+                            } else {
+                                if (nPerc > C.scores[2] && nPerc <= C.scores[3]) {
+                                    strColor = C.colors[3];
+                                    strText = C.verdects[3];
+                                    A(B).css({
+                                        width: '75%'
+                                    })
+                                } else {
+                                    strColor = C.colors[4];
+                                    strText = C.verdects[4];
+                                    A(B).css({
+                                        width: '92%'
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            A(B).css({
+                backgroundColor: strColor
+            });
+            A(E).html('<span style="color: ' + strColor + ';">' + strText + '</span>')
+        },
+        checkPassword: function (C, B) {
+            var F = 0;
+            var E = B.verdects[0];
+            if (C.length < B.minchar) {
+                F = (F - 100)
+            } else {
+                if (C.length >= B.minchar && C.length <= (B.minchar + 2)) {
+                    F = (F + 0)
+                } else {
+                    if (C.length >= (B.minchar + 3) && C.length <= (B.minchar + 4)) {
+                        F = (F + 12)
+                    } else {
+                        if (C.length >= (B.minchar + 5)) {
+                            F = (F + 18)
+                        }
+                    }
+                }
+            }
+            /*if (C.match(/[a-z]/)) {
+                F = (F + 7)
+            }
+            if (C.match(/[A-Z]/)) {
+                F = (F + 7)
+            }
+            if (C.match(/\d+/)) {
+                F = (F + 0)
+            }
+            if (C.match(/(.*[0-9].*[0-9].*[0-9])/)) {
+                F = (F + 7)
+            }
+            if (C.match(/.[!,@,#,$,%,^,&,*,?,_,~]/)) {
+                F = (F + 7)
+            }
+            if (C.match(/(.*[!,@,#,$,%,^,&,*,?,_,~].*[!,@,#,$,%,^,&,*,?,_,~])/)) {
+                F = (F + 7)
+            
+            if (C.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
+                F = (F + 2)
+            }*/
+            if (C.match(/([a-z])/) && C.match(/([A-Z])/) && C.match(/([0-9])/) && C.match(/[!,@,#,$,%,^,&,*,?,_,~,+,=,-,(,)]/)) {
+                F = (F + 40)
+            }
+            /*if (C.match(/([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/)) {
+                F = (F + 3)
+            }*/
+            for (var D = 0; D < B.common.length; D++) {
+                if (C.toLowerCase() == B.common[D]) {
+                    F = -200
+                }
+            }
+            return F
+        }
+    })
+})(jQuery);
+
+// --------------------------------------------------------------------
+/**
+ * Unused Functions
+ *
+ */
+/*function showReg() {
+    var a = $('#form'),
+        WRAPPER = $('#wrapper'),
+        CONTENT = $('#content');
+    WRAPPER.animate({
+        height: a.height() + 30 + 'px'
+    }, function () {
+        $('#reg_input').fadeIn()
+    });
+    CONTENT.animate({
+        height: CONTENT.height() + 30 + 'px'
+    });
+    return false
+}*/
+/*function hideReg() {
+    var a = $('#form'),
+        WRAPPER = $('#wrapper'),
+        CONTENT = $('#content');
+    $('#reg_input').fadeOut(function () {
+        WRAPPER.animate({
+            height: a.height() - 30 + 'px'
+        });
+        CONTENT.animate({
+            height: CONTENT.height() - 30 + 'px'
+        })
+    });
+    return false
+}*/
+/*function setdefaultSelected(a, b) {
+    $('select' + a + ' option[selected]').removeAttr('selected');
+    $('select' + a + ' option[value="' + b + '"]').attr('selected', 'selected')
+}*/

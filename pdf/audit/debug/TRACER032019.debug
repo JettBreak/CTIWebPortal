@@ -1,0 +1,27 @@
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37| START OF TRACE
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37| REQUESTID: 2118
+TRC:03.05.2019.09.05.37| CLASS: library.reportclass.ReportsParameter
+TRC:03.05.2019.09.05.37| VOIDCODE: 903
+TRC:03.05.2019.09.05.37| VOIDDESC: Parsing Error
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37| ERROR MESSAGE: Unparseable date: "03/05/2019 00:00:00
+TRC:03.05.2019.09.05.37| "
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37| TRACE MESSAGE: 
+TRC:03.05.2019.09.05.37| java.text.DateFormat.parse(DateFormat.java:366)
+TRC:03.05.2019.09.05.37| library.reportclass.ReportsParameter.getTransactionDa
+TRC:03.05.2019.09.05.37| te(ReportsParameter.java:194)
+TRC:03.05.2019.09.05.37| library.reportclass.ReportsParameter.getReportParam(R
+TRC:03.05.2019.09.05.37| eportsParameter.java:133)
+TRC:03.05.2019.09.05.37| library.reportclass.ReportsParameter.generateParamter
+TRC:03.05.2019.09.05.37| s(ReportsParameter.java:59)
+TRC:03.05.2019.09.05.37| library.reportclass.ReportGenerator.processReport(Rep
+TRC:03.05.2019.09.05.37| ortGenerator.java:203)
+TRC:03.05.2019.09.05.37| ReportSystem.main(ReportSystem.java:37)
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37| END OF TRACE
+TRC:03.05.2019.09.05.37|  
+TRC:03.05.2019.09.05.37|  

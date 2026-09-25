@@ -1,0 +1,294 @@
+/*
+Coreware Technologies, Inc.
+http://www.corewaretech.com
+
+Coreware Theme
+Author: Franz Evangelista
+Copyright (c) 2010 CorewareTech
+*/
+
+@charset "utf-8";
+/* Reset Styles */
+
+html, body, div, span, applet, object, 
+iframe, h1, h2, h3, h4, h5, h6, p, 
+blockquote, pre, a, abbr, acronym, 
+address, big, cite, code, del, dfn, 
+em, img, ins, kbd, q, s, samp, small, 
+strike, strong, sub, sup, tt, var, b, 
+u, i, center, dl, dt, dd, ol, ul, li, 
+fieldset, form, label, legend, table, 
+caption, tbody, tfoot, thead, tr, th, 
+td, article, aside, canvas, details, 
+embed, figure, figcaption, footer, 
+header, hgroup, menu, nav, output, 
+ruby, section, summary, time, mark, 
+audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+:focus {
+	outline: none;
+}
+::-moz-focus-inner {
+	border:0;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after, q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+option {
+	margin: 2px 4px;
+	padding: 0;
+}
+/* Body Styles ------------------------------------------------------------------------------------------------- */
+
+body {
+	background: #e3f5eb url(../../images/ucpbsavings/contentbg.jpg) repeat-x fixed;
+	background-position: 0px 30px;
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 12px;
+	line-height: 20px;
+}
+td {
+	vertical-align: top;
+}
+th {
+	text-align: center;
+}
+iframe {
+	
+}
+a, a:link, a:active, a:visited {
+	color: #fc0;
+	text-decoration: none;
+	cursor: pointer;
+}
+a:hover {
+	color: #ccf;
+	cursor: pointer;
+	text-decoration: underline;
+}
+strong {
+	color: #fc0;
+	font-weight: bold;
+}
+p {
+	margin: 10px 0;
+	text-align: justify;
+}
+header {
+	background: #017633 url(../../images/ucpbsavings/header.png) bottom center no-repeat;
+	color: #fff;
+	font-size: 11px;
+	text-shadow: 1px 1px 1px #000;
+	line-height: 22px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	min-height: 40px;
+ 	/*height: header - <length>;*/
+	z-index: 1;
+}
+section {
+	padding: 0 0 50px 0;
+	/*height: 100%;*/
+	position: absolute;
+	top: 78px;
+	width: 100%;
+}
+footer {
+	background: #017633 url(../../images/ucpbsavings/footer.png) top center no-repeat;
+	color: #fff;
+	font-size: 10px;
+	text-align: center;
+	line-height: 15px;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+ 	/*height: footer - <length>;*/
+}
+/*@media screen {
+	body > header {
+		position: fixed;
+	}
+	body > footer {
+		position: fixed;
+	}
+}
+* html body {
+	overflow: hidden;
+}
+* html section {
+	height: 100%;
+	overflow: auto;
+}*/
+/* Header Styles ------------------------------------------------------------------------------------------------- */
+
+.wrapper {
+	margin: 5px 20px;
+}
+#instName {
+	font-weight: bold;
+	font-size: 2.7em;
+	text-shadow: 2px 2px 2px #000;
+}
+#instLogo {
+	position: fixed;
+	width: 200px;
+	left: 50%;
+	bottom: 50px;
+	margin-left: -100px;
+	z-index: -1;
+}
+#topleft {
+	clear: none;
+	float: left;
+}
+#userinfo {
+	clear: none;
+	float: left;
+}
+#topRight {
+	float: right;
+}
+
+//* Misc Styles ------------------------------------------------------------------------------------------------- */
+
+.floatLeft {
+	float: left;
+}
+.floatRight {
+	float: right;
+}
+.links {
+	padding: 5px 20px 0 0;
+}
+.links span {
+	color: #ccf;
+	cursor: pointer;
+}
+.links span:hover {
+	color: #ccf;
+	text-decoration: underline;
+}
+.red {
+	color: #c00;
+	font-size: 1.6em;
+	position: relative;
+	top: 0.3em;
+}
+.loader {
+	background: url(../../images/ucpbsavings/ajax-loader.gif) top center no-repeat;
+	position: absolute;
+	width: 48px;
+	height: 48px;
+	top: 50%;
+	left: 50%;
+	margin-top: -24px;
+	margin-left: -24px;
+}
+.ui-progressbar-value {
+	background-image: url(../../images/ucpbsavings/pbar.gif) !important;
+}
+.imgWrapper {
+	background: url(../../images/grey.png);
+	border: 1px solid #888;
+	width: 100px;
+	height: 100px;
+	margin: 0 15px 15px 0;
+}
+.logo {
+	margin: 0 0 10px 0;
+}
+.label, legend {
+	color: #ccf;
+	font-weight: bold;
+}
+.upperCase {
+	text-transform: uppercase;
+}
+.lowerCase {
+	text-transform: lowercase;
+}
+.properCase {
+	text-transform: capitalize;
+}
+/* Floating Menu Styles ------------------------------------------------------------------------------------------------- */
+
+@media screen {
+	body > #floatMenu {
+		position: fixed;
+	}
+}
+#floatMenu {
+	font-size: 1.1em;
+	top: 70px;
+	width: 240px;
+	z-index: 1;
+	display: none;
+}
+#floatMenu .panel {
+	background: url(../../images/ucpbsavings/panel.png);
+	position: absolute;
+	top: 50%;
+	left: 240px;
+	width: 16px;
+	height: 50px;
+	margin-top: -25px;
+	cursor: pointer;
+}
+#floatMenu ul li span.menu {
+	background-color: rgba(0,0,0,0.5);
+	border: 1px solid #555;
+	border-left: 6px solid #555;
+	display: block;
+	text-decoration: none;
+	color: #fff;
+	padding: 5px 5px 5px 25px;
+}
+#floatMenu ul li ul {
+	list-style-type: disc;
+	color: #0ff;
+}
+#floatMenu ul li span.menu:hover {
+	background-color: rgba(255,204,0,0.9);
+	color: #000;
+	font-weight: bold;
+}
+#floatMenu .ui-accordion-content {
+	background-color: rgba(0,0,0,0.3);
+	border: 1px solid #333;
+}
+#floatMenu .ui-accordion-content li {
+	margin-left: 20px;
+}
+#floatMenu .ui-accordion-content a {
+	color: #fff;
+}
+#floatMenu .ui-accordion-content a:hover {
+	color: #fc0;
+}

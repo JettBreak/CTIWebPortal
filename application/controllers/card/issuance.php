@@ -1,0 +1,635 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Issuance extends CI_Controller {
+	
+	private $fileVersion = '1.10.00';
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(CARDISSUANCE_NO);
+		
+		$this->load->library('version');
+
+		$file = basename(__DIR__) . '/' . basename(__FILE__);
+
+		$verified = $this->version->validate($file, $this->fileVersion);
+
+		if (!$verified) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Module is out of date. Please contact software administrator.'
+			));
+		}
+
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->helper('url');
+		
+		$card = $this->card_model;
+		$bnkcode = str_pad($this->core->getBANKCODE(), 3, '0', STR_PAD_LEFT);
+		
+		if ($cust = $this->cache->get($this->core->getSessionID() . 'cust')) {
+
+			$cache = $this->cache;
+			$core = $this->core;
+			$input = $this->input;
+					
+			$data['cifseqno'] = $cust['cifseqno'];
+			$data['custName'] = $cust['fullName'];
+			
+			$data['newCardNo'] = NULL;
+
+			$cache = $this->cache;
+			$core = $this->core;
+			$input = $this->input;
+			
+			//get branches
+			if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+				$this->load->model('coreapp/branch_model');
+				$result = $this->branch_model->getBranchList();
+			
+				$branches = $result->result_array();
+				
+				$result->free_result();
+				$result->next_result();
+				$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+			}
+			
+			$data['branches'] = NULL;
+			$currentBrCode = NULL;
+			
+			if (count($branches) > 0) {
+				foreach ($branches as $row) {
+					//if user branch is not allowed to monitor users from other branches
+					$matched = $row['brseqno'] === $this->core->getBranchID() ? TRUE : FALSE;
+					
+					if (!$this->core->isHeadOffice() && $matched) {
+						$data['branches'] = '<option value="'. $row['brcode'] .'">'. $row['brname'] .'</option>';
+						break;
+					}
+					
+					if ($matched) {
+						$selected = ' selected';
+						$currentBrCode = $row['brcode'];
+					} else {
+						$selected = NULL;
+					}
+					
+					$data['branches'] .= '<option value="'. $row['brcode'] .'"'. $selected .'>'. $row['brname'] .'</option>';
+				}
+			} else {
+				$data['branches'] = '<option value="">No Branches Defined</option>';
+			}
+			//end
+			
+			if (!$cardBIN = $cache->get($this->core->getSessionID() . 'cardBINWithFormat')) {
+				$result = $card->getCardBINWithFormat();
+				$cardBIN = $result->result_array();
+				
+				$result->free_result();
+				$result->next_result();
+				
+				$cache->save($this->core->getSessionID() . 'cardBINWithFormat', $cardBIN, CACHE_TTL);
+			}
+			
+			$data['cardBIN'] = NULL;
+			$cardNoMask = NULL;
+			$cardNoPlaceholder = NULL;
+			
+			foreach ($cardBIN as $row)
+			{			
+				$val = $row['codevalue'];
+				$format = $row['formatvalue'];
+								
+				$data['cardBIN'] .= '<option value="'. $val .'" format="'. $format .'">'. $val .'</option>';
+			}
+
+			$result = $card->getCardType('N');
+			$cardType = $result->result_array();
+				
+			$result->free_result();
+			$result->next_result();
+					
+				//$cache->save($this->core->getSessionID() . 'cardType', $cardType, CACHE_TTL);
+			//}
+			
+			$allows = NULL;
+			$format = NULL;
+			$format1= NULL;
+
+			$data['cardtype'] = NULL;
+			$replace = array('-', 'I');
+			
+			foreach ($cardType as $row)
+			{
+				$val  = $row['accttype'];
+				$desc = $row['description'];
+
+				$format = str_replace($replace, '', $row['formatvalue']);
+				$format = str_replace('C', 'N', $format);
+
+				$format1= $format1 == NULL ? $format : $format1 ;
+
+				if ($this->core->hasProductCode()) {
+					$format = str_replace(array('P'), 'N', $format);
+				}
+					
+				$data['cardtype'] .= '<option value="'. $val .'" format="'.$format.'">'. $desc .'</option>';
+			}
+
+			$bCount = NULL;
+			foreach (count_chars($format, 1) as $i => $cnt) {
+				if (chr($i) === 'B') {
+					$bCount = $cnt;
+				}
+			}
+			
+			$format = str_replace($replace, '', $format1);
+			$format = str_replace(array('C'), 'N', $format);
+			//$format = str_replace(str_repeat('B', $bCount), str_pad($this->core->getBranchCode(), '0', $bCount, STR_PAD_LEFT), $format);
+			if ($this->core->hasProductCode()) {
+				$format = str_replace(array('P'), 'N', $format);
+			}
+			if ($cardNoMask === NULL) {
+				$mask = str_replace(str_repeat('B', $bCount), str_pad($this->core->getBranchCode(), '0', $bCount, STR_PAD_LEFT), $format);
+				
+				$pCount = NULL;
+				foreach (count_chars($mask, 1) as $i => $cnt) {
+					if (chr($i) === 'P') {
+						$pCount = $cnt;
+					}
+				}
+				$mask = str_replace(str_repeat('P', $pCount), str_pad($cardType[0]['accttype'], '0', $pCount, STR_PAD_LEFT), $mask);
+
+				$cardNoMask = $mask;
+				$cardNoPlaceholder = str_replace('N', '_', $mask);
+			}
+			
+			$data['cardNoMask'] = $cardNoMask;
+			$data['cardNoPlaceholder'] = $cardNoPlaceholder;
+
+			if ( $bnkcode == '002') {
+				$data['hiddenInput'] = '<tr><td><label for="embossName">Emboss Name:</label></td>'.
+				'<td><input type="text" name="embossName" id="embossName" style="width:200px" maxlength="25"/></td></tr>';
+			} else {
+				$data['hiddenInput'] = '';
+			}
+			$data['sessionExp'] = $this->core->getSessionExp();
+
+			$this->load->view('card/issuance', $data);
+		} else {
+			$this->load->helper('url');
+			redirect('welcome');
+		}
+	}
+	
+	function verify()
+	{	
+		$this->load->model('coreapp/card_model');
+		$this->load->model('coreapp/branch_model');
+		
+		$card  = $this->card_model;
+		$brnch  = $this->branch_model;
+		$input = $this->input;
+		
+		$prKey = $input->post('cardBIN', TRUE) . $input->post('cardNo', TRUE);
+		$cifseqno = $input->post('cifseqno', TRUE);
+
+		$brseqno = $this->core->getBranchID();
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+
+		if ($this->core->isHeadOffice()) {
+			$branchID = $input->post('brseqno', TRUE);
+		} else {
+			$branchID = $this->core->getBranchCode();
+		}
+		
+		$tokenid = 0;
+		$errn = 0;
+		if ($this->core->isCoreEncrypt()) {
+			$result = $card->getCardToken($prKey,$branchID,$userAudit,$sessionID);
+
+			$row = $result->row_array();
+
+			$result->free_result();
+			$result->next_result();
+
+			
+			if ($row['errno'] > 0) {
+				echo json_encode(array(
+					'verified' => FALSE,
+					'message' => $row['errmsg'],
+					'errorno' => $row['errno']
+				));
+				exit();
+			} else {
+				$tokenid = $row['tokenid'];
+			}
+		}
+
+		$result = $card->checkiftokencolexists();
+		$row = $result->row_array();
+
+		$errn = $row['PCIDSS'];
+
+		$result->free_result();
+		$result->next_result();
+		
+		if ($errn == 0) {  
+			$result = $card->getValidCardForActivationpcidss($prKey, $tokenid, $this->core->isCoreEncrypt());
+			$row = $result->row_array();
+			
+			$errNo = $row['errno'];
+		} else {
+			$result = $card->getValidCardForActivation($prKey, $tokenid, $this->core->isCoreEncrypt());
+			$row = $result->row_array();
+			
+			$errNo = $row['errno'];
+		}
+		
+		switch ($errNo) {
+			case '-1':
+				$verified = FALSE;
+				$message  = $row['errmsg'];
+				$prseqno  = NULL;
+				$acctType = NULL;
+				$cardStat = NULL;
+				$cardType = NULL;
+				break;
+			case '0':
+				$verified = TRUE;
+				$prseqno  = $row['prseqno'];
+				$acctType = $row['accttype'];
+				$cardStat = strtoupper($row['statdesc']);
+				$cardType = $row['acctdesc'];
+				$message  = NULL;
+				break;
+			case '1':
+				$verified = FALSE;
+				$message  = $breakmsg;
+				$prseqno  = NULL;
+				$acctType = NULL;
+				$cardStat = NULL;
+				$cardType = NULL;
+				break;
+			default:
+				$verified = FALSE;
+				$message  = $row['errmsg'] .'. must be "For Activation" status';
+				$prseqno  = NULL;
+				$acctType = NULL;
+				$cardStat = NULL;
+				$cardType = NULL;
+				break;
+		}
+		
+
+		$result->free_result();
+		$result->next_result();
+
+		if ($errNo !== '-1') {
+			if ($errNo !== '1') {
+				$result = $brnch->getBranchCodeValue($row['brseqno']);
+				$brnchcode = $result->row_array();
+
+				$brnchcode = $brnchcode['brcode'];
+
+				if (intval($brnchcode) !== intval($branchID) ) {
+					echo json_encode(array(
+						'verified' => FALSE, 
+						'message' => 'Card maintained by other branch.'
+					));
+					exit();
+				}
+			} else {
+				echo json_encode(array(
+					'verified' => FALSE, 
+					'message' => $breakmsg
+				));
+				exit();
+			}
+			
+		}
+
+		$result = $card->searchAccountbyCIF($cifseqno, $row['brseqno'],$cifseqno, $row['brseqno']);
+
+		$details = array();
+		$message2 = '';
+		$hasaccount = FALSE;
+
+		$resultarr = $result->result_array();
+		
+		if (count($resultarr) > 0) {
+			foreach ($resultarr as $row)
+			{
+				$details[] = array(
+				'<input type="checkbox" name="accounts[]" id="'. $row['prseqno'] .'" value="'. $row['acctno'] .':'. $row['accttype'] .':'.$row['prseqno'].'"/>',
+					$row['acctno'],
+					$row['description']
+				);
+			}
+			$success = TRUE;
+			$hasaccount = TRUE;
+		} else {
+			if ($this->core->isISOCustomer()) {
+				$success = FALSE;
+				$message2 = "No accounts linked";
+			} else {
+				$success = TRUE;
+			}
+		}
+
+		$showacctlist = FALSE;
+		if ($this->core->isISOCustomer()) {
+			$showacctlist = TRUE;
+		}
+
+		//echo json_encode(array(
+		//));
+
+		echo json_encode(array(
+			'verified' => $verified, 
+			'message'  => $message,
+			'prseqno'  => $prseqno,
+			'acctType' => $acctType,
+			'cardStat' => $cardStat,
+			'cardType' => $cardType,
+			'success' => $success,
+			'result' => $details,
+			'showlist' => $showacctlist,
+			'hasAccount' => $hasaccount,
+			'message2' => $message2
+		));
+	}
+
+	function issuanceinfo()
+	{
+		
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$card  = $this->card_model;
+		$core  = $this->core;
+		$input = $this->input;
+		
+		$prseqno   = $input->post('prseqno', TRUE);
+		$prKey	   = $input->post('cardBIN', TRUE) . $input->post('cardNo', TRUE);
+		$cifseqno  = $input->post('cifseqno', TRUE);
+		$custName  = $input->post('custName', TRUE);
+		$acctType  = $input->post('acctType', TRUE);
+		$embossName  = $input->post('embossName', TRUE);
+		$branchID  = $core->getBranchID();
+		$ipAddress = $core->getIPAddress();
+		$workstation = $core->getWorkstation();
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+		$bnkcode = str_pad($this->core->getBANKCODE(), 3, '0', STR_PAD_LEFT);
+				
+		$result = $card->activateCard(
+			$prseqno,
+			$prKey,
+			$cifseqno,
+			$custName,
+			$acctType,
+			$branchID,
+			$ipAddress,
+			$workstation,
+			$userAudit,
+			$sessionID
+		);
+
+		$activateresult = $result->row_array();
+
+		$result->free_result();
+		$result->next_result();
+
+		if ($core->isISOCustomer()) {
+			
+			//$result = $card->searchAccountbyCIF($cifseqno, $branchID);
+
+			//$data = $result->result_array();
+			
+			//$result->free_result();
+			//$result->next_result();
+
+			$data = $input->post('accounts', TRUE);
+			
+			$validcnt = 0;
+			$accounts = ''; 
+			$inrowcnt = 0;
+			$invalidacctcnt = 0;
+			$inacctinfobykey = 0;
+			
+			$acctdetailcntis10 = 0; 
+			$acctdetailcntis4 = 0; 
+			$acctdetailcntis8 = 0; 
+			$statusnotfound = 0;
+			$abkonloop = "(";
+			//$infobykeyparams = '(';
+			$hasPrimarySA = FALSE;
+			$hasPrimaryCA = FALSE;
+			$primarySA = '';
+			$primaryCA = '';
+
+			$counter = 0;
+			$accountlist = '';
+			$accountdata = '';
+			foreach ($data as $acctbycif) {
+
+				$cifacctno		= substr($acctbycif, 0, 11);
+				$cifaccttype	= substr($acctbycif, 12, 2);
+				$cifacctprseqno	= substr($acctbycif, 15);
+
+
+				//$infobykeyparams .= $acctbycif['acctno'].'%&%'.$acctbycif['accttype']. '+';
+				//$cifacctprseqno = $acctbycif['prseqno'];
+				//$cifacctno = $acctbycif['acctno'];
+				//$cifaccttype = $acctbycif['accttype'];
+				//$result = $card->validateAccountLink($cifacctprseqno);
+
+				//$validacct = $result->row_array();
+
+				$inrowcnt++;
+
+				//$result->free_result();
+				//$result->next_result();
+				if ($cifaccttype == 10) {
+					$primarySA = $hasPrimarySA ? 'N' : 'Y';
+					$hasPrimarySA = TRUE;
+				} elseif ($cifaccttype == 20) {
+					$primaryCA = $hasPrimaryCA ? 'N' : 'Y';
+					$hasPrimaryCA = TRUE;
+				}
+				//if (intval($validacct['link']) === 0) {
+					//$invalidacctcnt++;
+					$result = $card->getAccountInfoByKey($cifacctno, $cifaccttype);
+					$acctdetail = $result->row_array();
+
+					$accountdata .= $cifacctno.$cifaccttype;
+
+					$abkonloop .= count($acctdetail) . '|';
+					
+					if (count($acctdetail) > 0) {
+
+						$inacctinfobykey++;
+
+						if ($acctdetail['status'] == 10) {
+							$acctdetailcntis10++;
+							$verified = FALSE;
+							$message = 'Account is for verification';
+						} else if ($acctdetail['status'] == 8) {
+							$acctdetailcntis8++;
+							$verified = FALSE;
+							$message = 'Account is closed';
+						} else if ($acctdetail['status'] == 4) {
+							$acctdetailcntis4++;
+
+							$xml = '<ACCTNO>'. $acctdetail['prkey'] .'</>'.
+									'<ACCTTYPE>'. $acctdetail['acctdesc'] .'</>'.
+									'<ACCTCODE>'. $acctdetail['accttype'] .'</>'.
+									'<AUTHTYPE>'. $acctdetail['authmode'] .'</>'.
+									'<ACCT>'. $acctdetail['acctcode'] .'</>'.
+									'<AUTHCODE>'. $acctdetail['issuer'] .'</>'.
+									'<PRIMARY>'. ($acctdetail['accttype'] == 10 ? $primarySA : $primaryCA) .'</>';
+
+							$clprseqno 		= $prseqno;
+							$clprkey		= $prKey;
+							$clpseqnoLink 	= $acctdetail['prseqno'];
+							$clacctno 		= $acctdetail['prkey'];
+							$clacctdesc 	= $acctdetail['acctdesc'];
+
+							$result->free_result();
+							$result->next_result();
+
+							$result    = $card->getCardAccountLink($clprseqno, $userAudit, $sessionID);
+
+							$resultcardAcctLink = $result->result_array();
+
+							$result->free_result();
+							$result->next_result();
+
+							$prptr = 1;
+							
+							$prptr += count($resultcardAcctLink);
+							
+							$result->free_result();
+							$result->next_result();
+
+							$result	= $card->insertCardAccountLink(
+								$clprseqno,
+								$clpseqnoLink,
+								$prptr,
+								$xml,
+								$clacctno,
+								$clacctdesc,
+								$clprkey,
+								$branchID,
+								$ipAddress,
+								$workstation,
+								$userAudit,
+								'', //user override
+								$sessionID
+							);
+
+
+							$counter++;
+							$accountlist .= $cifacctno . '['.$cifaccttype.$cifacctprseqno.']/' ;
+
+							$row = $result->row_array();
+							if (intval($row['errno']) > 0) {
+								$errNo = $row['errno'];
+								break;
+							}
+						} else {
+							$statusnotfound++;
+						}
+					}
+
+					$result->free_result();
+					$result->next_result();
+				//}
+			}
+
+			$abkonloop .= ")";
+			//$infobykeyparams .= ")";
+		}	
+		
+		
+		$errNo = $activateresult['errno'];
+		$errMsg =  $activateresult['errmsg'];
+		$embstat = 'N/A';
+		
+		if ($errNo === '0') {
+			$success = TRUE;
+			if ($this->core->isISOCustomer()) {
+
+				$result->free_result();
+				$result->next_result();
+
+				$result = $card->updateCardForIssuance(
+					strval($this->core->getBANKCODE()),
+					$prseqno,
+					$userAudit,
+					$sessionID
+				);
+
+				$message = 'Card is now for approval';
+			} else {
+				$message = $errMsg	;
+			}
+
+			if ($bnkcode == '002') {
+				$result = $card->updateEmbossName($prseqno,$embossName);
+				$row = $result->row_array();
+
+				if ($row['errno'] > 0) {
+					$embstat = 'Failed to update';
+				} else {
+					$embstat = 'Successfully updated';
+				}
+			}
+		} else {
+			$success = FALSE;
+			$message = $activateresult['errmsg'];
+		}
+
+		echo json_encode(array(
+			'successissuance' => $success,
+			'message' => $message . ' ' . $counter . ' ' . $accountlist . ' ' . $accountdata/*,
+			'embossname' => $embstat,
+			'datacount' => count($data) . '|is4' . $acctdetailcntis4 . 
+			'|is10' . $acctdetailcntis10 . 
+			'|is8' . $acctdetailcntis8 .
+			'|inrow' . $inrowcnt .
+			'|invac' . $invalidacctcnt .
+			'|inabk' . $inacctinfobykey .
+			'|insnf' . $statusnotfound . 
+			'|abkonloop' . $abkonloop .
+			'|infobykeyparams' . $infobykeyparams,
+			'data' => $data*/
+		));
+	}
+}
+?>

@@ -1,0 +1,243 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class NewEntry extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(ACCNTNEW_NO);
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->library('coreconverters');
+		
+		$branchCode = $this->core->getBranchCode();
+		
+		if (!$accountTypes = $this->cache->get($this->core->getSessionID() . 'accountTypes')) {
+			$result = $this->card_model->getAccountType();
+			
+			$accountTypes = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'accountTypes', $accountTypes, CACHE_TTL);
+		}
+		
+		$first = current($accountTypes);
+		
+		$formatValue = $first['formatvalue'];
+		$brChar = 'B';
+		$newFormat = $this->getFormat($formatValue, $brChar);
+		
+		$data['mask'] = $newFormat;
+		$placeholder = str_replace(array('P', 'S', 'C', 'X'), '_', $newFormat);
+		$data['acctNoPlaceholder'] = $placeholder;
+		
+		$acctChar = $first['acctchar'];
+		
+		switch ($acctChar) {
+			case 'A':
+				$XFormat = '[A-Za-z]';
+				break;
+			case 'N':
+				$XFormat = '[0-9]';
+				break;
+			case 'X':
+				$XFormat = '[A-Za-z0-9]';
+				break;
+			default:
+				$XFormat = '[A-Za-z0-9]';
+				break;
+		}
+		
+		$data['XFormat'] = $XFormat;
+		$allows = NULL;
+		$data['accountTypes'] = NULL;//'<option mask="SSSSBBBBBB" xchar="[A-Za-z0-9]">TEST</option>';
+		foreach ($accountTypes as $row) {
+			$val = $row['accttype'];
+			
+			switch ($row['acctchar']) {
+				case 'A':
+					$xChar = '[A-Za-z]';
+					break;
+				case 'N':
+					$xChar = '[0-9]';
+					break;
+				case 'X':
+					$xChar = '[A-Za-z0-9]';
+					break;
+				default:
+					$xChar = '[A-Za-z0-9]';
+					break;
+			}
+
+			$brChar = 'B';
+			$newFormat = $this->getFormat($row['formatvalue'], $brChar);
+			$placeholder = str_replace(array('P', 'S', 'C', 'X'), '_', $newFormat);
+			
+			$result = $this->card_model->getDefaultAllows('ACCT', $val, 'ACCT');
+			$r = $result->row_array();
+			
+			if ($result->num_rows() > 0) {
+				$defAllows = rtrim($this->coreconverters->asciiHexToBin($r['allows']), 0);
+			} else {
+				$defAllows = 0;
+			}
+			
+			if ($allows === NULL) {
+				$allows = $defAllows;
+			}
+			
+			$result->free_result();
+			$result->next_result();
+			
+			$data['accountTypes'] .= '<option inputph="'. $placeholder .'" mask="'. $row['formatvalue'] .'" xchar="'. $xChar .'" defaultallows="'. $defAllows .'" value="'. $val .'">'. $row['description'] .'</option>';
+		}
+		
+		//get branches
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		$currentBrCode = NULL;
+		
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				$matched = $row['brseqno'] === $this->core->getBranchID() ? TRUE : FALSE;
+				
+				if (!$this->core->canUser() && $matched) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				
+				if ($matched) {
+					$selected = ' selected';
+					$currentBrCode = $row['brcode'];
+				} else {
+					$selected = NULL;
+				}
+				
+				$data['branches'] .= '<option value="'. $row['brseqno'] .'"'. $selected .'>'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		//end
+		
+		//tran allows		
+		$result = $this->card_model->getDefaultTranAllows('ACCT');
+		
+		$data['tranAllows'] = NULL;
+		
+		foreach ($result->result_array() as $row) {
+			$data['tranAllows'] .= '<input type="checkbox" id="bit'. $row['bitno'] .'" name="allows[]" value="'. $row['bitno'] .'" checked/>'. $row['description'] .'<br />';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		//$this->output->cache(CACHE_TTL);
+		$data['title'] = 'New Account Entry';
+		$data['formAction'] = 'accounts/newentry/submit';
+		
+		$this->load->view('accounts/newentry', $data);
+	}
+	
+	function getFormat($formatValue, $brChar)
+	{
+		$branchCode = $this->core->getBranchCode();
+		
+		$padCnt = substr_count($formatValue, $brChar);
+		$get = str_repeat($brChar, $padCnt); //BBBBBB
+		$brVal = str_pad($branchCode, $padCnt, '0', STR_PAD_LEFT);
+		$newFormat = str_replace($get, $brVal, $formatValue);
+		
+		return $newFormat;
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('coreconverters');
+		
+		$card  = $this->card_model;
+		$core  = $this->core;
+		$input = $this->input;
+		
+		$cifseqno 	 = $input->post('cifseqno', TRUE);
+		$brseqno     = $input->post('branch', TRUE);
+		$prKey       = $input->post('accntNo', TRUE);
+		$acctType    = $input->post('accntType', TRUE);
+		$status      = 10; //for verification
+		
+		$allows = $this->input->post('allows');
+		
+		if ($allows) {
+			$max = max($allows);
+			$bin = '';
+			for ($i = 1; $i <= $max; $i++) {	
+				if (in_array($i, $allows)) {
+					$bin .= '1';
+				} else {
+					$bin .= '0';
+				}
+			}
+		} else {
+			$bin = '0';
+		}
+		
+		$hex = $this->coreconverters->asciiBinToHex($bin);
+		
+		$ipAddress   = $core->getIPAddress();
+		$workstation = $core->getWorkstation();
+		$userAudit	 = $core->getUserID();
+		$userOverride = $this->session->userdata('userOverride');
+		$sessionID	 = $core->getSessionID();
+		
+		$result = $card->insertAccount(
+			$cifseqno,
+			$brseqno,
+			$prKey,
+			$acctType,
+			$status,
+			$hex,
+			$ipAddress,
+			$workstation,
+			$userAudit,
+			$userOverride,
+			$sessionID
+		);
+		
+		$this->session->unset_userdata('userOverride');
+		$row = $result->row_array();
+		
+		if ($row['errno'] === '0') {
+			$success = TRUE;
+			$message = 'Account successfully created<br />Please verify your account';
+		} else {
+			$success = FALSE;
+			$message = $row['errmsg'];
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+}
+/* End of file newentry.php */
+/* Location: ./application/contollers/accounts/newentry.php */

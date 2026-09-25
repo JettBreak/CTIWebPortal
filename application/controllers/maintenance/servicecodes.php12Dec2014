@@ -1,0 +1,119 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class ServiceCodes extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$types = NULL;
+		foreach ($this->core->getChargeTypes() as $val => $desc) {
+			$types .= '<option value="'. $val .'">'. $desc .'</option>';
+		}
+		
+		$data['chargeTypes'] = $types;
+		
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('maintenance/servicecodes', $data);
+	}
+	
+	function getData()
+	{
+		$this->load->model('coreapp/svccode_model');
+		
+		$chargeType = $this->input->get('chargeType', TRUE);
+		
+		$result = $this->svccode_model->getServiceCodeList($chargeType);
+		
+		$details = array();
+		$success = FALSE;
+		
+		if ($result->num_rows() > 0) {
+			$success = TRUE;
+			foreach ($result->result_array() as $row)
+			{
+				$details[] = array(
+					$row['trxcode'],
+					$row['description'],
+					$row['mnemonic']
+				);
+			}
+			
+			//get last bitNo
+			$trxcode = end($result->result_array());
+			$trxcode = intval($trxcode['trxcode']) + 1;
+			//end
+		} else {
+			$trxcode = 10000;
+		}
+		
+		$_SESSION['lastTrxcode'] = $trxcode;
+		
+		$result->free_result();
+		$result->next_result();
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $details
+		));
+	}
+	
+	function cache()
+	{
+		$_SESSION['svccode'] = $_POST;
+		
+		echo json_encode(array(
+			'success' => TRUE
+		));
+	}
+	
+	function delete()
+	{
+		$this->load->model('coreapp/svccode_model');
+		
+		$trxcode = $this->input->post('trxcode', TRUE);
+		$brseqno = $this->core->getBranchID();
+		$ipAddress = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$result = $this->svccode_model->deleteServiceCode(
+			$trxcode, $brseqno, $ipAddress,
+			$workstation, $userAudit, $sessionID
+		);
+		
+		$row = $result->row_array();
+		
+		if (intval($row['errno']) > 0) {
+			$success = FALSE;
+			$message = $row['errmsg'];
+		} else {
+			$success = TRUE;
+			$message = 'Removed successfully';
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+}

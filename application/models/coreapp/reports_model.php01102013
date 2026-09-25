@@ -1,0 +1,33 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Reports_model extends CI_Model {
+	private $db, $security;
+	
+	function Reports_model() {
+		$this->db = $this->load->database(DB1, TRUE);
+		$this->security = $this->coresecurity;
+		
+		//sets the current database
+		$this->security->_initDb($this->db);
+	}
+	//$brseqno, $userAudit, $sessionID
+	function getCardInventory()
+	{
+		$query = "CALL sp_getcardinventory(?,?,".APPSEQNO.",?)";
+		return $this->security->validateQuery($query, func_get_args());
+	}
+	
+	function getTermTypes()
+	{
+		$query = "CALL sp_getcodelist('TERMTYPE')";
+		return $this->db->query($query);
+	}
+	
+	function getPMBatch()
+	{
+		$query = "CALL sp_getpmbatch(?)";
+		return $this->db->query($query, func_get_args());
+	}
+}
+/* End of file reports_model.php */
+/* Location: ./application/models/coreapp/reports_model.php */

@@ -1,0 +1,286 @@
+<form id="cardEmbossingForm" action="card/embossing/process" method="post" enctype="multipart/form-data" target="formTarget">
+<input type="hidden" name="batchNox" id="batchNox"/>
+<div id="cardEmbossing">
+	<h1>Card Embossing</h1>
+    <div id="content">
+    	<fieldset>
+        	<legend>Embossing File Type</legend>
+            <input type="radio" name="embossingType" value="text" <?php //echo $forcetxt; ?>/>Text File
+            <input type="radio" name="embossingType" value="csv" disabled <?php //echo $disablecsv; ?> />CSV File
+            <input type="radio" name="embossingType" value="xml" disabled />XML File
+            <input type="radio" name="embossingType" value="xls"  />Excel File
+            <input type="radio" name="embossingType" value="emv" checked />EMV
+        </fieldset>
+        <fieldset id="genType">
+        	<legend>Generation Type</legend>
+            <input type="radio" name="generationType" value="0" />Personalized
+            <input type="radio" name="generationType" value="1" checked/>Pre-Generated
+        </fieldset>
+        <br />
+        <table width="100%">
+        	<!--<tr>
+            	<td width="150"><label for="destinationDir">Destination Directory:</label></td>
+                <td><input type="text" name="destinationDir" id="destinationDir" style="width: 180px;" readonly /></td>
+            </tr>-->
+            <tr>
+            	<td width="150"><label for="cardType">Card Type:</label></td>
+                <td>
+                	<select name="cardType" id="cardType" style="width: 192px;">
+                    	<?php echo html_entity_decode($cardType); ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+            	<td><label for="brseqno">Branch:</label></td>
+                <td>
+                	<select name="brseqno" id="brseqno" style="width: 192px;">
+                    	<?php echo html_entity_decode($branches); ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+            	<td><label for="date">Date:</label></td>
+                <td><input type="text" name="date" id="date" style="width: 180px;" value="<?php echo $date; ?>" class="datePicker" readonly/></td>
+            </tr>
+            <tr>
+            	<td><label for="batchNo">Batch No.:</label></td>
+                <td><input type="text" name="batchNo" id="batchNo" style="width: 180px;" class="numbersOnly" value="<?php echo $batchNo; ?>" maxlength="4" readonly/></td>
+            </tr>
+            <tr>
+            	<td>&nbsp;</td>
+                <td><input type="checkbox" id="regen"/><label for="regen">Regenerate Previous Batch</label></td>
+            </tr>
+            <tr>
+            	<td colspan="2">
+                <span id="progressStat">Ready</span>
+                <div id="progressBar"><span id="progressVal">0%</span></div>
+                </td>
+            </tr>
+        </table>
+	</div>
+</div>
+<div id="bottom">
+	<span class="buttons floatLeft">
+    	<button id="processBtn" value="card/embossing/process">Process</button
+        ><button id="verifyBtn" class="hidden">Verify</button>
+	</span>
+    <span class="buttons floatRight">
+    	<button class="closebtn">Close</button>
+	</span>
+</div>
+</form>
+<iframe id="formTarget" name="formTarget" class="hidden"></iframe>
+<style>
+#progressVal {
+	position: static;
+	text-align: center;
+	margin-top: 2px;
+	width: 100%;
+	float: left;
+}
+fieldset {
+	padding: 3px 5px 10px 5px;
+	border: 1px solid #aaa;
+}
+legend {
+	padding: 0 5px;
+}
+input[type="checkbox"], input[type="radio"] {
+	position: relative;
+	top: 2px;
+}
+</style>
+<script>	
+$(function() {
+	var processBtn = '#processBtn',
+		verifyBtn = '#verifyBtn',
+		regen = '#regen',
+		cardType = '#cardType',
+		branch = '#branchName',
+		date = '#date',
+		genType = '#genType',
+		batchNo = '#batchNo',
+		batchNox = '#batchNox',
+		form = $('form');
+
+	var overture = '<?php echo $overture; ?>';
+	
+	var pBar = '#progressBar',
+		pVal = '#progressVal',
+		pStat = '#progressStat';
+	initSession('<?php echo $sessionExp; ?>');
+	
+	//initialize datepicker
+	$(DTPICKER).datepicker({
+		//dateFormat: 'MM d, yy'
+		changeMonth: true,
+		changeYear: true,
+		maxDate: '+0d',
+		yearRange: '-10y:-0y'
+	});
+		
+	$(pBar).progressbar({
+		value: 0,
+		change: function() {
+
+			//$(MSGBOX).dialog('close');
+			var val = $(this).progressbar('value');
+			//if (val !== 0) {
+				$(pStat).text('Processing...');
+			//}
+			$(pVal).text(val + '%');
+			
+		},
+		complete: function() {
+			if (!overture) {
+				emblink = '<br /><a id="xmlLink" href="card/embossing/getProcessed">Click this link to download emboss file</a>';
+			} else {
+				emblink = '';
+			}
+			messageBoxV2('Card embossing completed!'+emblink, 'Information');
+			$(pStat).text('Completed');
+			
+			$(MSGBOX).one('dialogbeforeclose', function () {
+				$(pStat).text('Ready');
+				$(pBar).progressbar({
+					value: 0
+				});
+				$(processBtn + ',' + batchNo + ',' + regen).removeAttr('disabled');
+				
+				if (!$('#regen').is(':checked')) {
+					$(batchNo).val(parseInt($(batchNo).val()) + 1);
+				}
+				
+				$(pStat).text('Ready');
+				
+				$('#xmlLink').trigger('click');
+			});
+		}
+	});
+
+	$('input[name="generationType"]').change(function() {
+		$(batchNox).val('');
+		$('#cardType').val('ALL');
+		//filter combobox
+		$('#personalized, #generic').toggle();
+	});
+	
+	$(processBtn).click(function(e) {
+		messageBox('Proceed to card embossing?','Confirm','confirm',function(){
+			waitMessage('Processing...');
+			
+			form.submit();
+			//$(MSGBOX).dialog('close');
+			//$(MSGBOX).dialog('option', {
+				//close: function () {
+					$(processBtn + ',' + batchNo).attr('disabled', true);
+					//lpStart();
+				//}
+			//});
+		});
+		e.preventDefault();
+	});
+	
+	var lastval = {
+		batch: $(batchNo).val(),
+		date: $(date).val()
+	};
+	
+	$(regen).change(function (e) {
+		
+		$(batchNox).val('');
+		
+		if ($(this).attr('checked')) {
+			
+			$(processBtn).hide();
+			$(verifyBtn).show();
+			
+			$(genType + ',' + cardType + ',' + branch + ',' + date)
+				.attr('disabled', true)
+				.css('opacity', 0.7);
+			$(batchNo).removeAttr('readonly')
+				.val('')
+				.focus();
+		} else {
+			
+			$(processBtn).show();
+			$(verifyBtn).hide();
+			
+			$(genType + ', ' + cardType + ', ' + branch + ', ' + date)
+				.removeAttr('disabled')
+				.css('opacity', 1);
+			$(batchNo).attr('readonly', true)
+				.val(lastval.batch);
+			$(date).val(lastval.date);
+		}
+	});
+	
+	//$(batchNo).bind('focusout', function() {
+		/*if ($(batchNo).val() !== '' && !$(batchNo).attr('readonly')) {
+			$(verifyBtn).triggerHandler();
+		} else {
+			//$(regen).removeAttr('checked').trigger('change');
+		}*/
+	//});
+	
+	$(verifyBtn).click(function (e) {
+		
+		if ($(batchNo).val()) {
+			//verify batch no.
+			requests.push(
+				$.ajax({
+					type: 'POST',
+					url: 'card/embossing/verify',
+					data: {
+						brseqno: $('#brseqno').val(),
+						batchNo: $(batchNo).val()
+					},
+					dataType: 'json',
+					beforeSend: function() {
+						waitMessage('Verifying Batch Number...');
+					},
+					success: function(data) {
+						if (data.success === true) {
+							$(MSGBOX).dialog('close');
+							$(date).val(data.message);
+							$(batchNox).val($(batchNo).val());
+							
+							$(processBtn).show();
+							$(verifyBtn).hide();
+							
+						} else {
+							//$(regen).removeAttr('checked').trigger('change')
+							messageBox(data.message);
+							$(MSGBOX).one('dialogbeforeclose', function () {
+								$(batchNo).val('').focus();
+							});
+						}
+					}
+				})
+			);
+		} else {
+			messageBox('Please input batch no.');
+			$(MSGBOX).one('dialogbeforeclose', function () {
+				$(batchNo).focus();
+			});
+		}
+		
+		e.preventDefault();
+	});
+});
+
+function updateProgress(progress) {
+	console.log(progress);
+	
+	$('#progressBar').progressbar({
+		value: progress
+	});
+}
+
+function noData(params) {
+	messageBox('No data found.');// for all'+params
+	$(MSGBOX).one('dialogbeforeclose', function () {
+		$('#processBtn, #batchNo').removeAttr('disabled');
+	});
+}
+</script>

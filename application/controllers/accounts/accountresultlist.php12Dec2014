@@ -1,0 +1,330 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class AccountResultList extends CI_Controller {
+	
+	private $fileVersion = '1.10.00';
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(ACCNTVERIFY_NO);
+
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+		
+		$this->load->library('version');
+
+		$file = basename(__DIR__) . '/' . basename(__FILE__);
+
+		$verified = $this->version->validate($file, $this->fileVersion);
+
+		if (!$verified) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Module is out of date. Please contact software administrator.'
+			));
+		}
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		//get branches
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				if (!$this->core->isHeadOffice() && $row['brseqno'] === $this->core->getBranchID()) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				$data['branches'] .= '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		
+		//if ($this->core->isHeadOffice()) {
+			$data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+		//} else {
+			$data['uiToolbar'] = NULL;
+		//}
+			$data['sessionExp'] = $this->core->getSessionExp();
+		
+		$this->load->view('accounts/accountresultlist', $data);
+	}
+	
+	function getData()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->library('shortxml');
+		
+		$core		= $this->core;
+		$xmldata	= $this->shortxml;
+		
+		if ($this->core->isHeadOffice()) {
+			$brseqno = $this->input->get('brseqno', TRUE);
+		} else {
+			$brseqno = $this->core->getBranchID();
+		}
+		
+		$ipAddress 		= $this->core->getIPAddress();
+		$workstation 	= $this->core->getWorkstation();
+		$userAudit 		= $this->core->getUserID();
+		$override 		= '';
+		$sessionID 		= $this->core->getSessionID();
+		
+		if ($acctreq = $this->cache->get($this->core->getSessionID() . 'acctreq')) {
+			
+			$id = $acctreq['cifseqno'];
+			$xmldata->setXML($acctreq['xmlstring']);
+
+			$data['custid'] = $id;
+			$data['cifseqno'] = $acctreq['cifdata']['custid'];
+
+			$data['custname'] = $acctreq['cifdata']['custname'];
+
+			//tran allows		
+			$result = $this->card_model->getDefaultTranAllows('ACCT');
+			
+			$data['tranAllows'] = NULL;
+			
+			$bin = '';
+			foreach ($result->result_array() as $row) {
+				$bin .= '1';
+			}
+			
+			$result->free_result();
+			$result->next_result();
+
+			$details = array();
+			foreach ($acctreq['accounts'] as $accountno) {
+				$data['acctnoxml'] = substr($accountno, 0, 12);
+				$data['accttypexml'] = substr($accountno, 12, 2);
+
+				if ($data['accttypexml'] == '01') {
+					$accttypedesc = 'SAVINGS ACCOUNT';
+					$accttype = 10;
+				} else {
+					$accttypedesc = 'CURRENT ACCOUNT';
+					$accttype = 20;
+
+				}
+
+				$details[] = array(
+					'<input type="checkbox" name="accounts[]" id="'. $data['acctnoxml'] .'" value="'. $data['acctnoxml'] .':'. $accttype .':'. $data['cifseqno'] .'|'. $bin .'"/>',
+					$data['acctnoxml'],
+					//'<input type="checkbox" name="isPrimary[]" id="'. $data['acctnoxml'] .':primary' .'" value="Y:N"/>',
+					$accttypedesc,
+					$data['acctnoxml']
+				);
+
+			}
+			$success = TRUE;
+		} else {
+			$success = FALSE;
+		}
+
+		echo json_encode(array(
+			'success' => $success,
+			'details' => $details
+		));
+	}
+	
+	/*function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$card 		= $this->card_model;
+		$core 		= $this->core;
+		$accounts 	= $this->input->post('accounts');
+		$isPrimary 	= $this->input->post('isPrimary');
+		
+		$accountsX = array();
+		
+		$brseqno 		= $core->getBranchID();
+		$ipAddress 		= $core->getIPAddress();
+		$workstation 	= $core->getWorkstation();
+		$userID 		= $core->getUserID();
+		$override 		= '';
+		$sessionID 		= $core->getSessionID();
+		
+		$card->db->trans_begin();
+		
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+			
+		$row = $card
+			->checkLogin($userAudit, $sessionID)
+			->row_array();
+		
+		$errno = $row['errno'];
+		
+		if ($errno !== '8') {
+
+			$query = array();
+			foreach ($accounts as $accountNo) {
+				$prseqno = substr($accountNo, strpos($accountNo, ':') + 1);
+				$prKey = substr($accountNo, 0, strpos($accountNo, ':'));
+				
+				$accountsX[] = $prseqno;
+				
+				$result = $card->verifyAccount(
+					$prseqno,
+					$prKey,
+					$brseqno,
+					$ipAddress,
+					$workstation,
+					$userAudit,
+					$override,
+					$sessionID
+				);
+				$result->free_result();
+				$result->next_result();
+			}
+			
+			if ($card->db->trans_status() === FALSE) {
+				$success = FALSE;
+				$message = 'An error has occured';
+				$card->db->trans_rollback();
+			} else {
+				$success = TRUE;
+				$message = 'Account verification successful';
+				$card->db->trans_commit();
+			}
+		} else {
+			$success = FALSE;
+			$message = $row['errmsg'];
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message,
+			'errorno' => $errno,
+			'accounts' => $accountsX
+		));
+	}*/
+
+	function verify()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('coreconverters');
+		
+		$card  = $this->card_model;
+		$core  = $this->core;
+		$input = $this->input;
+
+
+		$accounts 	 	= $input->post('accounts');
+		$isPrimary		= $input->post('brancList');
+		$userOverride 	= $this->session->userdata('userOverride');
+		$sessionID	 	= $core->getSessionID();
+
+		
+		$brseqno = $this->core->getBranchID();
+		$success = '';
+		$message = '';
+
+		$created 		= 'Account/s successfully linked<br>';
+		$createdcnt 	= 0;
+		$notCreated 	= 'Failed to link account/s:<br>';
+		$failedaccts 	= 0;
+
+
+		foreach ($accounts as $accountinfo) {
+			$prkey 		= substr($accountinfo, 0, 12);
+			$accttype 	= substr($accountinfo, 13, 2);
+			$cifseqno	= substr($accountinfo, 16, ( (strpos($accountinfo, '|') ) - 16 ) );
+			$bin 		= substr($accountinfo, strpos($accountinfo, '|') + 1);
+			
+			$customersX[] = $cifseqno;
+
+			$status      = $core->isISOCustomer() ? 4 : 10; //for verification
+
+			$hex = $this->coreconverters->asciiBinToHex($bin);
+			
+			$ipAddress   = $core->getIPAddress();
+			$workstation = $core->getWorkstation();
+			$userAudit	 = $core->getUserID();
+
+			$result = $card->insertAccount(
+					$cifseqno,
+					$brseqno,
+					$prkey,
+					$accttype,
+					$status,//$status,
+					$hex,
+					$ipAddress,
+					$workstation,
+					$userAudit,
+					$userOverride,
+					$sessionID
+				);
+
+				$row = $result->row_array();
+
+				$result->free_result();
+				$result->next_result();
+
+				if ($row['errno'] === '0') {
+					$success = TRUE;
+					$createdcnt++;
+					$created .= '*'.$prkey.'<br>';
+				} else {
+					$failedaccts++;
+					$errormessage = intval($row['errno']) != 1 ? $row['errmsg'] : $row['errmsg'] ;
+					$notCreated .= '*'.$prkey.' - '.$errormessage.'<br>';
+				}
+			
+		}
+		
+
+		$this->session->unset_userdata('userOverride');
+		
+		if ($createdcnt > 0) {
+			$success = TRUE;
+			$message .= $created;
+			if ($failedaccts > 0) {
+				$message .= '<br>';
+			}
+		}
+		if ($failedaccts > 0) {
+			$message .= $notCreated;
+			if ($createdcnt === 0) {
+				$success = FALSE;
+			}
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+	
+}

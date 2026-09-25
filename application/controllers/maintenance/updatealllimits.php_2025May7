@@ -1,0 +1,455 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class UpdateAllLimits extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		//$this->core->checkUserAllows(MAINTENANCEATM_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$limitseqno = $this->input->get('limitseqno', TRUE);
+		
+		$result = $this->card_model->getCardDefaultOnlineLimits($limitseqno);
+		
+		$limits = NULL;
+		foreach ($result->result_array() as $index => $row) {
+			$trxcode = $row['trxcode'];
+			
+			$limits .= '<tr>'
+				. '<td><input type="hidden" name="trx[]" value="'. $trxcode .'"/><span>'. $row['description'] .'</span></td>'				
+				. '<td align="center"><input type="checkbox" name="amt['.$index.']" value="'. $row['cycledef'] .','. $row['nonfeetrandef'] .'" checked/></td>'
+				. '<td align="center"><input type="checkbox" name="ctr['.$index.']" value="'. $row['ctrdef'] .','. $row['nonfeectrdef'] .'" checked/></td>'
+				. '<td align="center"><input type="checkbox" name="min['.$index.']" value="'. $row['tranmindef'] .'" checked/></td>'
+				. '<td align="center"><input type="checkbox" name="max['.$index.']" value="'. $row['tranmaxdef'] .'" checked/></td>'
+				. '<td align="center"><input type="checkbox" name="cyc['.$index.']" value="'. $row['nonfeecycle'] .','. $row['duralimit'] .','. $row['cycle'] .'" checked/></td>'
+			. '</tr>';
+		}
+		
+		$data['brseqno'] = $row['brseqno'];
+		$data['limits'] = $limits;
+		$data['limitseqno'] = $limitseqno;
+		$data['accttype'] = $this->input->get('accttype', TRUE);
+		
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('maintenance/updatealllimits', $data);
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		//$session = $_SESSION['limitxx'];
+		$userAudit = $this->core->getUserID();
+		$workstation = $this->core->getWorkstation();
+		$card = $this->card_model;
+		
+		$tracer = NULL; //assign vars to tracer for debugging
+		
+		
+		
+		//validate session --------------------------------------------------------------
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$result = $card->checkLogin($userAudit, $sessionID);
+		$row = $result->row_array();
+		
+		$result->free_result();
+		$result->next_result();
+		
+		if ($row['errno'] === '8') {
+			$card->db->trans_commit();
+			echo json_encode(array(
+				'success' => FALSE,
+				'message' => $row['errmsg'],
+				'errorno' => $row['errno']
+			));
+			exit();
+		}
+		//end validate session ----------------------------------------------------------
+		
+		//begin get cards ---------------------------------------------------------------
+		$accttype = $this->input->post('accttype', TRUE);
+		$limitseqno = $this->input->post('limitseqno', TRUE);
+		$limitbrseqno = $this->input->post('brseqno', TRUE);
+		
+		//$includeNon = $this->input->post('includeNon', TRUE);
+		//$query = "SELECT a.prseqno, a.brseqno FROM prmaster a, limitxxx b WHERE a.prseqno = b.prseqno AND accttype = 80 AND limitseqno = 32 GROUP BY 1";
+			
+		$params = array(
+			$accttype
+		);
+
+		if ($limitbrseqno != 9999) {
+				
+				$brseqnoSQL = " AND brseqno = ?";	
+				$params[] = $limitbrseqno;
+				
+		} else {
+			
+			$brseqnoSQL = "";	
+			
+		}
+
+		$sql = "SELECT a.prseqno, a.brseqno "
+			."FROM prmaster a, limitxxx b "
+			."WHERE a.prseqno = b.prseqno AND accttype = ?".$brseqnoSQL
+			."GROUP BY 1 ";
+		
+		
+			
+		if (isset($_POST['includeNon'])) { //if include product with no default limit is checked
+		
+			if ($limitbrseqno != 9999) {
+				
+				$brseqnoSQL = "brseqno = ? AND";	
+				$params[] = $limitbrseqno;
+				
+			} else {
+				
+				$brseqnoSQL = "";	
+				
+			}
+		
+			$sql .= "UNION ALL ".
+				"SELECT prseqno, brseqno FROM prmaster ".
+				"WHERE ".$brseqnoSQL." accttype = ? AND prseqno NOT IN ".
+				"(SELECT DISTINCT prseqno FROM limitxxx) ";
+			
+			//$brseqno = '';
+			
+			$params[] = $accttype;
+		} else {
+			//echo json_encode(array('success' => FALSE, 'message' => 'no limits defined not included.'));
+			//exit();
+		}
+		
+		
+		
+		$result = $card->db->query($sql, $params);
+		
+		$numRows = $result->num_rows();
+		
+		$result->free_result();
+		$result->next_result();
+		
+		echo str_pad('<html><body>', 4096);
+		$progress = 0;
+		$limit = 1000;
+		$totalProg = NULL;
+		$sqlx = $sql;
+		
+		//for ($i = 0; $i < $numRows; $i += $limit) {
+			//$sql = $sqlx;
+			//$sql .= " LIMIT ?,?";
+			
+			//$params[] = $i;
+			//$params[] = $limit;
+			
+			$result = $card->db->query($sql, $params);
+			$lastResult = $result->result_array();
+			//echo $i . " - " . ($i + $limit) . "<br/>";
+			
+			$result->free_result();
+			$result->next_result();
+		
+			//end get cards -----------------------------------------------------------------
+			
+			//page 2 to 4
+			$amt = $this->input->post('amt', TRUE);
+			$ctr = $this->input->post('ctr', TRUE);
+			$min = $this->input->post('min', TRUE);
+			$max = $this->input->post('max', TRUE);
+			$cyc = $this->input->post('cyc', TRUE);
+			
+			$transaction = $this->input->post('trx'); //transactions
+			
+			$trancount = 0;
+			foreach ($transaction as $index => $trxcode) {
+
+				if ( //Count checked checkboxes ---------------------------------------------------------------------------------------------- if
+						isset($amt[$index]) ||
+						isset($ctr[$index]) ||
+						isset($min[$index]) ||
+						isset($max[$index]) ||
+						isset($cyc[$index])
+				) {
+					$trancount++;
+				}
+			}
+			
+			foreach ($transaction as $index => $trxcode) { //loop all transactions --------------------------------------------------------- foreach
+				
+				$r = 0;
+				
+				//init var
+				$defaults = array(
+					'cyclemax' => 0,
+					'nonfeetranmax' => 0,
+					'ctrmax' => 0,
+					'nonfeectrmax' => 0,
+					'tranmin' => 0,
+					'tranmax' => 0,
+					'nonfeecycle' => 0,
+					'duralimit' => 0,
+					'cycle' => 0
+				);
+				
+				if ( //checking of checkboxes ---------------------------------------------------------------------------------------------- if
+					isset($amt[$index]) ||
+					isset($ctr[$index]) ||
+					isset($min[$index]) ||
+					isset($max[$index]) ||
+					isset($cyc[$index])
+				) {
+					$set = array();
+					
+					if (isset($amt[$index])) {
+						$val = explode(',', $amt[$index]);
+						
+						$defaults['cyclemax'] = $val[0];
+						$defaults['nonfeetranmax'] = $val[1];
+						
+						$set[] = 'cyclemax = '. $val[0];
+						$set[] = 'nonfeetranmax = '. $val[1];
+					}
+					if (isset($ctr[$index])) {
+						$val = explode(',', $ctr[$index]);
+						
+						$defaults['ctrmax'] = $val[0];
+						$defaults['nonfeectrmax'] = $val[1];
+						
+						$set[] = 'ctrmax = '. $val[0];
+						$set[] = 'nonfeectrmax = '. $val[1];
+					}
+					if (isset($min[$index])) {
+						$val = $min[$index];
+						
+						$defaults['tranmin'] = $val;
+						
+						$set[] = 'tranmin = '. $val;
+					}
+					if (isset($max[$index])) {
+						$val = $max[$index];
+						
+						$defaults['tranmax'] = $val;
+						
+						$set[] = 'tranmax = '. $val;
+					}
+					if (isset($cyc[$index])) {
+						$val = explode(',', $cyc[$index]);
+						
+						$defaults['nonfeecycle'] = $val[0];
+						$defaults['duralimit'] = $val[1];
+						$defaults['cycle'] = $val[2];
+						
+						$set[] = 'nonfeecycle = '. $val[0];
+						$set[] = 'duralimit = '. $val[1];
+						$set[] = 'cycle = '. $val[2];
+					}
+					
+					$set[] = 'useraudit = ?';
+					$set[] = 'wkstn = ?';
+
+				} else {
+					continue;
+				} //end if statement checking of checkboxes -------------------------------------------------------------------------------- end if
+				
+				$card->db->trans_begin();
+				foreach ($lastResult as $row) { //loop all queried cards ------------------------------------------------------------------- foreach
+				
+					$prseqno = $row['prseqno'];
+					$brseqno = $row['brseqno'];
+					
+					if ($brseqno != $limitbrseqno) { //------------------------------------------------------------------------------------ if
+						$sql = "DELETE FROM limitxxx ".
+							"WHERE prseqno = ? AND trxcode = ? LIMIT 1";
+						$params = array($prseqno, $trxcode);
+						$card->db->query($sql, $params);
+						
+						//$tracer[] = array($sql, $params);
+						
+						$sql = "INSERT INTO limitxxx (".
+							"prseqno, trxcode, limitseqno, ".
+							"cycleavail, cyclemax, ctravail, ctrmax, tranmax, ".
+							"tranmin, duralimit, cycle, nonfeectravail, nonfeectrmax, ".
+							"nonfeetranavail, nonfeetranmax, ".
+							"useraudit, override, wkstn".
+						") VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+								
+							$params = array(
+								$prseqno,
+								$trxcode,
+								$limitseqno,
+								$defaults['cyclemax'],
+								$defaults['cyclemax'],
+								$defaults['ctrmax'],
+								$defaults['ctrmax'],
+								$defaults['tranmax'],
+								$defaults['tranmin'],
+								$defaults['duralimit'],
+								$defaults['cycle'],
+								$defaults['nonfeectrmax'],
+								$defaults['nonfeectrmax'],
+								$defaults['nonfeetranmax'],
+								$defaults['nonfeetranmax'],
+								$userAudit,
+								'',
+								$workstation
+							);
+						
+						//$tracer[] = array($sql, $params);
+						
+						$card->db->query($sql, $params);
+						
+						$r = 1;
+					} else { // ----------------------------------------------------------------------------------------------------------- else
+	
+						$sql = "UPDATE limitxxx SET ". implode(', ', $set) .
+							" WHERE prseqno = ? AND limitseqno = ? AND trxcode = ? LIMIT 1";
+							
+						$params = array(
+							$userAudit,
+							$workstation,
+							$prseqno,
+							$limitseqno,
+							$trxcode
+						);
+						
+						//$tracer[] = array($sql, $params);
+						
+						$card->db->query($sql, $params);
+						
+					} //end if ------------------------------------------------------------------------------------------------------------ end if
+					
+					if ($r === 0) { //----------------------------------------------------------------------------------------------- if
+						$sql = "SELECT prseqno FROM limitxxx ".
+							"WHERE prseqno = ? AND limitseqno = ? AND trxcode = ?";
+						$params = array($prseqno, $limitseqno, $trxcode);
+						
+						//$tracer[] = array($sql, $params);
+						
+						$result = $card->db->query($sql, $params);
+	
+						if ($result->num_rows() === 0) {
+							$sql = "DELETE FROM limitxxx ".
+								"WHERE prseqno = ? AND trxcode = ?";
+								
+							$params = array($prseqno, $trxcode);
+							
+							//$tracer[] = array($sql, $params);
+							
+							$card->db->query($sql, $params);
+							
+							$sql = "INSERT INTO limitxxx (".
+								"prseqno, trxcode, limitseqno, ".
+								"cycleavail, cyclemax, ctravail, ctrmax, tranmax, ".
+								"tranmin, duralimit, cycle, nonfeectravail, nonfeectrmax, ".
+								"nonfeetranavail, nonfeetranmax, ".
+								"useraudit, override, wkstn".
+							") VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+								
+							$params = array(
+								$prseqno,
+								$trxcode,
+								$limitseqno,
+								$defaults['cyclemax'],
+								$defaults['cyclemax'],
+								$defaults['ctrmax'],
+								$defaults['ctrmax'],
+								$defaults['tranmax'],
+								$defaults['tranmin'],
+								$defaults['duralimit'],
+								$defaults['cycle'],
+								$defaults['nonfeectrmax'],
+								$defaults['nonfeectrmax'],
+								$defaults['nonfeetranmax'],
+								$defaults['nonfeetranmax'],
+								$userAudit,
+								'',
+								$workstation
+							);
+								
+							//$tracer[] = array($sql, $params);
+							
+							$card->db->query($sql, $params);
+						}
+					} else { // ---------------------------------------------------------------------------------------------------------- else
+					} // ----------------------------------------------------------------------------------------------------------------- end if
+					
+					$sql = "DELETE FROM limitxxx WHERE prseqno = ? AND limitseqno != ?";
+					$params = array($prseqno, $limitseqno);
+					
+					//$tracer[] = array($sql, $params);
+					
+					$card->db->query($sql, $params);
+					
+					
+					$progress++;
+
+
+					if ($totalProg !== round(($progress/($numRows * count($trancount))) * 100, 2) && $totalProg < 100) {
+						$totalProg = round(($progress/($numRows * count($trancount))) * 100, 2);
+						
+						if ($totalProg >= 100) {
+							$totalProg = 100;
+						}
+						
+						echo str_pad('<script>parent.updateProgress('. $totalProg .');</script>'."\n", 1024);
+						flush();
+					}
+					//usleep(500000);
+				} //end (loop all queried cards) ----------------------------------------------------------------------------------------- end foreach
+				if ($card->db->trans_status() === FALSE) {
+					$card->db->trans_rollback();
+				} else {
+					//$card->db->trans_rollback();
+					$card->db->trans_commit();
+				}
+			} //end foreach (transactions loop) ------------------------------------------------------------------------------------------ end foreach
+			
+			echo str_pad('<script>parent.updateProgress(100);</script>'."\n", 1024);
+			flush();
+			/*echo json_encode(array(
+				'success' => TRUE,
+				'message' => json_encode($tracer),
+				'trace' => $tracer
+			));*/
+			
+			/*echo "<script>parent.messageBox('". json_encode($tracer) . "');</script>";*/
+			
+			//echo '<pre>'. print_r($tracer) .'</pre>';
+			
+		//}
+		echo str_pad('<script>parent.updateProgress(100);</script>'."\n", 1024);
+		flush();
+		echo '</body></html>';
+
+		
+		/*echo json_encode(array(
+			'success' => TRUE,
+			'message' => json_encode($tracer),
+			'trace' => $tracer
+		));*/
+	}
+}

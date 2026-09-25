@@ -1,0 +1,404 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Enrollment extends CI_Controller {
+	
+	private $fileVersion = '1.10.00';
+	private $coreencrypt = FALSE;
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(CARDENROLLMENT_NO);
+
+		$this->coreencrypt = $this->core->isCoreEncrypt();
+	}
+	
+	function index()
+	{
+		$this->load->library('version');
+
+		$file = basename(__DIR__) . '/' . basename(__FILE__);
+
+		$verified = $this->version->validate($file, $this->fileVersion);
+
+		if (!$verified) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Module is out of date. Please contact software administrator.'
+			));
+			exit();
+		}
+
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/card_model');
+		$this->load->library('coreconverters');
+		
+		$card = $this->card_model;
+		$core = $this->core;
+		$cache = $this->cache;
+		
+		//get branches
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		$currentBrCode = NULL;
+		
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				$matched = $row['brseqno'] === $this->core->getBranchID() ? TRUE : FALSE;
+				
+				if (!$this->core->isHeadOffice() && $matched) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'" brcode="'. $row['brcode'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				
+				if ($matched) {
+					$selected = ' selected';
+					$currentBrCode = $row['brcode'];
+				} else {
+					$selected = NULL;
+				}
+				
+				$data['branches'] .= '<option value="'. $row['brseqno'] .'" brcode="'. $row['brcode'] .'"'. $selected .'>'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		//end
+		
+		if (!$cardBIN = $cache->get($this->core->getSessionID() . 'cardBINWithFormat')) {
+			$result = $card->getCardBINWithFormat();
+			$cardBIN = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			
+			$cache->save($this->core->getSessionID() . 'cardBINWithFormat', $cardBIN, CACHE_TTL);
+		}
+		
+		$data['cardBIN'] = NULL;
+		//$cardNoMask = NULL;
+		$cardNoPlaceholder = NULL;
+		
+		$replace = array('-', 'I');
+		
+		foreach ($cardBIN as $row)
+		{			
+			$val = $row['codevalue'];
+			$format = str_replace($replace, '', $row['formatvalue']);
+			$format = str_replace('C', 'N', $format);
+			
+			$data['cardBIN'] .= '<option value="'. $val .'" format="'. $format .'">'. $val .'</option>';
+		}
+		
+		$data['productCodes'] = NULL;
+		//get product code
+		if ($this->core->hasProductCode()) {
+			//cache product codes	
+			if (!$productCodes = $cache->get($this->core->getSessionID() . 'productCodes')) {
+				$this->load->model('coreapp/card_model');
+				
+				$result = $this->card_model->getProductCodes();
+				$productCodes = $result->result_array();
+				$cache->save($this->core->getSessionID() . 'productCodes', $productCodes, CACHE_TTL);
+				
+				$result->free_result();
+				$result->next_result();
+			}
+			
+			$options = NULL;
+			if (count($productCodes) > 0) {
+				foreach ($productCodes as $row)
+				{
+					$options .= '<option value="'. $row['codeseqno'] .'">'. strtoupper($row['codevalue']) .'</option>';
+				}
+			} else {
+				$options = '<option value="">No Product Codes Defined</option>';
+			}
+			$prCodesHtml = '<tr>
+				<td><label for="productCode">Product Code: <span class="red">*</span></label></td>
+				<td>
+					<select name="productCode" id="productCode" style="width:212px" class="validate[required]">
+					'. $options .'
+					</select>
+				</td>
+			</tr>	';
+			
+			$data['productCodes'] = $prCodesHtml;
+		}
+		//end product code
+		
+		
+		//unset($_SESSION['cardType']);
+		//if (!$cardType = $cache->get($this->core->getSessionID() . 'cardType')) {
+		$result = $card->getCardType('N');
+		$cardType = $result->result_array();
+			
+		$result->free_result();
+		$result->next_result();
+				
+			//$cache->save($this->core->getSessionID() . 'cardType', $cardType, CACHE_TTL);
+		//}
+		
+		$allows = NULL;
+		$data['cardType'] = NULL;
+		$format = NULL;
+		$firstformat = NULL;
+		foreach ($cardType as $row)
+		{
+			$val  = $row['accttype'];
+			$desc = $row['description'];
+			//$format = $row['formatvalue'];
+			$format = str_replace($replace, '', $row['formatvalue']);
+			if ($firstformat == NULL) {
+				$firstformat = $format;
+			}
+			$format = str_replace('C', 'N', $format);
+						
+			$result = $this->card_model->getDefaultAllows('CARD', $val, 'CARD');
+			$row = $result->row_array();
+			
+			if ($result->num_rows() > 0) {
+				$defAllows = rtrim($this->coreconverters->asciiHexToBin($row['allows']), 0);
+			} else {
+				$defAllows = 0;
+			}
+			
+			if ($allows === NULL) {
+				$allows = $defAllows;
+			}
+			
+			$result->free_result();
+			$result->next_result();
+				
+			$data['cardType'] .= '<option value="'. $val .'" defaultallows="'. $defAllows .'" format="'.$format.'">'. $desc .'</option>';
+		}
+		$format = $firstformat;
+
+		// ----------------
+		$bCount = NULL;
+		foreach (count_chars($format, 1) as $i => $cnt) {
+			if (chr($i) === 'B') {
+				$bCount = $cnt;
+			}
+		}
+		
+		//$format = str_replace($replace, '', $cardBIN[0]['formatvalue']);
+		$format = str_replace('C', 'N', $format);
+		$mask = str_replace(str_repeat('B', $bCount), str_pad($this->core->getBranchCode(), '0', $bCount, STR_PAD_LEFT), $format);
+		
+		if ($this->core->hasProductCode()) {
+			$pCount = NULL;
+			foreach (count_chars($format, 1) as $i => $cnt) {
+				if (chr($i) === 'P') {
+					$pCount = $cnt;
+				}
+			}
+			$mask = str_replace(str_repeat('P', $pCount), str_pad($productCodes[0]['codeseqno'], '0', $pCount, STR_PAD_LEFT), $mask);
+		} else {
+			$pCount = NULL;
+			//$charcnt = 0;
+			foreach (count_chars($format, 1) as $i => $cnt) {
+				if (chr($i) === 'P') {
+					$pCount = $cnt;
+					//$charcnt++;
+				}
+			}
+			//if ($charcnt > 0) {
+				$mask = str_replace(str_repeat('P', $pCount), str_pad($cardType[0]['accttype'], '0', $pCount, STR_PAD_LEFT), $mask);	
+			//}
+			//$mask = str_replace('P', 'N', $mask);
+		}
+		
+		$placeholder = str_replace('N', '_', $mask);
+		// ----------------
+		
+		$data['cardNoMask'] = $mask;
+		$data['cardNoPlaceholder'] = $placeholder;
+		$data['cardNox'] = NULL;
+		//}
+		
+		$data['custName'] = NULL;
+		$data['dtInitIssue'] = date('F j, Y');
+		$data['issueCount'] = 1;
+		$data['dtActivated'] = NULL;
+		
+		$data['dtExpiry'] = date('F j, Y', strtotime('+10 year'));
+		$data['cardStatus'] = 'For Verification';
+		
+		//tran allows		
+		$result = $card->getDefaultTranAllows('CARD');
+		
+		$data['tranAllows'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$checked = substr($allows, $row['bitno'] - 1, 1) === '1' ? ' checked' : NULL;
+			$data['tranAllows'] .= '<input type="checkbox" id="bit'. $row['bitno'] .'" name="allows[]" value="'. $row['bitno'] .'"'. $checked .'/>'. $row['description'] .'<br />';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		//channel locking			
+		$result = $this->card_model->getChannelLocks();
+		
+		$data['allows'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$data['allows'] .= '<input type="checkbox" name="ch'. $row['xml1'] .'"/>'. $row['codevalue'] .'<br />';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		//def fast cash		
+		$result = $card->getDefFastCash();
+		$row = $result->row_array();
+		
+		$data['defFastCash'] = NULL;
+		$data['defFastCashAttr'] = ' disabled';
+			
+		if ($row['dfc'] === 'Y') {
+			$data['defFastCashAttr'] = NULL;
+		}
+		
+		foreach ($this->_getDefFastCash() as $fType => $fDesc) {
+			if ($row['dfc'] === 'Y' && $fType == 2) {
+				break;
+			}
+			$data['defFastCash'] .= '<option value="'. $fType .'">'. $fDesc .'</option>';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		$this->load->view('card/enrollment', $data);
+	}
+	
+	function _getDefFastCash()
+	{
+		return array(
+			0 => 'SAVINGS',
+			1 => 'CURRENT',
+			2 => 'BY ACCT PTR.'
+		);
+	}
+
+	function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('coreconverters');
+		$core = $this->core;
+		
+		$input = $this->input;
+		
+		$cardBIN = $input->post('cardBIN', TRUE);
+		$cardNo = $input->post('cardNo', TRUE);
+		$prKey = $cardBIN . $cardNo;
+		$acctType = $input->post('acctType', TRUE);
+		$cifseqno = $input->post('cifseqno', TRUE);
+		$emboss = $input->post('embossName', TRUE);
+		
+		$allows = $this->input->post('allows');
+		
+		if ($allows) {
+			$max = max($allows);
+			$bin = '';
+			for ($i = 1; $i <= $max; $i++) {	
+				if (in_array($i, $allows)) {
+					$bin .= '1';
+				} else {
+					$bin .= '0';
+				}
+			}
+		} else {
+			$bin = '0';
+		}
+		
+		$hex = $this->coreconverters->asciiBinToHex($bin);
+		
+		//$initAllows = $hex;//'DFFFFFFBFFFF0000';//$input->post('initAllows', TRUE);
+		$fCash = str_replace(',', '', $core->currency($input->post('fCash', TRUE))); //format 0.00
+		$fType = $input->post('fType', TRUE);
+		$fPtr = 0;
+		
+		$atmLock = $input->post('chATMLOCK', TRUE) ? 'Y' : 'N';
+		$posLock = $input->post('chPOSLOCK', TRUE) ? 'Y' : 'N';
+		$webLock = $input->post('chWEBLOCK', TRUE) ? 'Y' : 'N';
+		$cellLck = $input->post('chCELLLOCK', TRUE) ? 'Y' : 'N';
+		
+		$xml = !$this->coreencrypt ? '<CARDNO>'. $cardNo .'</>' : NULL;
+		$xml .= '<ATMLOCK>'. $atmLock .'</>'.
+			'<POSLOCK>'. $posLock .'</>'.
+			'<WEBLOCK>'. $webLock .'</>'.
+			'<CELLLOCK>'. $cellLck .'</>';
+		
+		//if INST has card product code
+		if ($this->core->hasProductCode()) {
+			$prcdcode = $input->post('productCode', TRUE);
+			
+			$xml .= '<PRCDCODE>'. $prcdcode .'</>';
+		}
+		
+		if ($core->isHeadOffice()) {
+			$brseqno = $input->post('brseqno', TRUE);
+		} else {
+			$brseqno = $core->getBranchID();
+		}
+		
+		$ipAddress = $core->getIPAddress();
+		$workstation = $core->getWorkstation();
+		$userAudit = $core->getUserID();
+		$override = '';
+		$sessionID = $core->getSessionID();
+		
+		$result = $this->card_model->insertCard(
+			$cardBIN,
+			$prKey,
+			str_pad($acctType,2,'0',STR_PAD_LEFT),
+			$cifseqno,
+			$emboss,
+			$hex,
+			$fCash,
+			$fType,
+			$fPtr,
+			$xml,
+			$brseqno,
+			$ipAddress,
+			$workstation,
+			$userAudit,
+			$override,
+			$sessionID
+		);
+		
+		$row = $result->row_array();
+		
+		if ($row['errno'] > 0) {
+			$success = FALSE;
+			$message = isset($row['errmsg']) ? $row['errmsg'].':'.$row['errno'] : 'An error has occured.';
+		} else {
+			$success = TRUE;
+			$message = 'Card successfully enrolled.<br />Please verify your Card Number';
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message,
+			//'errorno' => $row['errno']/*,
+			'hex' => $hex,
+			'xml' => $xml
+		));
+	}
+}

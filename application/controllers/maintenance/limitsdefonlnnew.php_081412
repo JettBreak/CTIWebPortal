@@ -1,0 +1,76 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class LimitsDefOnlnNew extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		//$this->core->checkUserAllows(CARDINFO);
+	}
+	
+	function index()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$limitseqno = $this->input->get('limitseqno', TRUE);
+		
+		$result = $this->card_model->getTransactionAllowsLimit($limitseqno, 0);
+		
+		$trxList = NULL;
+		$inputAttr = NULL;
+		$trandesc = NULL;
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row) {
+				
+				if ($inputAttr === NULL && $row['isamtlimit'] === 'N') {
+					$inputAttr = ' readonly';
+				} else {
+					$inputAttr = '';
+				}
+				
+				if ($trandesc === NULL) {
+					$trandesc = $row['description'];
+				}
+				
+				$trxList .= '<option value="'. $row['trxcode'] .'" isamtlimit="'. $row['isamtlimit'] .'">'. $row['description'] .'</option>';
+			}
+		} else {
+			$trxList = '<option value="" isamtlimit="Y">No available transactions</option>';
+		}
+		
+		$data['trxList'] = $trxList;
+
+		$data['trxcode'] = '';
+		$data['limitseqno'] = $limitseqno;
+		
+		$row = $result->row_array();
+		
+		$data['trandesc'] = $trandesc;
+		$data['inputAttr'] = $inputAttr;
+		
+		$data['cycledef'] = '0.00';
+		$data['cyclemax'] = '0.00';
+		$data['ctrdef'] = 0;
+		$data['ctrmax'] = 0;
+		$data['tranmindef'] = '0.00';
+		$data['tranmin'] = '0.00';
+		$data['tranmaxdef'] = '0.00';
+		$data['tranmax'] = '0.00';
+		$data['cycle'] = 1;
+		$data['duralimit'] = 0;
+		$data['nonfeectr'] = 0;
+		$data['nonfeectrdef'] = 0;
+		$data['nonfeetran'] = '0.00';
+		$data['nonfeetrandef'] = '0.00';
+		$data['nonfeecycle'] = 1;
+		
+		$data['method'] = 0;
+		$data['formAction'] = 'maintenance/limitsdefonln/submit';
+		
+		$result->free_result();
+		$result->next_result();
+			
+		$this->load->view('maintenance/limitsdefonlnx', $data);
+	}
+}

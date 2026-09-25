@@ -1,0 +1,106 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class UserGroups extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(USERGROUPS_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('security/usergroups', $data);
+	}
+	
+	function getData()
+	{
+		$this->load->model('coreapp/user_model');
+		$this->load->library('shortxml');
+		
+		$xml = $this->shortxml;
+		
+		$result = $this->user_model->getWebUserGroupList();
+		
+		$details = array();
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row) {
+				$xml->setXML($row['xml1']);
+				
+				$details[] = array(
+					$row['grpseqno'],
+					$row['description'],
+					$xml->getValue('MAXRETRY'),
+					$xml->getValue('USEREXPIRY'),
+					$xml->getValue('MINCHAR'),
+					$xml->getValue('PASSEXPIRY'),
+					$xml->getValue('SESSIONEXP'),
+					$xml->getValue('SECUOPTION'),
+					$xml->getValue('PASSOPTION'),
+					$xml->getValue('PWCYCLE'),
+					$xml->getValue('USERINACTIVE')
+				);
+			}
+		}
+		
+		$_SESSION['newGroupID'] = $row['grpseqno'] + 1;
+		
+		$result->free_result();
+		$result->next_result();
+
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $details
+		));
+	}
+	
+	function cache()
+	{
+		$_SESSION['userGroupx'] = $_POST;
+		
+		echo json_encode(array(
+			'success' => TRUE
+		));
+	}
+	
+	function delete()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$grpseqno = $this->input->post('grpseqno', TRUE);
+		$result = $this->user_model->deleteWebUserGroup($grpseqno);
+		
+		$row = $result->row_array();
+		
+		if (intval($row['errno']) > 0) {
+			$success = FALSE;
+		} else {
+			$success = TRUE;
+		}
+		$message = $row['errmsg'];
+		
+		$result->free_result();
+		$result->next_result();
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+}

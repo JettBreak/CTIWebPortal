@@ -1,0 +1,347 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class AccountAdd extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(ACCNTLINKING_NO);
+	}
+	
+	function index()
+	{	
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		//session_start();
+		$this->load->library('session');
+
+		$session = $this->session;
+		//$core    = $this->core;
+		
+		//$info = $session->userdata('cardInfo');
+		$info = $_SESSION['cardInfo'];
+		if (!$info) {
+			$this->load->helper('url');
+			redirect('welcome');
+			exit();
+		}
+		$data['prptr']		= $session->userdata('prptr');
+		$data['primary']	= $session->userdata('primary');
+		$data['prseqno'] 	= $info['prseqno'];
+		$data['cardBIN']	= $info['cardBIN'];
+		$data['custName'] 	= $info['custName'];
+		$data['cardStatus'] = $info['cardStatDesc'];
+		$data['cardType'] 	= $info['cardType'];
+				
+		if (!$accountTypes = $this->cache->get($this->core->getSessionID() . 'accountTypes')) {
+			$this->load->model('coreapp/card_model');
+			$result = $this->card_model->getAccountType();
+			
+			$accountTypes = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'accountTypes', $accountTypes, CACHE_TTL);
+		}
+		
+		$first = current($accountTypes);
+		
+		$formatValue = $first['formatvalue'];
+		$brChar = 'B';
+		$newFormat = $this->getFormat($formatValue, $brChar);
+		
+		$data['mask'] = $newFormat;
+		$placeholder = str_replace(array('P', 'S', 'C', 'X'), '_', $newFormat);
+		$data['acctNoPlaceholder'] = $placeholder;
+		
+		$acctChar = $first['acctchar'];
+		
+		switch ($acctChar) {
+			case 'A':
+				$XFormat = '[A-Za-z]';
+				break;
+			case 'N':
+				$XFormat = '[0-9]';
+				break;
+			case 'X':
+				$XFormat = '[A-Za-z0-9]';
+				break;
+		}
+		
+		$data['XFormat'] = $XFormat;
+		
+		$data['accountTypes'] = NULL;//'<option mask="SSSSBBBBBB" xchar="[A-Za-z0-9]">TEST</option>';
+		foreach ($accountTypes as $row) {
+			switch ($row['acctchar']) {
+				case 'A':
+					$xChar = '[A-Za-z]';
+					break;
+				case 'N':
+					$xChar = '[0-9]';
+					break;
+				case 'X':
+					$xChar = '[A-Za-z0-9]';
+					break;
+			}
+
+			$brChar = 'B';
+			$newFormat = $this->getFormat($row['formatvalue'], $brChar);
+			$placeholder = str_replace(array('P', 'S', 'C', 'X'), '_', $newFormat);
+		
+			$data['accountTypes'] .= '<option inputph="'. $placeholder .'" mask="'. $row['formatvalue'] .'" xchar="'. $xChar .'" value="'. $row['accttype'] .'">'. $row['description'] .'</option>';
+		}
+		
+		$this->load->view('card/accountadd', $data);
+	}
+	
+	function getFormat($formatValue, $brChar)
+	{
+		$branchCode = $this->core->getBranchCode();
+		
+		$padCnt = substr_count($formatValue, $brChar);
+		$get = str_repeat($brChar, $padCnt); //BBBBBB
+		$brVal = str_pad($branchCode, $padCnt, '0', STR_PAD_LEFT);
+		$newFormat = str_replace($get, $brVal, $formatValue);
+		
+		return $newFormat;
+	}
+	
+	function verify()
+	{	
+		$this->load->library('shortxml');
+		$xml = $this->shortxml;
+		
+		//clear temp accntToReplace
+		//if (array_key_exists('accntToReplace', $_SESSION)) {
+			unset($_SESSION['accntToReplace']);
+		//}
+		
+		$accntNo = $this->input->post('accntNo', TRUE);
+		
+		$details = NULL;
+		$message = NULL;
+		$primary = NULL;
+		$isMaxAccount = FALSE;
+		
+		//check if already linked
+		$isExists = FALSE;
+		foreach ($_SESSION['accounts'] as $row) {
+			$xml->setXML($row['xml1']);
+			if ($xml->getValue('ACCTNO') === $accntNo) {
+				$isExists = TRUE;
+			}
+		}
+		
+		if ($isExists) {
+		//if ( in_array(array('acctno' => $accntNo), $_SESSION['accounts'][$key]['acctno']) ) {
+			$verified = FALSE;
+			$message = 'Account already linked to this card';
+		} else {
+			$this->load->model('coreapp/card_model');
+			
+			//get max account
+			if (isset($_SESSION['maxAccount'])) {
+				$maxAccount = $_SESSION['maxAccount'];
+			} else {				
+				$result = $this->card_model->getMaxAccount();
+				$row 	= $result->row_array();
+				$maxAccount = $_SESSION['maxAccount'] = $row['maxacct'];
+				
+				$result->free_result();
+				$result->next_result();
+			}
+			$acctType = $this->input->post('acctType', TRUE);
+			
+			$result = $this->card_model->getAccountInfoByKey($accntNo, $acctType);
+			if ($result->num_rows() > 0) {
+				$row = $result->row_array();
+				
+				if ($_SESSION['cardInfo']['brseqno'] !== $row['brseqno']) { //check branch
+					$verified = FALSE;
+					$message = 'Cannot link account from other branch';
+				} else if ($row['status'] == 10) {
+					$verified = FALSE;
+					$message = 'Account is for verification';
+				} else {
+					$accntCode = $row['acctcode'];
+					
+					//CASA check
+					foreach ($_SESSION['accounts'] as $data) {
+						$xml->setXML($data['xml1']);
+						
+						$acct = $xml->getValue('ACCT'); //CA or SA
+						$acctNo = $xml->getValue('ACCTNO');
+						$acctDesc = $xml->getValue('ACCTTYPE');
+						$isPrimary = $xml->getValue('PRIMARY');
+						
+						if ($acct === $accntCode) {
+							$isMaxAccount = TRUE;
+							$_SESSION['accntToReplace'] = array(
+								'pseqnoLink' => $data['pseqnolink'],
+								'prptr' => $data['prptr'],
+								'acctNo' => $acctNo,
+								'acctDesc' => $acctDesc,
+								'primary' => $isPrimary
+							);
+							
+							$message = 'Maximum account limit reached.<br />This will replace account:<br /><strong>['. $acct .'-'. $acctNo .']</strong>';
+							
+							if ($isPrimary === 'Y') {
+								$message .= '<br />which is your primary account';
+							}
+						} else {
+							$primary = 'Y';	
+						}
+						
+					}
+					
+					$pseqnoLink	= $row['prseqno'];
+					$authMode 	= $row['authmode'];
+					$accntStats	= strtoupper($row['statdesc']);
+					$accntOwn 	= $row['cifseqno'] == TRUE ? $row['lastname'] .', '. $row['firstname'] .' '. $row['middlename'] : 'NONE';
+					
+					$prKey		= $row['prkey'];
+					$accntDesc	= $row['acctdesc'];
+					$accntType	= $row['accttype'];
+					$issuer		= $row['issuer'];
+					
+					$details = array(
+						'accntStats' => $accntStats,
+						'accntOwn' 	 => $accntOwn,
+						'prseqno' 	 => $accntType,
+						'pseqnoLink' => $pseqnoLink,
+						'prKey'		 => $prKey,
+						'accntDesc'	 => $accntDesc,
+						'accntType'  => $accntType,
+						'authMode' 	 => $authMode,
+						'accntCode'	 => $accntCode,
+						'issuer'	 => $issuer,
+						'primary'	 => $primary  
+					);
+					
+					$verified = TRUE;
+				}
+			} else {
+				$verified = FALSE;
+				$message  = 'Account number does not exist';
+			}
+			
+			$result->free_result();
+			$result->next_result();
+		}
+		
+		echo json_encode(array(
+			'isMaxAccount' => $isMaxAccount,
+			'verified' => $verified, 
+			'details' => $details,
+			'message' => $message
+		));
+	}
+	
+	function link()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('session');
+		
+		$card  = $this->card_model;
+		$core  = $this->core;
+		$input = $this->input;
+		
+		$accntNo = $input->post('accntNo', TRUE);
+		if (in_array($accntNo, $_SESSION['accounts']) === TRUE) {
+			$success = FALSE;
+			$message = 'Account already linked to this card';
+		} else {
+			$prseqno 	= $input->post('prseqno', TRUE);
+			$pseqnoLink	= $input->post('pseqnoLink', TRUE);
+			$prptr		= $input->post('prptr', TRUE);
+			
+			$acctNo		= $input->post('prKey', TRUE);
+			$acctDesc 	= $input->post('accntDesc', TRUE);
+			$acctType 	= $input->post('acctType', TRUE);
+			$authMode	= $input->post('authMode', TRUE);
+			$accntCode	= $input->post('accntCode', TRUE);
+			$issuer		= $input->post('issuer', TRUE);
+			$primary	= $input->post('primary', TRUE);;
+			
+			$xml = '<ACCTNO>'. $acctNo .'</>'.
+				'<ACCTTYPE>'. $acctDesc .'</>'.
+				'<ACCTCODE>'. $acctType .'</>'.
+				'<AUTHTYPE>'. $authMode .'</>'.
+				'<ACCT>'. $accntCode .'</>'.
+				'<AUTHCODE>'. $issuer .'</>'.
+				'<PRIMARY>'. $primary .'</>';
+			
+			$prKey 	   = $input->post('cardNo', TRUE);
+			$branchID  = $core->getBranchID();
+			$ipAddress = $core->getIPAddress();
+			$workstation = $core->getWorkstation();
+			$userAudit	= $core->getUserID();
+			$userOverride = $this->session->userdata('userOverride');
+			$sessionID	= $core->getSessionID();
+			
+			//replace account
+			if (array_key_exists('accntToReplace', $_SESSION)) {
+				$acct = $_SESSION['accntToReplace'];
+			
+				$result = $card->deleteCardAccountLink(
+					$prseqno,
+					$acct['pseqnoLink'],
+					$acct['prptr'],
+					$acct['acctNo'],
+					$acct['acctDesc'],
+					$prKey,
+					$branchID,
+					$ipAddress,
+					$workstation,
+					$userAudit,
+					$userOverride,
+					$sessionID
+				);
+				$result->free_result();
+				$result->next_result();
+				
+				$primary = $acct['primary'];
+			}
+			
+			$xml = '<ACCTNO>'. $acctNo .'</>'.
+				'<ACCTTYPE>'. $acctDesc .'</>'.
+				'<ACCTCODE>'. $acctType .'</>'.
+				'<AUTHTYPE>'. $authMode .'</>'.
+				'<ACCT>'. $accntCode .'</>'.
+				'<AUTHCODE>'. $issuer .'</>'.
+				'<PRIMARY>'. $primary .'</>';
+				
+			$result	 = $card->insertCardAccountLink(
+				$prseqno,
+				$pseqnoLink,
+				$prptr,
+				$xml,
+				$acctNo,
+				$acctDesc,
+				$prKey,
+				$branchID,
+				$ipAddress,
+				$workstation,
+				$userAudit,
+				$userOverride,
+				$sessionID
+			);
+			
+			$result->free_result();
+			$result->next_result();
+			
+			$this->session->unset_userdata('userOverride');
+			
+			$success = TRUE;
+			$message = 'Account successfully linked to card';
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+}
+/* End of file accountadd.php */
+/* Location: ./application/controllers/card/accountadd.php */

@@ -1,0 +1,317 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class CardInventory extends CI_Controller {	
+
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->model('coreapp/reports_model');
+		$this->load->library('core');
+		//$this->core->checkUserAllows(OTHERCARDHOLDERATOURTERM_NO);
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		$reports = $this->reports_model;
+		$core 	 = $this->core;
+
+		//$core->checkUserAllows(REPCARDINV_NO);
+		
+		if ($core->canRep()) {
+			$brseqno = '-1';
+		} else {
+			$brseqno = $core->getBranchID();
+		}
+		
+		$userAudit  = $core->getUserID();
+		$sessionID  = $core->getSessionID();
+		
+		//branches combobox
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$branchList = NULL;
+		foreach ($branches as $row) {
+			$branchList .= '<option value="'. $row['brseqno'] .'" brname="'. $row['brname'] .'">'. $row['brname'] .'</option>';
+		}
+		
+		$data['branches'] = NULL;
+		if ($this->core->canRep()) {
+			$data['branches'] = '<table style="background-color:#333;padding:3px;width:100%"><tr>
+				<td><label for="branchList">Branch:</label></td>
+				<td><select name="branch" id="branchList" style="width:162px">
+						<option value="-1" brname="ALL BRANCHES">ALL</option>
+						'. $branchList .'
+					</select></td>
+			</tr></table>';
+		}
+		
+		$result = $reports->getCardInventory($brseqno, $userAudit, $sessionID);
+		
+		$data['cardInv'] = NULL;
+		$grpx = NULL;
+		$cnt  = 0;
+		foreach ($result->result_array() as $row) {
+			$grp = $row['grp'];
+			
+			// get data
+			if ($grp !== $grpx) {
+				$grpx = $grp;
+				$data['cardInv'] .= '<tr><td class="label" style="padding-left:15px;">'. $grp .'</td><td></td></tr>';
+			}
+			//count totals
+			if ($grp === 'TOTALS') {
+				$cnt += $row['total'];
+			}
+			
+			$data['cardInv'] .= '<tr>
+				<td style="padding-left: 40px;">'. $row['description'] .'</td>
+				<td>'. $row['total'] .'</td>
+			</tr>';
+		}
+		//display branch total
+		$data['cardInv'] .= '<tr><td style="padding-left: 40px;">BRANCH TOTAL</td><td>'. $cnt .'</td></tr>';
+		
+		$this->load->view('reports/cardinventory', $data);
+	}
+	
+	function getData()
+	{
+		$reports = $this->reports_model;
+		$core 	 = $this->core;
+		
+		if ($core->canRep()) {
+			$brseqno = $this->input->get('brseqno', TRUE);
+		} else {
+			$brseqno = $core->getBranchID();
+		}
+		
+		$userAudit  = $core->getUserID();
+		$sessionID  = $core->getSessionID();
+		
+		$dtFrom = $core->formatDate('Y-m-d', $this->input->post('dtFrom', TRUE));
+		$dtTo = $core->formatDate('Y-m-d', $this->input->post('dtTo', TRUE));
+		$reportLog = $this->input->post('reports', TRUE);
+		
+		if ($dtFrom !== $dtTo) {
+			//if same month, outputs: January 1 - 10, 2011
+			if ($core->formatDate('Y-m', $dtFrom) === $core->formatDate('Y-m', $dtTo)) {
+				$reportDate = $core->formatDate('F j', $dtFrom) .' - '. $core->formatDate('j, Y', $dtTo);
+			} else {
+				$reportDate = 'From '. $core->formatDate('F j, Y', $dtFrom) .' to '. $core->formatDate('F j, Y', $dtTo);
+			}
+			$dateSaveFormat = $core->formatDate('mdY', $dtFrom) .'-'. $core->formatDate('mdY', $dtTo);
+		} else {
+			$reportDate = $core->formatDate('F j, Y', $dtFrom);
+			$dateSaveFormat = $core->formatDate('mdY', $dtFrom);
+		}
+		
+		$result = $reports->getCardInventory($brseqno, $userAudit, $sessionID);
+		
+		$cardInv = NULL;
+		$grpx = NULL;
+		$cnt  = 0;
+		foreach ($result->result_array() as $row) {
+			$grp = $row['grp'];
+			
+			//
+			if ($grp !== $grpx) {
+				$grpx = $grp;
+				$cardInv .= '<tr><td class="label" style="padding-left:15px;">'. $grp .'</td><td></td></tr>';
+			}
+			//count totals
+			if ($grp === 'TOTALS') {
+				$cnt += $row['total'];
+			}
+			
+			$cardInv .= '<tr>
+				<td style="padding-left: 40px;">'. $row['description'] .'</td>
+				<td>'. $row['total'] .'</td>
+			</tr>';
+		}
+		//display branch total
+		$cardInv .= '<tr><td style="padding-left: 40px;">BRANCH TOTAL</td><td>'. $cnt .'</td></tr>';
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $this->core->compressOutput($cardInv)
+		));
+	}
+	
+	
+	
+	function preview()
+	{
+		$this->load->model('coreapp/reports_model');
+		$this->load->library('core');
+		$this->load->library('pdf');
+		
+		$reports = $this->reports_model;
+		$core 	 = $this->core;
+		$pdf 	 = $this->pdf;		
+		
+		//$core->checkUserAllows(REPCARDINV_NO);
+		
+		$userName = $core->getUserName();
+		$instName = $core->getInstName();
+		
+		if ($core->canRep()) {
+			$branchCode = $this->input->post('branch', TRUE);
+			$branchName = $this->input->post('branchName', TRUE);
+		} else {
+			$branchCode = $core->getBranchCode();
+			$branchName = $core->getBranchName();
+		}
+		
+		if (intval($branchCode) === 0)
+		{
+			$branchCode = '-1';	
+		}
+		
+		$userAudit  = $core->getUserID();
+		$sessionID  = $core->getSessionID();
+		
+		$dtFrom = $core->formatDate('Y-m-d', $this->input->post('dtFrom', TRUE));
+		$dtTo = $core->formatDate('Y-m-d', $this->input->post('dtTo', TRUE));
+		$reportLog = $this->input->post('reports', TRUE);
+		
+		if ($dtFrom !== $dtTo) {
+			//if same month, outputs: January 1 - 10, 2011
+			if ($core->formatDate('Y-m', $dtFrom) === $core->formatDate('Y-m', $dtTo)) {
+				$reportDate = $core->formatDate('F j', $dtFrom) .' - '. $core->formatDate('j, Y', $dtTo);
+			} else {
+				$reportDate = 'From '. $core->formatDate('F j, Y', $dtFrom) .' to '. $core->formatDate('F j, Y', $dtTo);
+			}
+			$dateSaveFormat = $core->formatDate('mdY', $dtFrom) .'-'. $core->formatDate('mdY', $dtTo);
+		} else {
+			$reportDate = $core->formatDate('F j, Y', $dtFrom);
+			$dateSaveFormat = $core->formatDate('mdY', $dtFrom);
+		}
+		
+		$result = $reports->getCardInventory($branchCode, $userAudit, $sessionID);
+		
+		$cardInv 	= NULL;
+		$grpx 		= NULL;
+		$fontWeight = NULL;
+		$space		= FALSE;
+		$cntx    	= 0;
+		foreach ($result->result_array() as $row) {
+			$grp = $row['grp'];
+			
+			//count totals
+			if ($grp === 'TOTALS') {
+				if ($space === FALSE) {
+					$cardInv .= '<tr><td colspan="3" height="100">&nbsp;</td></tr>';
+					$space = TRUE;
+				}
+				$cntx += $row['total'];
+				$fontWeight = 'font-weight: bold;';
+			} else {
+				if ($grp !== $grpx) {
+					$grpx = $grp;
+					$cardInv .= '<tr><td colspan="2" style="font-weight: bold;"><br /><br />'. $grp .'<br /></td><td></td></tr>';
+				}
+			}
+			
+			$cardInv .= '<tr>
+				<td colspan="2" style="padding-left: 40px;'. $fontWeight .'">'. $row['description'] .'</td>
+				<td align="right" style="'. $fontWeight .'">'. $row['total'] .'</td>
+			</tr>';
+		}
+		//display branch total
+		$cardInv .= '<tr><td colspan="2" style="padding-left: 40px; font-weight: bold;">BRANCH TOTAL</td><td align="right" style="'. $fontWeight .'">'. $cntx .'</td></tr>';
+		
+		$currentDate = date('F j, Y');
+		
+		// set document information
+		$pdf->SetCreator(PDF_CREATOR);
+		$pdf->SetAuthor($userName);
+		$pdf->SetTitle('Daily Card Inventory Report');
+		$pdf->SetSubject('Card');
+		$pdf->SetKeywords(NULL);
+		
+		// set default header data
+		//$pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE, PDF_HEADER_STRING);
+		$pdf->SetHeaderData(NULL);
+		
+		// set header and footer fonts
+		$pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+		$pdf->setUser($core->getUserName());
+		$pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+		
+		// set default monospaced font
+		$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+		
+		//set margins
+		$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		$pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+		$pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+		
+		//set auto page breaks
+		$pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+		
+		// ---------------------------------------------------------
+		
+		// Set font
+		// dejavusans is a UTF-8 Unicode font, if you only need to
+		// print standard ASCII chars, you can use core fonts like
+		// helvetica or times to reduce file size.
+		$pdf->SetFont('helvetica', '', 10, '', true);
+		
+		// Add a page
+		// This method has several options, check the source code documentation for more information.
+		$pdf->AddPage('P', 'Letter');
+		
+		// Set some content to print
+		$html = '<style>
+		h1, h2, h3, h4, h5 {
+			text-align: center;
+		}
+		th {
+			font-weight: bold;
+			text-align: center;
+		}
+		</style>
+		<h2>'.$instName.'</h2>
+		<h1>DAILY CARD INVENTORY REPORT</h1>
+		<h3>'. $branchName .'</h3>
+		<h4>'. $currentDate .'</h4>
+		<table>
+			<tr>
+				<td colspan="3" height="200">&nbsp;</td>
+			</tr>
+			<tr>
+			<td width="20%"></td>
+			<td width="50%"><table width="100%">
+			'.$cardInv.'
+			</table></td>
+			<td width="30%"></td>
+			</tr>
+			<tr>
+				<td colspan="3" height="400"></td>
+			</tr>
+			<tr>
+				<td colspan="2"></td>
+				<td>Prepared by:
+				<br /><br /><br />
+				____________________________
+				<br /><span align="center">'.$userName.'</span>
+				</td>
+			</tr>
+		</table>';
+		// Print text using writeHTMLCell()
+		$pdf->writeHTML($html, true, false, true, false, '');
+
+		$pdf->Output('cardinventory_' .$dateSaveFormat . '.pdf', 'I');
+	}
+}

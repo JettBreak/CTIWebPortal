@@ -1,0 +1,387 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Users extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(USERENTRY_NO);
+	}
+	
+	function index()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/user_model');
+		$this->load->library('shortxml');
+		$this->cache->delete($this->core->getSessionID() .'userInfo');
+		
+		$xml = $this->shortxml;
+		
+		if (!$branches = $this->cache->get($this->core->getSessionID() . 'branches')) {
+			$this->load->model('coreapp/branch_model');
+			$result = $this->branch_model->getBranchList();
+		
+			$branches = $result->result_array();
+			
+			$result->free_result();
+			$result->next_result();
+			$this->cache->save($this->core->getSessionID() .'branches', $branches, CACHE_TTL);
+		}
+		
+		$data['branches'] = NULL;
+		foreach ($branches as $row) {
+			$data['branches'] .= '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+		}
+		
+		$result = $this->user_model->getWebUserGroupList();
+		
+		$data['usergroups'] = NULL;
+		$details = array();
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row) {
+				$xml->setXML($row['xml1']);
+				
+				//$attr = substr($xml->getValue('SECUOPTION'), 1, 1) === '1' ? ' xuser' : NULL;
+				
+				$data['usergroups'] .= '<option value="'. $row['grpseqno'] .'">'. $row['description'] .'</option>';		
+			}
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		
+		$userGroup = $this->core->getUserGroup();
+		
+		$data['initgrpseqno'] = 0;
+		//end
+		
+		//set initbrseqno and ui toolbar
+		
+		if ($this->core->canUser()) {
+			$initbrseqno = 0;
+			$data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+		} else {
+			$initbrseqno = $this->core->getBranchID();
+			$data['uiToolbar'] = NULL;
+		}
+		
+		$data['initbrseqno'] = $initbrseqno;
+		//end
+
+		$this->load->view('security/users', $data);
+	}	
+
+	//cache user info
+	function cache()
+	{
+		$_SESSION['user'] = $_POST;
+		
+		echo json_encode(array(
+			'success' => TRUE
+		));
+	}
+	
+	function getData()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		$grpseqno = $this->input->post('grpseqno', TRUE);
+		
+		if ($this->input->post('cache', TRUE) === '0') {
+			$this->cache->delete($this->core->getSessionID() .'users'.$grpseqno);
+		}
+		
+		if (!$details = $this->cache->get($this->core->getSessionID() . 'users'.$grpseqno)) {
+			$this->load->model('coreapp/user_model');
+			$this->load->library('shortxml');
+			
+			$core = $this->core;
+			$xml = $this->shortxml;
+			
+			if ($core->canUser()) {
+				$brseqno = $this->input->post('brseqno', TRUE);
+			} else {
+				$brseqno = $core->getBranchID();
+			}
+			
+			$result = $this->user_model->getWebUserList($grpseqno, $brseqno);
+			
+			$details = array();
+			if ($result->num_rows() > 0) {
+				foreach ($result->result_array() as $row) {
+					$xml->setXML($row['xml1'] . $row['grpxml']);
+					
+					$userID	= $row['userid'];
+					
+					if ($userID !== $core->getUserID()) {
+					
+						$userName = $row['username'];
+						$branch = $row['brname'];
+						$grpdesc = $row['grpdesc'];
+						$status = $row['statdesc'];
+						$dtLastAccess = $row['dtlastlogin'] ? $core->formatDate('m/d/Y h:i:s A', $row['dtlastlogin']) : 'Never';
+						$dtLastPwdChg = $row['dtlastpwdchg'] ? $core->formatDate('m/d/Y h:i:s A', $row['dtlastpwdchg']) : 'Never';
+						$dtCreated = $xml->getValue('DATECREATED');
+						$dtCreated = $core->formatDate('m/d/Y h:i:s A', $dtCreated);
+						$grpseqno = $row['grpseqno'];
+						$position = $xml->getValue('POSITION');
+						//$xml1 = $row['xml1'];
+						$department = $xml->getValue('DEPARTMENT');
+						$tmseqno = $row['tmseqno'];
+						$allows = $row['allows'];
+						$brseqno = $row['brseqno'];
+						$enableDisable = substr($xml->getValue('SECUOPTION'), 1, 1) === '1' ? 1 : 0;
+						
+						$details[] = array(
+							$userID,
+							$userName,
+							$branch,
+							$grpdesc,
+							$status,
+							$dtLastAccess,
+							$dtLastPwdChg,
+							$dtCreated,
+							$grpseqno,
+							$position,
+							'',//$xml1, //reserved for debugging
+							$department,
+							$tmseqno,
+							$allows,
+							$brseqno,
+							$enableDisable
+						);
+					}
+				}
+			}
+			
+			$this->cache->save($this->core->getSessionID() .'users'.$grpseqno, $details, CACHE_TTL);
+		}
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $details
+		));
+	}
+	
+	function submit()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));		
+		$this->load->model('coreapp/user_model');
+		//$this->load->library('shortxml');
+		$this->load->library('coreconverters');
+		
+		$core = $this->core;
+		$input = $this->input;
+		
+		$tmseqno = $input->post('tmseqno', TRUE);
+		$grpseqno = $input->post('grpseqno', TRUE);
+		$userID = $input->post('userID', TRUE);
+		$brseqno = $input->post('branch', TRUE);
+		$userName = ucwords(strtolower($input->post('userName', TRUE)));
+		
+		$allows = $this->input->post('allows');
+		
+		if ($allows) {
+			$max = max($allows);
+			$bin = '';
+			for ($i = 1; $i <= $max; $i++) {	
+				if (in_array($i, $allows)) {
+					$bin .= '1';
+				} else {
+					$bin .= '0';
+				}
+			}
+		} else {
+			$bin = '0';
+		}
+		
+		$hex = $this->coreconverters->asciiBinToHex($bin);
+		
+		$position = $input->post('position', TRUE);
+		$department = $input->post('department', TRUE);
+		$workstation = $core->getWorkstation();
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+		
+		if ($input->post('update', TRUE)) {
+			//$this->cache->clean();
+			if ($info = $_SESSION['user']) {
+				$dtCreated = $info['dtCreated'];
+			} else {
+				echo json_encode(array(
+					'success' => FALSE,
+					'message' => 'Cache has expired please try again'
+				));
+				exit();
+			}
+		
+			/*$xml = $this->shortxml;
+			$xml->getXML($xml1);
+			$xml->editTag('POSITION', $position);
+			$xml->editTag('DEPARTMENT', $department);
+		
+			$xml1 = $xml->getXML();*/
+			
+			$xml1 = '<DATECREATED>'. $dtCreated .'</>'.
+				'<POSITION>'. $position .'</>'.
+				'<DEPARTMENT>'. $department .'</>';
+			
+			$result = $this->user_model->updateWebUser($tmseqno, $userID, $brseqno, $userName, $hex, $xml1, $workstation, $userAudit, $sessionID);
+			$message = 'User entry updated successfully';
+		} else {
+			$dtCreated = date('m/d/Y h:i:s A');
+			$userPW = $core->encrypt($userID, sha1($userID));
+			
+			$xml1 = '<DATECREATED>'. $dtCreated .'</>'.
+				'<POSITION>'. $position .'</>'.
+				'<DEPARTMENT>'. $department .'</>';
+				
+			$xml2 = '<ISWEB>Y</>'.
+				'<WEBPWD>'. $userPW .'</>'.
+				'<WEBSTAT>1</>';
+		
+			$result = $this->user_model->insertWebUser($tmseqno, $grpseqno, $userID, $brseqno, $userName, $hex, $xml1, $xml2, $workstation, $userAudit, $sessionID);
+			$message = 'New user entry created successfully';
+		}
+
+		//if user is required to input password upon registration
+		/*if (isset($_POST['newPassword'])) {
+			$userPW = $core->encrypt($userID, $input->post('newPassword', TRUE));
+			$question = $input->post('secretQuestion', TRUE);
+			$answer = $core->encrypt($userID, $input->post('secretAnswer', TRUE));
+			
+			$result = $this->user_model->setInitUserPass(
+				$userID,
+				$userPW,
+				$question,
+				$answer
+			);
+			
+			$result->free_result();
+			$result->next_result();
+		}*/
+		//end
+		
+		if ($result->num_rows() > 0) {
+			$row = $result->row_array();
+			if ($row['errno'] > 0) {
+				$success = FALSE;
+				$message = $row['errmsg'];
+			} else {
+				unset($_SESSION['user']);
+				$success = TRUE;
+			}
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message,
+			'hex' => $hex/*,
+			'allows' => $allows,
+			'tmseqno' => $tmseqno,
+			'grpseqno' => $grpseqno,
+			'userID' => $userID,
+			'brseqno' => $brseqno,
+			'userName' => $userName,
+			'allows' => $allows,
+			'xml1' => '',
+			'userAudit' => $userAudit,
+			'sessionID' => $sessionID*/
+		));
+	}
+	
+	function delete()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/user_model');
+		unset($_SESSION['user']);
+		
+		$userID = $this->input->post('userID', TRUE);
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$this->user_model->deleteWebUser($userID, $userAudit, $sessionID);
+		
+		echo json_encode(array(
+			'removed' => TRUE,
+			'userID' => $userID
+		));
+	}
+	
+	function enable()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$userID = $this->input->post('userID', TRUE);
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$this->user_model->enableWebUser($userID, $userAudit, $sessionID);
+		
+		echo json_encode(array(
+			'enabled' => TRUE,
+			'userID' => $userID,
+			'newStat' => 'Active'
+		));
+	}
+	
+	function disable()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$userID = $this->input->post('userID', TRUE);
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$this->user_model->disableWebUser($userID, $userAudit, $sessionID);
+		
+		echo json_encode(array(
+			'disabled' => TRUE,
+			'userID' => $userID,
+			'newStat' => 'Disabled'
+		));
+	}
+	
+	function resetSettings()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$grpseqno = $this->input->post('grpseqno', TRUE);
+		$userID = $this->input->post('userID', TRUE);
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		
+		$this->user_model->resetWebUserSettings($grpseqno, $userID, $userAudit, $sessionID);
+		
+		echo json_encode(array(
+			'resetSettings' => TRUE,
+			'userID' => $userID,
+			'newStat' => 'User Reset'
+		));
+	}
+	
+	function resetPwd()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$userID = $this->input->post('userID', TRUE);
+		$brseqno = $this->core->getBranchID();
+		$ipAddress = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit = $this->core->getUserID();
+		$sessionID = $this->core->getSessionID();
+		$userPW = $this->core->encrypt($userID, sha1($userID));
+		
+		$result = $this->user_model->setUserPass($userID, $userPW, TRUE, '', '', FALSE, $brseqno, $ipAddress, $workstation, $userAudit, $sessionID);
+		
+		echo json_encode(array(
+			'resetPwd' => TRUE,
+			'userID' => $userID,
+			'newStat' => 'Password Reset'
+		));
+	}
+}

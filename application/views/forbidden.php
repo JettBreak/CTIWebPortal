@@ -1,0 +1,1 @@
+<div id="welcomePage"><h1>ACCESS DENIED</h1><div id="content"><center>You are not allowed to access this page</center></div></div><div id="bottom"><span class="buttons floatRight"><button class="closebtn">Close</button></span></div>

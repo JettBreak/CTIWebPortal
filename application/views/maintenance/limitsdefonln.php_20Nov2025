@@ -1,0 +1,266 @@
+<div style="width:1024px">
+    <h1>Default Online Limits</h1>
+    <table class="dataTable">
+        <thead>
+            <th>Transaction</th>
+            <th>limitseqno</th>
+            <th>trxcode</th>
+            <th>Default Cycle Amt.</th>
+            <th>Max Cycle Amt.</th>
+            <th>Default Counter</th>
+            <th>Max Counter</th>
+            <th>Default Min Tran Amt.</th>
+            <th>Min Tran Amt.</th>
+            <th>Default Max Tran Amt.</th>
+            <th>Max Tran Amt.</th>
+            <th>Cycle Period</th>
+            <th>Time Limit</th>
+            <th>No Fee Ctr.</th>
+            <th>Max No Fee Ctr.</th>
+            <th>No Fee Amt. Limit</th>
+            <th>Max No Fee Amt. Limit</th>
+            <th>No Fee Cycle Period</th>
+        </thead>
+    </table>
+</div>
+<div id="bottom">
+	<span class="buttons floatLeft">
+		<span style="margin-left:20px;"></span>
+    </span>
+    <span class="buttons floatRight">
+        <button id="refreshBtn">Refresh</button
+        ><button class="closebtn">Close</button>
+    </span>
+</div>
+<div id="customToolbar" class="hidden">
+    <div class="top">
+        <!--<div class="dataTables_custom floatLeft"><span class="info"></span></div>-->
+        <div class="dataTables_custom floatLeft" style="padding:0 !important">
+        	<span class="info">
+        		<label for="type">Type:</label>
+                <select id="type" style="width:150px">
+                    <?php echo html_entity_decode($accountTypes); ?>
+                </select>
+			</span>
+            <span class="info">
+            	<label for="limitseqno">Limit Name:</label>
+                <select name="limitseqno" id="limitseqno" style="width:150px">
+                	<?php echo html_entity_decode($limitNames); ?>
+                </select>
+            </span>
+		</div>
+    </div>
+    <div class="bottom">
+        <div class="dataTables_custom floatLeft" style="padding:3px !important">
+        	<span class="info">
+            	<span class="label">PIN Retry Count Default:</span> <span id="pinctrdef"><?php echo $pinctrdef; ?></span>
+			</span>
+        	<span class="info">
+            	<span class="label">PIN Maximum Retry Count:</span> <span id="pinctrmax"><?php echo $pinctrmax; ?></span>
+			</span>
+		</div>
+    </div>
+</div>
+<style>
+.dataTables_scrollBody {
+	min-height: 150px !important;
+	max-height: 400px !important;
+}
+</style>
+<script>
+$(function() {
+	var limitseqno = '#limitseqno';
+	var modifyBtn = '#modifyBtn';
+	var removeBtn = '#removeBtn';
+	var accttype = '#type';
+	
+	var limits = {};
+	
+	var buttons = modifyBtn + ',' + removeBtn;
+	
+    initSession('<?php echo $sessionExp; ?>');
+	oTable = $(DATATABLE).dataTable({
+        bRetrieve: true,
+        bJQueryUI: true,
+		aLengthMenu: DTLENGTHMENU,
+        aaSorting: [],
+		aoColumns: [
+			null, //Transaction
+			{ bVisible: false }, //limitseqno
+			{ bVisible: false }, //trxcode
+			{
+				sClass: 'rightAlign'//, //Default Cycle Amt.
+				//sType: 'formatted-num'
+			}, 
+			{ sClass: 'rightAlign' },	//Maximum Cycle Amt.
+			{ sClass: 'centerAlign'},	//Default Counter
+			{ sClass: 'centerAlign'},	//Max Counter
+			{ sClass: 'rightAlign' },	//Default Min Tran Amt.
+			{ sClass: 'rightAlign' },	//Min Tran Amt.
+			{ sClass: 'rightAlign' },	//Default Max Tran Amt.
+			{ sClass: 'rightAlign' },	//Max Tran Amt.
+			{ sClass: 'centerAlign'},	//Cycle Period
+			{ sClass: 'centerAlign'},	//Time Limit
+			{ sClass: 'centerAlign'},	//No Fee Ctr.
+			{ sClass: 'centerAlign'},	//Max. No Fee Ctr.
+			{ sClass: 'rightAlign' },	//No Fee Amt. Limit
+			{ sClass: 'rightAlign' },	//Max. No Fee Amt.
+			{ sClass: 'centerAlign'} 	//No Fee Cycle Period
+		],
+        sScrollY: '100%',
+        sScrollX: '100%',
+        sPaginationType: 'full_numbers',
+        fnInitComplete: function () {
+			getData();
+        },
+        fnRowCallback: function (nRow, aData, iDisplayIndex) {
+			$(nRow).attr('id', aData[2]).unbind('click dblclick').click(function () {
+				if ($(MSGBOX).length > 0) {
+					$(MSGBOX).dialog('close');
+				}
+                $('tbody tr').removeClass('rowSelected');
+                $(this).addClass('rowSelected');
+				
+                //set temp var
+				limits = {
+					description: 	aData[0],
+					limitseqno: 	aData[1],
+					trxcode: 		aData[2],
+					cycledef:		aData[3],	//Default Cycle Amt.
+					cyclemax: 		aData[4],	//Maximum Cycle Amt.
+					ctrdef: 		aData[5],	//Default Counter
+					ctrmax: 		aData[6],	//Max Counter
+					tranmindef: 	aData[7],	//Default Min Tran Amt.
+					tranmin: 		aData[8],	//Min Tran Amt.
+					tranmaxdef: 	aData[9],	//Default Max Tran Amt.
+					tranmax: 		aData[10],	//Max Tran Amt.
+					cycle: 			aData[11],	//Cycle Period
+					duralimit: 		aData[12],	//Time Limit
+					nonfeectr: 		aData[13],	//No Fee Ctr.
+					nonfeectrdef: 	aData[14],	//Max. No Fee Ctr.
+					nonfeetran:		aData[15],	//No Fee Amt. Limit
+					nonfeetrandef:	aData[16],	//Max. No Fee Amt.
+					nonfeecycle: 	aData[17]	//No Fee Cycle Period
+				}
+				
+                $(buttons).removeAttr('disabled');
+				
+				$(DIALOG).dialog('close');
+            }).dblclick(function () {
+                //$(modifyBtn).triggerHandler('click');
+            });
+            $(buttons).attr('disabled', true);
+			
+			limits = {};
+            return nRow;
+        }
+    });
+	
+	$('#bottom button').click(function () {
+		$(DIALOG).dialog('close');
+	});
+	
+	$('.ui-toolbar:even').append($('#customToolbar .top').html());
+	$('.ui-toolbar:odd').append($('#customToolbar .bottom').html());
+	
+	$(accttype).change(function () {
+		//serialize AJAX request
+		requests.push(
+			jqxhr = $.ajax({
+				type: 'GET',
+				url: 'maintenance/limitsdefonln/getlimitnames',
+				data: {
+					acctType: this.value
+				},
+				dataType: 'json',
+				beforeSend: function() {
+					abortAJAXRequests();
+					waitMessage('Retrieving data...');
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+
+				},
+				success: function(data) {
+					if (data.success) {
+						$(limitseqno)
+							.html(data.options)
+							.triggerHandler('change')
+						
+						var selected = $(limitseqno).find('option:selected');
+						var pinctrdef = selected.attr('pinctrdef');
+						var pinctrmax = selected.attr('pinctrmax');
+						
+						$('#pinctrdef').text(pinctrdef);
+						$('#pinctrmax').text(pinctrmax);
+						//oTable.fnAdjustColumnSizing();
+					}
+					$(MSGBOX).dialog('close');
+				}
+			})
+		);
+	}).click(function () {
+		$(DIALOG).dialog('close');
+	});
+	
+	$(limitseqno).change(function () {
+		getData();
+		var selected = $(this).find('option:selected');
+		
+		var pinctrdef = selected.attr('pinctrdef');
+		var pinctrmax = selected.attr('pinctrmax');
+		
+		$('#pinctrdef').text(pinctrdef);
+		$('#pinctrmax').text(pinctrmax);
+	}).click(function () {
+		$(DIALOG).dialog('close');
+	});
+	
+	$('#refreshBtn').click(getData);
+	
+	function getData() {
+		//serialize AJAX request
+		requests.push(
+			jqxhr = $.ajax({
+				type: 'GET',
+				url: 'maintenance/limitsdefonln/getdata',
+				data: {
+					limitseqno: $(limitseqno).val()
+				},
+				dataType: 'json',
+				beforeSend: function() {
+					abortAJAXRequests();
+					waitMessage('Retrieving data...');
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+
+				},
+				success: function(data) {
+					
+					$.fn.dataTableExt.iApiIndex = 0;
+					oTable.fnClearTable(0);
+						
+					if (data.success) {
+						oTable.fnAddData(data.details);
+						//oTable.fnAdjustColumnSizing();
+						$('#updateAllLimitsBtn').attr('disabled', false);
+						$('#newBtn').attr('disabled', false);
+					} else {
+						$('#updateAllLimitsBtn').attr('disabled', true);
+						if (data.limitno > 0) {
+							$('#newBtn').attr('disabled', false);
+						} else {
+							$('#newBtn').attr('disabled', true);
+						}
+
+						$(buttons).attr('disabled', true);
+					}
+					
+					oTable.fnDraw();
+					
+					$(MSGBOX).dialog('close');
+				}
+			})
+		);
+	}
+});
+</script>

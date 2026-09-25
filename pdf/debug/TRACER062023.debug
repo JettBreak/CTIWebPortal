@@ -1,0 +1,83 @@
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11| START OF TRACE
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11| REQUESTID: 3575
+TRC:06.07.2023.15.45.11| CLASS: library.reportclass.ReportGenerator
+TRC:06.07.2023.15.45.11| VOIDCODE: 107
+TRC:06.07.2023.15.45.11| VOIDDESC: Class name not recognized
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11| ERROR MESSAGE: reportlist.IPY.InstapayRejectedTransac
+TRC:06.07.2023.15.45.11| tion
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11| TRACE MESSAGE: 
+TRC:06.07.2023.15.45.11| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:06.07.2023.15.45.11| :381)
+TRC:06.07.2023.15.45.11| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:06.07.2023.15.45.11| ava:331)
+TRC:06.07.2023.15.45.11| java.lang.Class.forName0(Native Method)
+TRC:06.07.2023.15.45.11| java.lang.Class.forName(Class.java:264)
+TRC:06.07.2023.15.45.11| library.reportclass.ReportGenerator.generateReport(Re
+TRC:06.07.2023.15.45.11| portGenerator.java:597)
+TRC:06.07.2023.15.45.11| library.reportclass.ReportGenerator.processReport(Rep
+TRC:06.07.2023.15.45.11| ortGenerator.java:188)
+TRC:06.07.2023.15.45.11| ReportSystem.main(ReportSystem.java:37)
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11| END OF TRACE
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.45.11|  
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42| START OF TRACE
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42| REQUESTID: 3576
+TRC:06.07.2023.15.57.42| CLASS: library.reportclass.ReportGenerator
+TRC:06.07.2023.15.57.42| VOIDCODE: 107
+TRC:06.07.2023.15.57.42| VOIDDESC: Class name not recognized
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42| ERROR MESSAGE: reportlist.IPY.InstapayRejectedTransac
+TRC:06.07.2023.15.57.42| tion
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42| TRACE MESSAGE: 
+TRC:06.07.2023.15.57.42| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:06.07.2023.15.57.42| :381)
+TRC:06.07.2023.15.57.42| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:06.07.2023.15.57.42| ava:331)
+TRC:06.07.2023.15.57.42| java.lang.Class.forName0(Native Method)
+TRC:06.07.2023.15.57.42| java.lang.Class.forName(Class.java:264)
+TRC:06.07.2023.15.57.42| library.reportclass.ReportGenerator.generateReport(Re
+TRC:06.07.2023.15.57.42| portGenerator.java:597)
+TRC:06.07.2023.15.57.42| library.reportclass.ReportGenerator.processReport(Rep
+TRC:06.07.2023.15.57.42| ortGenerator.java:188)
+TRC:06.07.2023.15.57.42| ReportSystem.main(ReportSystem.java:37)
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42| END OF TRACE
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.15.57.42|  
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01| START OF TRACE
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01| REQUESTID: 3577
+TRC:06.07.2023.16.00.01| CLASS: library.reportclass.ReportGenerator
+TRC:06.07.2023.16.00.01| VOIDCODE: 107
+TRC:06.07.2023.16.00.01| VOIDDESC: Class name not recognized
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01| ERROR MESSAGE: reportlist.IPY.InstapayTransactionNB
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01| TRACE MESSAGE: 
+TRC:06.07.2023.16.00.01| java.net.URLClassLoader.findClass(URLClassLoader.java
+TRC:06.07.2023.16.00.01| :381)
+TRC:06.07.2023.16.00.01| sun.misc.Launcher$AppClassLoader.loadClass(Launcher.j
+TRC:06.07.2023.16.00.01| ava:331)
+TRC:06.07.2023.16.00.01| java.lang.Class.forName0(Native Method)
+TRC:06.07.2023.16.00.01| java.lang.Class.forName(Class.java:264)
+TRC:06.07.2023.16.00.01| library.reportclass.ReportGenerator.generateReport(Re
+TRC:06.07.2023.16.00.01| portGenerator.java:597)
+TRC:06.07.2023.16.00.01| library.reportclass.ReportGenerator.processReport(Rep
+TRC:06.07.2023.16.00.01| ortGenerator.java:188)
+TRC:06.07.2023.16.00.01| ReportSystem.main(ReportSystem.java:37)
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01| END OF TRACE
+TRC:06.07.2023.16.00.01|  
+TRC:06.07.2023.16.00.01|  

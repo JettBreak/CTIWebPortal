@@ -1,0 +1,52 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class SetPW2 extends CI_Controller {
+	private $userID;
+	
+	function __construct()
+	{
+		parent::__construct();
+		
+		//$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		if (isset($_SESSION['userIDx']) && !empty($_SESSION['userIDx'])) {
+			$this->userID = $_SESSION['userIDx'];
+		} else {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'You are trying to access a forbidden page'
+			));
+			exit();
+		}
+	}
+	
+	function index()
+	{
+		$data['minChar'] = $_SESSION['minChar'];
+		$this->load->view('setpw2', $data);
+	}
+	
+	function submit()
+	{
+		//$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coreapp/user_model');
+		$this->load->library('core');
+		
+		$userID = $this->userID;
+		$brseqno = $this->core->getBranchID();
+		$ipAddress = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit = '';
+		$sessionID = '';
+		$userPW = $this->core->encrypt($userID, $this->input->post('newPassword', TRUE));
+		
+		$result = $this->user_model->setUserPass($userID, $userPW, FALSE, '', '', FALSE, $brseqno, $ipAddress, $workstation, $userAudit, $sessionID);
+		
+		//$this->cache->clean();
+		unset($_SESSION['userIDx']);
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'message' => 'User information updated'
+		));
+	}
+}

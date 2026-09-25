@@ -1,0 +1,117 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Brchlist extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->load->model('coreapp/branch_model');
+		$this->core->checkUserAllows(BRANCH_NO);
+	}
+	
+	function index()
+	{
+		$this->load->view('maintenance/brchlist');
+	}
+	
+	function cache()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->cache->delete($this->core->getSessionID() .'brchlist');
+		
+		$brchlist = array(
+			'brchCode' => $this->input->post('code', TRUE),
+			
+			'brchName' => $this->input->post('name', TRUE) ,
+			'brchId' => $this->input->post('id', TRUE),
+			'brchSeq' => $this->input->post('seq', TRUE),
+			'address' => $this->input->post('addr', TRUE),
+			'telNo' => $this->input->post('tel', TRUE),
+			'areaname' => $this->input->post('area', TRUE),
+			'headOfc' => $this->input->post('head', TRUE),
+			'isRep' => $this->input->post('isRep', TRUE),
+			'isMon' => $this->input->post('isMon', TRUE),
+			'isUser' => $this->input->post('isUser', TRUE)
+		);
+		
+		$success = $this->cache->save($this->core->getSessionID() .'brchlist', $brchlist, CACHE_TTL);
+		
+		echo json_encode(array(
+			'success' => $success
+		));
+	}
+	
+	function getData()
+	{
+		$this->load->library('shortxml');
+		
+		$xml = $this->shortxml;
+		
+		$result = $this->branch_model->getBranchList();
+		
+		$details = array();
+		foreach ($result->result_array() as $row) {
+			
+			// GET DATA 
+			$xml->setXML($row['xml1']);
+			$details[] = array(
+				$row['brcode'],
+				$row['brname'],
+				$row['brid'],
+				$row['brseqno'],
+				$row['address'],
+				$row['telno'],
+				$row['regioncode'],
+				$row['ishead'],
+				$xml->getValue('ISREP'),
+				$xml->getValue('ISMON'),
+				$xml->getValue('ISUSER')
+			);
+		}
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'details' => $details
+		));
+	}
+	
+	function delete()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		
+		$brseq       = $this->input->post('brchSeq', TRUE);
+		$brcode      = $this->input->post('brchCode', TRUE);
+		$brseqno     = $this->core->getBranchID();
+		$ipaddress   = $this->core->getIPAddress();
+		$workstation = $this->core->getWorkstation();
+		$userAudit   = $this->core->getUserID();
+		$sessionID   = $this->core->getSessionID();
+	 
+ 		$result = $this->branch_model->deleteBranch(
+			$brseq,
+			$brcode,
+			$brseqno,
+			$ipaddress,
+			$workstation,
+			$userAudit,
+			$sessionID
+		);
+		
+		$row = $result->row_array();
+		
+		$success = TRUE;
+		
+		$this->cache->delete($this->core->getSessionID() .'branches');
+		
+		if (intval($row['errno']) > 0) {
+			$success = FALSE;
+		}
+		
+		echo json_encode(array(
+			'removed' => $success,
+			'errno' => $row['errno'],
+			'message' => $row['errmsg']
+		));
+	}
+}

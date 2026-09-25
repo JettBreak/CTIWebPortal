@@ -1,0 +1,221 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class AccountRequest extends CI_Controller {
+	
+	private $fileVersion = '1.10.00';
+	
+	function index()
+	{
+		//parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(ACCNTNEW_NO);
+
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+		
+		$this->load->library('version');
+
+		$file = basename(__DIR__) . '/' . basename(__FILE__);
+
+		$verified = $this->version->validate($file, $this->fileVersion);
+
+		if (!$verified) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Module is out of date. Please contact software administrator.'
+			));
+			exit();
+		} else {
+			$data = array();
+			$data['sessionExp'] = $this->core->getSessionExp();
+			$this->load->view('accounts/accountrequest', $data);
+		}
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/card_model');
+		
+		$success = TRUE;
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => ''
+		));
+	}
+	
+	function cache()
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->library('shortxml');
+		$this->load->model('coreapp/customer_model');
+		
+		$input 	 	= $this->input;
+		$xmldata	= $this->shortxml;
+		$core		= $this->core;
+		$cifseqno 	= $input->post('cifseqno', TRUE);
+
+		$message = '';
+		
+		if ($cifseqno !== NULL || $cifseqno !== '') {
+			$success = TRUE;
+		} else {
+			$success = FALSE;
+		}
+
+		$data = array();
+		try {
+			$result = $this->customer_model->validateCustomer($cifseqno);
+			
+			$row = $result->row_array();
+
+			if ($result->num_rows() > 0) {
+				$data['custid'] = $row['cifseqno'];
+				$data['custname'] = $row['lastname'].', '.$row['firstname'].' '.$row['middlename'];
+			} else {
+				//$data['custname'] = $acctreq['xmlstring'];
+				$success = FALSE;
+				$message = "Customer is not yet enrolled";
+			}
+		} catch (Exception $e) {
+			$success = FALSE;
+			$message = "An error has occured during CIF validation.";
+		}
+
+		if ($success) {
+			
+			$fp = NULL;
+			$rport = 17003;
+			$rhost = 'localhost';
+
+			try {
+				if (@fsockopen($rhost, $rport, $errno, $errstr, 10)) {
+					$fp = fsockopen($rhost, $rport, $errno, $errstr, 10);
+				} else {
+					$message = "Warning: Unable to connect to port [".$rport."]";
+					$success = FALSE;
+
+
+					//fclose($fp);
+
+					echo json_encode(array(
+						'success' => $success,
+						'message' => $message
+					));
+
+					exit();
+				}
+			} catch (Exception $e) {
+				
+				fclose($fp);
+				$success = FALSE;
+				$message = "An error has occured while connecting.";
+			}
+		}
+
+		$xmlstring = '';
+		$accountlength = 0;
+		$accountcnt = 0;
+		$bit116 = '';
+
+		$acctData['accountlist'] = array();
+		if ($success) {
+			if (!$fp) {
+				$success = FALSE;
+			} else {
+			
+				$out = '<MSGTYPE>50</>' .
+	               '<TRXCODE>660012</>' . 
+	               '<XML>' .
+	               '<OCIF>'.$cifseqno.'</>' .
+	               '</>' .
+	               "\x00";
+			
+				fwrite($fp, $out);
+			
+				$msg = '';
+
+				$_SESSION['request_time'] = time();
+
+				$starttime = $_SESSION['request_time'];
+				$endtime = time();
+
+				$message = '';
+
+				while (TRUE) {
+					$x = fgets($fp, 2);
+					$time = time() - $_SESSION['request_time'];
+					if ($x === "\x00" ) {
+						$success = TRUE;
+						break;
+					} elseif ($time > 10) {
+						$success = FALSE;
+						$message = "Connection Timeout (timelapse: ".$time." Starttime: ".$starttime." Endtime: ".time().")";
+						break;
+					} else {
+						$success = TRUE;
+					}
+
+					$msg .= $x;
+				}
+				//echo $msg;
+				$xmlstring = $msg;
+				$xmldata->setXML($msg);
+
+				$bit116 = $xmldata->getValue('BISO_BIT116');
+				$accountlength = strlen($bit116);
+
+				$accountcnt = $accountlength / 17;
+				$container = $bit116;
+				
+				for ($i = 0; $i < $accountcnt; $i++) {
+					$acctData['accountlist'][] = substr($container, 0, 17);
+					$container = substr($container, 17);
+				}
+				
+				//echo json_encode($xml);
+				fclose($fp);
+			}
+		}
+
+		$custInfo = array(
+			'cifseqno' => $cifseqno,
+			'xmlstring'=> $xmlstring,
+			'accountcnt' => $accountcnt,
+			'accounts' => $acctData['accountlist'],
+			'cifdata' => $data
+		);
+
+		if ($success) {
+			$msgtype = intval($xmldata->getValue('MSGTYPE'));
+
+			if ( in_array($msgtype, array(53, 73)) ) {
+				$success = FALSE;
+				$message = $xmldata->getValue('SYSVDESC');
+			} else {
+				$success = $this->cache->save($this->core->getSessionID() .'acctreq', $custInfo, CACHE_TTL);
+
+				if (!$success) {
+					$message = 'Unable to save data.';
+				}
+			}
+		}
+		
+
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message
+		));
+	}
+}

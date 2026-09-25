@@ -1,0 +1,193 @@
+<form id="custSearchForm" method="post">
+    <div id="custSearch">
+        <h1>Customer Search</h1>
+        <div id="content">
+            <table width="100%">
+            	<tr>
+                	<td colspan="2" class="hint">
+                    	Enter Customer Name and press ENTER key to Search
+                    </td>
+                </tr>
+            	<tr>
+                    <td width="150"><label for="custNo">Customer No.:</label></td>
+                    <td><input type="text" name="custNo" id="custNo" style="width:250px" maxlength="11" class="validate[custom[onlyNumberSp]] numbersOnly"/></td>
+				</tr>
+                <tr>
+                    <td width="150"><label for="custLastName">Last Name:</label></td>
+                    <td><input type="text" name="custLastName" id="custLastName" style="width:250px" maxlength="30" class="validate[custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+				</tr>
+                <tr>
+                    <td><label for="custFirstName">First Name:</label></td>
+                    <td><input type="text" name="custFirstName" id="custFirstName" style="width:250px" maxlength="30" class="validate[custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+				</tr>
+                <tr>
+                    <td><label for="custMiddleName">Middle Name:</label></td>
+                    <td><input type="text" name="custMiddleName" id="custMiddleName" style="width:250px" maxlength="30" class="validate[custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="bottom">
+    	<span class="buttons floatLeft">
+            <button id="submitBtn" value="customer/search/submit">Search</button>
+		</span>
+        <span class="buttons floatRight">
+            <button type="reset">Clear</button
+            ><button class="closebtn">Close</button>
+        </span>
+	</div>
+    <div id="dtContainer" class="hidden">
+        <table class="dataTable">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Customer Name</th>
+                    <th><?php echo $title; ?></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</form>
+<style>
+.dataTables_scrollBody{max-height:200px !important;}
+</style>
+<script>
+$(function () {
+    var submitBtn = '#submitBtn',
+        dtContainer = $('#dtContainer'),
+		custNo = '#custNo',
+		custLName = '#custLastName',
+		custFName = '#custFirstName',
+		custMName = '#custMiddleName',
+        form = $('form');
+	
+    initSession('<?php echo $sessionExp; ?>');
+	$(custNo).focus();
+	
+	//$(DATATABLE).find('tbody tr').die('dblclick');
+    oTable = $(DATATABLE).dataTable({
+        bRetrieve: true,
+        bJQueryUI: true,
+        aaSorting: [],
+		oLanguage: {
+			sSearch: 'Filter: '
+		},
+        sScrollY: '100%',
+        sScrollX: '100%',
+        sPaginationType: 'full_numbers',
+		fnInitComplete: function () {
+			
+		},
+		fnRowCallback: function (nRow, aData, iDisplayIndex) {
+			$('td:eq(0)', nRow).attr('align', 'center');
+            $('td:eq(2)', nRow).attr('align', 'center');
+			$(nRow).attr('id', aData[0])
+				.unbind('click dblclick')
+				.dblclick(function () {
+					//hack
+					searchRedirect(aData[0], aData[1]);
+				});
+			return nRow;
+		}
+    });
+	$.fn.dataTableExt.iApiIndex = 0;
+	
+    form.validationEngine({
+        ajaxFormValidation: true,
+        onBeforeAjaxFormValidation: function () {
+            waitMessage('Searching...');
+        },
+        onAjaxFormComplete: function (a, b, data, d) {
+            if (data['pass'] === true) { //if one record found - redirect
+                $(MSGBOX).dialog('close');
+				
+                searchRedirect(data['id'], data['name']);
+            } else {
+                if (data.success === true) {
+					//show result
+                    $(MSGBOX).dialog('close');
+                    dtContainer.show();
+                    $(WRAPPER).height('auto');
+					//end
+					
+					//populate datatable
+                    //$.fn.dataTableExt.iApiIndex = 0;
+                    oTable.fnClearTable(0);
+                    oTable.fnAddData(data['result']);
+                    oTable.fnDraw();
+                    oTable.fnAdjustColumnSizing();
+					//end
+                } else if (data.success === false) {
+                    messageBox(data.pass);
+                    form[0].reset();
+                }
+            }
+        },
+        scroll: false
+    });
+    form.validationEngine('attach');
+    
+    $(submitBtn).click(function (e) {
+        if (($(custNo).val() === '') && ($(custLName).val() === '') && ($(custFName).val() === '') && ($(custMName).val() === '')) {
+            messageBox('At least one search parameter must have a value');
+			$(MSGBOX).one('dialogbeforeclose', function () {
+				$(custNo).focus();
+			});
+            e.preventDefault();
+        }
+    });
+	
+	$(custNo).bind('change keyup', function() {
+		$(custLName +','+ custFName +','+ custMName).val('');
+	});
+	
+	$(custLName +','+ custFName +','+ custMName).bind('change keyup', function() {
+		$(custNo).val('');
+	});
+	
+	/*$(DATATABLE).find('tbody tr').die('dblclick').live('dblclick', function () {
+		var a = $(this).find('td').eq(0).text(),
+			$name = $(this).find('td').eq(1).text();
+		searchRedirect(a, $name)
+	});*/
+});
+
+function searchRedirect(cifseqno, fullName) {
+    var type = '<?php echo $type; ?>',
+        page = null;
+    switch (type) {
+    case 'edit':
+    case 'info':
+        page = 'customer/' + type + '/' + cifseqno;
+        break;
+    case 'issuance':
+        page = 'card/issuance';
+        break;
+    case 'cardrequest':
+        page = 'card/personalized';
+        break;
+    case 'delete':
+        page = 'customer/delete';
+        break;
+    }
+    $.ajax({
+        type: 'POST',
+        url: 'customer/search/cache',
+        data: {
+            'cifseqno': cifseqno,
+            'fullName': fullName,
+            'type': type
+        },
+        dataType: 'json',
+        success: function (data) {
+            if (data.success === true) {
+                window.location.hash = page;
+            } else {
+                messageBox('An error has occured');
+            }
+        }
+    })
+}
+</script>

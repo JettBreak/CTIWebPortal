@@ -1,0 +1,223 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class XPOSINSTEDIT extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(MAINTENANCEPOS_NO);
+		
+		$this->load->model('coreapp/user_model');
+
+		$result = $this->user_model->checkLogin($this->core->getUserID(), $this->core->getSessionID());
+
+		$row = $result->row_array();
+
+		if (intval($row['errno']) > 0) {
+			echo json_encode(array(
+				'auth' => FALSE,
+				'message' => 'Invalid Login Session. Please relogin'
+			));
+			exit();
+		}
+	}
+
+	function index($instid)
+	{
+		$this->load->driver('cache', array('adapter' => 'apc', 'backup' => 'file'));
+		$this->load->model('coresys/pos_model');
+		$this->load->model('coreapp/branch_model');
+		$this->load->model('coreapp/area_model');
+		
+		$cache = $this->cache;
+		$pos = $this->pos_model;
+		$core = $this->core;
+		
+		$data['luno'] = NULL;
+		$data['status'] = 'Out of Service';
+				
+		$data['instid'] = '';
+		$data['instname'] = '';
+		$data['insttype'] = '';
+		$data['contact'] = '';
+		$data['telno'] = '';
+		$data['email'] = '';
+
+		$result = $this->pos_model->getInstitutionInfo($instid);
+		
+		$data['instid'] = isset($result['instid']) ? $result['instid'] : '';
+		$data['instname'] = isset($result['instname']) ? $result['instname'] : '';
+		$data['insttype'] = isset($result['insttype']) ? $result['insttype'] : '';
+		$data['contact'] = isset($result['contact']) ? $result['contact'] : '';
+		$data['telno'] = isset($result['telno']) ? $result['telno'] : '';
+		$data['email'] = isset($result['email']) ? $result['email'] : '';
+		//branches
+
+		$result = $this->branch_model->getBranchList();
+		$branches = $result->result_array();
+		
+		$data['branches'] = NULL;
+		$data['branches'] = '<option value="XXX">Select</option>';
+		if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				if (!$this->core->isHeadOffice() && $row['brseqno'] === $this->core->getBranchID()) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				$data['branches'] .= '<option code="'.$row['brcode'].'" value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}
+		//end
+
+		$result->free_result();
+		$result->next_result();
+
+		//branches
+
+		$result = $this->branch_model->getBranchList();
+		$branches = $result->result_array();
+		
+		$data['insttype'] = NULL;
+		$data['insttype'] = '<option value="1">Banking</option>';
+		/*if (count($branches) > 0) {
+			foreach ($branches as $row) {
+				//if user branch is not allowed to monitor users from other branches
+				if (!$this->core->isHeadOffice() && $row['brseqno'] === $this->core->getBranchID()) {
+					$data['branches'] = '<option value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+					break;
+				}
+				$data['branches'] .= '<option code="'.$row['brcode'].'" value="'. $row['brseqno'] .'">'. $row['brname'] .'</option>';
+			}
+		} else {
+			$data['branches'] = '<option value="">No Branches Defined</option>';
+		}*/
+		//end
+
+		$result->free_result();
+		$result->next_result();
+
+		
+			
+		$data['areaName'] = NULL;
+		$data['branchName'] = NULL;
+		
+		$data['header'] = 'Update Institution Entry '.$instid;
+		$data['termCodeParams'] = 'class="validate[required] numbersOnly" maxlength="8"';
+		$data['termID'] = NULL;
+		$data['desc'] = NULL;
+		$data['mercID'] = NULL;
+		$data['termIDParams'] = 'class="validate[required]"';
+		$data['submitBtnVal'] = 'maintenance/xposinstedit/submit';
+		$data['waitMsg'] = 'Updating Institution entry...';
+		$data['submitBtnMsg'] = 'Update Institution entry?';
+		
+		$data['sessionExp'] = $this->core->getSessionExp();
+		$this->load->view('maintenance/xposinst', $data);
+	}
+
+	function getData()
+	{
+		$this->load->model('coresys/pos_model');
+			
+		/*if ($this->core->canMon()) {
+			$branchCode = $this->input->get('brcode', TRUE);
+		} else {
+			$branchCode = $this->core->getBranchCode();
+		}*/
+
+		if ($this->core->isHeadOffice()) {
+			$brseqno = 0;
+		} else {
+			$brseqno = $this->core->getBranchID();
+		}
+
+		$result = $this->pos_model->getInstitutionList($brseqno);
+		
+		$details = array();
+		if ($result->num_rows() > 0) {
+			$success = TRUE;
+			foreach ($result->result_array() as $row)
+			{
+				$details[] = array(
+					$row['instseqno'],
+					$row['instid'],
+					$row['instname']//,
+					//isset($row['statdesc']) ? $row['statdesc'] : $row['status'] .'-Unknown' //if NULL display Unknown
+				);
+			}
+		} else {
+			$success = FALSE;
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'details' => $details,
+			'xpos' => 'xpos'
+		));
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/user_model');
+		
+		$core  = $this->core;
+		$input = $this->input;
+		
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+		
+		$row = $this
+			->user_model
+			->checkLogin($userAudit, $sessionID)
+			->row_array();
+			
+		if ($row['errno'] !== '8') { //if session valid
+			$instid = $input->post('instid', TRUE);
+			$instname = $input->post('instname', TRUE);
+			$insttype = $input->post('insttype', TRUE);
+			$contact = $input->post('contact', TRUE);
+			$email = $input->post('email', TRUE);
+			$telno = $input->post('telno', TRUE);
+			
+			
+			$this->load->model('coresys/pos_model');
+			
+			//$xml1 = '<MERCID>'. $mercID .'</>';
+			
+			/*$result = $this->pos_model->insertPOSTerminal(
+				$termCode, $termID, $luno, $locCode, $desc, $progLang, $xml1
+			);*/
+
+			$row = $this->pos_model->updatePartnerInstitution(
+				//$termID,$termCode,$status,$termName,$brseqno,$instseqno,$outlet,$progLang,$locCode,$luno
+				$instid,$instname,$insttype,$contact,$email,$telno
+			);
+			
+			//$row = $result->row_array();
+			
+			if ($row['errno'] == '0') {
+				$success = TRUE;
+				$message = $row['errmsg'];
+			} else {
+				$success = FALSE;
+				$message = $row['errmsg'];
+			}
+		} else { //if invalid userID / session then logout
+			$success = FALSE;
+			$message = $row['errmsg'];
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message,
+			'params' => '',
+			'errorno' => $row['errno']
+		));
+	}
+}
+/* End of file posnew.php */
+/* Location: ./application/contollers/maintenance/posnew.php */

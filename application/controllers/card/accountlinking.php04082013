@@ -1,0 +1,190 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class AccountLinking extends CI_Controller {
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(ACCNTLINKING_NO);
+	}
+	
+	function index()
+	{		
+		$this->load->library('session');
+		
+		$session = $this->session;
+		
+		/*if (!$info = $session->userdata('cardInfo')) {
+			$this->load->helper('url');
+			redirect('welcome');
+			exit();
+		};*/
+		$info = $_SESSION['cardInfo'];
+		if (!$info) {
+			$this->load->helper('url');
+			redirect('welcome');
+			exit();
+		}
+		$data['prseqno'] 	= $info['prseqno'];
+		$data['cardNo']		= $info['cardBIN'];
+		$data['custName'] 	= $info['custName'];
+		$data['cardStatus'] = $info['cardStatDesc'];
+		$data['cardType'] 	= $info['cardType'];
+		
+		$session->set_flashdata('prseqno', $data['prseqno']);
+		
+		$this->load->view('card/accountlinking', $data);
+	}
+	
+	function getData()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('session');
+		$this->load->library('shortxml');
+		
+		$card	   = $this->card_model;
+		$session   = $this->session;
+		$core      = $this->core;
+		$xml 	   = $this->shortxml;
+		
+		$session->keep_flashdata('prseqno');
+		$prseqno   = $session->flashdata('prseqno');
+		
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+		
+		$result    = $card->getCardAccountLink($prseqno, $userAudit, $sessionID);
+		
+		unset($_SESSION['accounts']);
+		
+		$aaData = array();
+		$prptr = NULL;
+		
+		$_SESSION['accounts'] = $result->result_array();
+		
+		if ($result->num_rows() > 0) {
+			foreach ($result->result_array() as $row)
+			{
+				$xml->setXML($row['xml1']);
+				
+				$prptr 		= $row['prptr'];
+				$accntType 	= $xml->getValue('ACCTTYPE');
+				$accntNo 	= $xml->getValue('ACCTNO');
+				$authType 	= $xml->getValue('AUTHTYPE');
+				$primary 	= $xml->getValue('PRIMARY');
+				$pseqnoLink	= $row['pseqnolink'];
+				
+				$aaData[] = array(
+					$prptr,
+					$accntType,
+					$accntNo,
+					$authType,
+					$primary,
+					$pseqnoLink
+				);
+				
+				$prptr++; 
+			}
+		}
+		
+		if ($result->num_rows === 0) {
+			$isPrimary = 'Y';
+		} else {
+			$isPrimary = 'N';
+		}
+		
+		$data = array(
+			'prptr'   => $prptr,
+			'primary' => $isPrimary
+		);
+		
+		$session->set_userdata($data);
+		
+		echo json_encode(array(
+			'aaData' => $aaData
+		));
+	}
+	
+	function remove()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('session');
+		
+		$core		= $this->core;
+		$input 		= $this->input;
+		
+		$prseqno 	= $input->post('prseqno', TRUE);
+		$pseqnoLink = $input->post('pseqnoLink', TRUE);
+		$prptr 		= $input->post('prptr', TRUE);
+		$acctNo		= $input->post('prKey', TRUE);
+		$acctDesc 	= $input->post('accntDesc', TRUE);
+		$prKey 	    = $input->post('cardNo', TRUE);
+		$branchID   = $core->getBranchID();
+		$ipAddress  = $core->getIPAddress();
+		$workstation = $core->getWorkstation();
+		$userAudit	= $core->getUserID();
+		$userOverride = $this->session->userdata('userOverride');
+		$sessionID  = $core->getSessionID();
+		
+		$result = $this->card_model->deleteCardAccountLink(
+			$prseqno,
+			$pseqnoLink,
+			$prptr,
+			$acctNo,
+			$acctDesc,
+			$prKey,
+			$branchID,
+			$ipAddress,
+			$workstation,
+			$userAudit,
+			$userOverride,
+			$sessionID
+		);
+		
+		$this->session->set_flashdata('prseqno', $prseqno);
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'message' => 'Account number: <strong>['. $acctNo .']</strong><br />successfully removed'
+		));
+	}
+	
+	function setprimary()
+	{
+		$this->load->model('coreapp/card_model');
+		$this->load->library('session');
+		
+		$core		= $this->core;
+		$input 		= $this->input;
+		
+		$prseqno 	= $input->post('prseqno', TRUE);
+		$pseqnoLink = $input->post('pseqnoLink', TRUE);
+		$branchID   = $core->getBranchID();
+		$ipAddress  = $core->getIPAddress();
+		$workstation = $core->getWorkstation();
+		$userAudit	= $core->getUserID();
+		$userOverride = $this->session->userdata('userOverride');
+		$sessionID  = $core->getSessionID();
+		
+		$result = $this->card_model->setCardPrimaryAccountLink(
+			$prseqno,
+			$pseqnoLink,
+			$branchID,
+			$ipAddress,
+			$workstation,
+			$userAudit,
+			$userOverride,
+			$sessionID
+		);
+		
+		//$session->set_flashdata('prseqno', $prseqno);
+		
+		echo json_encode(array(
+			'success' => TRUE,
+			'message' => 'Account successfully changed'
+		));
+	}
+}
+/* End of file accountlinking.php */
+/* Location: ./application/controllers/card/accountlinking.php */

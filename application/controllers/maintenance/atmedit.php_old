@@ -1,0 +1,354 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class ATMEdit extends CI_Controller {	
+
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('core');
+		$this->core->checkUserAllows(MAINTENANCEATM_NO);
+	}
+	
+	function index($termCode)
+	{
+		$this->load->model('coresys/atm_model');
+		$this->load->model('coreapp/area_model');
+		$this->load->library('shortxml');
+		$this->load->helper('url');
+		
+		$atm = $this->atm_model;
+		$xml = $this->shortxml;
+		$core = $this->core;
+		
+		$result = $atm->getTerminalInfo($termCode);
+		
+		if (!$termCode || ($result->num_rows() === 0)) {
+			$this->load->helper('url');
+			redirect('maintenance/atm');
+			exit();
+		}
+		
+		$row = $result->row_array();
+	
+		$progCode = $row['progcode'];
+		$prodCode = $row['productcode'];
+		$termLang = $row['termlang'];
+		$location = $row['loccode'];
+		$emulation = $row['emulation'];
+		$dispLogic = $row['dispenselogic'];
+		$instType = $row['installationtype'];
+		$data['dtProd'] = $row['dtprod'] ? $core->formatDate('m/d/Y', $row['dtprod']) : 'Undefined';
+		
+		//denomination
+		$progCodeDeno = $row['progcode_denomination'];
+		$progLangDeno = $row['proglang_denomination'];
+		
+		$xml->setXML($row['xml'] . $row['xml2']);
+		$data['luno'] 	  = $row['luno'];
+		$data['termID']   = $row['termid'];
+		$data['desc'] 	  = $row['description'];
+		$currency = $xml->getValue('CURRENCY');
+		$data['contactNo'] = $xml->getValue('CONTACT');
+		$data['screenLoadSize'] = $row['screenloadsize'];
+		$data['otherLoadSize'] 	= $row['otherloadsize'];
+		$data['stateLoadSize'] 	= $row['stateloadsize'];
+		$data['maxNotes'] 		= $xml->getValue('MAXNOTES');
+		$data['fitLoadSize'] 	= $row['fitloadsize'];
+		$data['optLoadSize'] 	= $row['optionloadsize'];
+		
+		$data['loadNewKey'] = ($row['isloadkeynew'] === '1' ? 'checked' : NULL);
+		$data['loadPower']  = ($row['isloadpower'] === '1' ? 'checked' : NULL);
+		
+		$data['threshold'] = $xml->getValue('THRES') ? $core->currency($xml->getValue('THRES')) : '0.00';
+		$data['decimal'] = $row['amtdec'];
+		$data['status'] = $row['statdesc'] ? $row['statdesc'] : $row['status'] .'-Unknown';
+		
+		//product codes
+		$result->free_result();
+		$result->next_result();
+		
+		$result = $atm->getProductCodes();
+		
+		$data['prodName'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['productcode'] === $prodCode ? ' selected' : NULL);
+			$data['prodName'] .= '<option value="'. $row['productcode'] .'"'. $selected .'>'. $row['productname'] .'</option>';
+		}
+		
+		//terminal language
+		$result->free_result();
+		$result->next_result();
+			
+		$result = $atm->getTerminalLanguage();
+		
+		$data['termLang'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['termlang'] === $termLang ? ' selected' : NULL);
+			$data['termLang'] .= '<option value="'. $row['termlang'] .'"'. $selected .'>'. $row['description'] .'</option>';
+		}
+		
+		//location
+		$result->free_result();
+		$result->next_result();
+			
+		if ($core->isHeadOffice()) {
+			$result = $atm->getAllLocations();
+		} else {
+			$result = $atm->getLocations($core->getBranchCode());
+		}
+		
+		$data['location'] = NULL;
+		$areaName = NULL;
+		$brchName = NULL;
+		
+		$lastResult = $result->result_array();
+		
+		$result->free_result();
+		$result->next_result();
+			
+		$locationFound = FALSE; //location indicator
+		
+		foreach ($lastResult as $row) {
+			$result = $this->area_model->getAreaByBranch($row['brcode']);
+			$r = $result->row_array();
+			
+			if ($location === $row['loccode']) {
+				$selected = ' selected';
+				$areaName = $r['areaname'];
+				$brchName = $r['brname'];
+				
+				$locationFound = TRUE; //
+			} else {
+				$selected = NULL;
+			}
+			
+			$result->free_result();
+			$result->next_result();
+		
+			$data['location'] .= '<option value="'. $row['loccode'] .'" areaname="'. $r['areaname'] .'" brname="'. $r['brname'] .'"'. $selected .'>'. $row['location'] .'</option>';
+		}
+		
+		//something is wrong
+		if ($locationFound === FALSE) {
+			$data['location'] = NULL;
+		}
+		
+		//Area and Branch
+		$data['areaName'] = $areaName;
+		$data['branchName'] = $brchName;
+		//end
+		
+		//emulation
+			
+		$result = $atm->getCodeList('TERMEMUL');
+		
+		$data['emulation'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['codevalue'] === $emulation ? ' selected' : NULL);
+			$data['emulation'] .= '<option value="'. $row['codevalue'] .'"'. $selected .'>'. $row['xml1'] .'</option>';
+		}
+			
+		//program codes
+		$result->free_result();
+		$result->next_result();
+			
+		$result = $atm->getProgramCodes();
+		
+		$row = $result->row_array();
+		$data['progCodex'] = $row['progcode'];
+		$data['progLangx'] = $row['proglang'];
+		
+		$data['progName'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['progcode'] === $progCode ? ' selected' : NULL);
+			$data['progName'] .= '<option proglang="'. $row['proglang'] .'" value="'. $row['progcode'] .'"'. $selected .'>'. $row['tpfile'] .'</option>';
+		}
+		
+		$result->free_result();
+		$result->next_result();
+		//end
+		
+		//installation type
+		$result = $atm->getCodeList('INSTTYPE');
+		
+		$data['instType'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['codeseqno'] === $instType ? ' selected' : NULL);
+			$data['instType'] .= '<option value="'. $row['codeseqno'] .'"'. $selected .'>'. $row['codevalue'] .'</option>';
+		}
+		
+		//dispense logic
+		$result->free_result();
+		$result->next_result();
+			
+		$result = $atm->getCodeList('DISPLOGIC');
+		
+		$data['dispLogic'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['codeseqno'] === $dispLogic ? ' selected' : NULL);
+			$data['dispLogic'] .= '<option value="'. $row['codeseqno'] .'"'. $selected .'>'. $row['codevalue'] .'</option>';
+		}
+		
+		//denominations
+		$result->free_result();
+		$result->next_result();
+			
+		$result = $atm->getDenomination();
+		
+		$data['progCodeDeno'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['progcode'] === $progCodeDeno ? ' selected' : NULL);
+			$data['progCodeDeno'] .= '<option value="'. $row['progcode'] .'"'. $selected .'>'. $row['progcode'] .'</option>';
+		}
+		$data['progLangDeno'] = $progLangDeno;
+		
+		$result->free_result();
+		$result->next_result();
+		
+		if ($progCodeDeno === '0') {
+			$progCodeDeno = $data['progCodex'];
+			$progLangDeno = $data['progLangx'];
+		}
+		
+		$result = $atm->getTerminalDenomination($progCodeDeno, $progLangDeno);
+		
+		$data['denominations'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$parmData = $row['parmdata'];
+			
+			$curr = substr($parmData, 0, 3);
+			$deno = $core->currency(substr($parmData, 6, 12) / 100);
+			$cass = substr($parmData, 4, 1);
+			$data['denominations'] .= '<tr>
+				<td>'. $curr .'</td>
+				<td>'. $deno .'</td>
+				<td>'. $cass .'</td>
+			</tr>';
+		}
+				
+		//default currency
+		$result->free_result();
+		$result->next_result();
+			
+		$result = $atm->getCurrency();
+		
+		$data['currency'] = NULL;
+		foreach ($result->result_array() as $row) {
+			$selected = ($row['currency'] === $currency ? ' selected' : NULL);
+			$data['currency'] .= '<option value="'. $row['currency'] .'"'. $selected .'>'. $row['currency'] .'</option>';
+		}
+		
+		//contact persons
+		$data['hName'] = $xml->getValue('HNAME');
+		$data['hNameAttr'] = $xml->getValue('HTEL') !== '' ? 'validate[required] ' : NULL;
+		$data['hTel'] = $xml->getValue('HTEL');
+		$data['hTelAttr'] = $xml->getValue('HNAME') !== '' ? 'validate[required] ' : NULL;
+		$data['nName'] = $xml->getValue('NNAME');
+		$data['nNameAttr'] = $xml->getValue('NTEL') !== '' ? 'validate[required] ' : NULL;
+		$data['nTel'] = $xml->getValue('NTEL');
+		$data['nTelAttr'] = $xml->getValue('NNAME') !== '' ? 'validate[required] ' : NULL;
+		$data['tName'] = $xml->getValue('TNAME');
+		$data['tNameAttr'] = $xml->getValue('TTEL') !== '' ? 'validate[required] ' : NULL;
+		$data['tTel'] = $xml->getValue('TTEL');
+		$data['tTelAttr'] = $xml->getValue('TNAME') !== '' ? 'validate[required] ' : NULL;
+		$data['oName'] = $xml->getValue('ONAME');
+		$data['oNameAttr'] = $xml->getValue('OTEL') !== '' ? 'validate[required] ' : NULL;
+		$data['oTel'] = $xml->getValue('OTEL');
+		$data['oTelAttr'] = $xml->getValue('ONAME') !== '' ? 'validate[required] ' : NULL;
+		
+		$data['header'] = 'Update ATM Information';
+		$data['termCodeParams'] = 'value="'. $termCode .'" class="validate[required] numbersOnly" maxlength="8" readonly';
+		$data['termIDParams'] = 'readonly';
+		$data['submitBtnVal'] = 'maintenance/atmedit/submit';
+		$data['waitMsg'] = 'Updating ATM entry...';
+		$data['submitBtnMsg'] = 'The modification will alter the terminal behavior.<br />Do you want to continue?';
+		
+		$this->load->view('maintenance/atmx', $data);
+	}
+	
+	function submit()
+	{
+		$this->load->model('coreapp/user_model');
+		$this->load->library('core');
+		
+		$core  = $this->core;
+		$input = $this->input;
+		
+		$userAudit = $core->getUserID();
+		$sessionID = $core->getSessionID();
+		
+		$row = $this
+			->user_model
+			->checkLogin($userAudit, $sessionID)
+			->row_array();
+		
+		if ($row['errno'] !== '8') { //if session valid
+			$termCode 		= $input->post('termCode', TRUE);
+			$termID 		= $input->post('termID', TRUE);
+			$luno 			= $input->post('luno', TRUE);
+			$instType 		= $input->post('instType', TRUE);
+			$codeDeno 		= $input->post('progCodeDeno', TRUE);
+			$langDeno 		= $input->post('progLangDeno', TRUE);
+			$emulation 		= $input->post('emulation', TRUE);
+			$prodCode 		= $input->post('prodName', TRUE);
+			$locCode 		= $input->post('location', TRUE);
+			$description 	= $input->post('description', TRUE);
+			$amtdec			= $input->post('decimal', TRUE);
+			$progCode 		= $input->post('progCode', TRUE);
+			$progLang 		= $input->post('progLang', TRUE);
+			$termLang 		= $input->post('termLang', TRUE);
+			$screenLoadSize = $input->post('screenLoadSize', TRUE);
+			$stateLoadSize 	= $input->post('stateLoadSize', TRUE);
+			$fitLoadSize 	= $input->post('fitLoadSize', TRUE);
+			$optLoadSize 	= $input->post('optLoadSize', TRUE);
+			$otherLoadSize 	= $input->post('otherLoadSize', TRUE);
+			$isLoadKeyNew 	= $input->post('loadNewKey') ? '1' : '0';
+			$dispLogic 		= $input->post('dispenseLogic', TRUE);
+			$isLoadPower 	= $input->post('loadPower') ? '1' : '0';
+			$dtProd			= $input->post('dtProd', TRUE) === 'Undefined' ? NULL : $core->formatDate('Y-m-d', $input->post('dtProd', TRUE));
+			
+			$xml1 = '<CURRENCY>'. $input->post('currency', TRUE) .'</>'.
+				 '<THRES>'. str_replace(',', '', $input->post('threshold', TRUE)) .'</>'.
+				 '<HNAME>'. $input->post('hName', TRUE) .'</>'.
+				 '<HTEL>'. $input->post('hTel', TRUE) .'</>'.
+				 '<NNAME>'. $input->post('nName', TRUE) .'</>'.
+				 '<NTEL>'. $input->post('nTel', TRUE) .'</>'.
+				 '<TNAME>'. $input->post('tName', TRUE) .'</>'.
+				 '<TTEL>'. $input->post('tTel', TRUE) .'</>'.
+				 '<ONAME>'. $input->post('oName', TRUE) .'</>'.
+				 '<OTEL>'. $input->post('oTel', TRUE) .'</>';
+				//'<CONTACT>'. $input->post('contactNo', TRUE) .'</>';
+								
+			$xml2 = '<MAXNOTES>'. $input->post('maxNotes', TRUE) .'</>';
+			
+			$this->load->model('coresys/atm_model');
+			
+			$result = $this->atm_model->updateATMTerminal(
+				$termCode, $termID, $luno, $instType, $codeDeno, $langDeno, $emulation, $prodCode,
+				$locCode, $description, $amtdec, $progCode, $progLang, $termLang, $screenLoadSize, $stateLoadSize,
+				$fitLoadSize, $optLoadSize, $otherLoadSize, $isLoadKeyNew, $dispLogic, $isLoadPower, $dtProd, $xml1, $xml2
+			);
+			
+			$row = $result->row_array();
+			
+			if ($row['errno'] === '0') {
+				$success = TRUE;
+				$message = 'ATM entry updated successfully';
+			} else {
+				$success = FALSE;
+				$message = $row['errmsg'];
+			}
+		} else { //if invalid userID / session then logout
+			$success = FALSE;
+			$message = $row['errmsg'];
+		}
+		
+		echo json_encode(array(
+			'success' => $success,
+			'message' => $message,
+			'errorno' => $row['errno']
+		));
+	}
+}
+/* End of file atmedit.php */
+/* Location: ./application/contollers/maintenance/atmedit.php */

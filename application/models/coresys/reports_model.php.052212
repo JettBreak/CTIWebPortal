@@ -1,0 +1,269 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Reports_model extends CI_Model {
+	private $db, $security;
+	
+	function __construct()
+	{
+		$this->db = $this->load->database(DB2, TRUE);
+	}
+	
+	//$branchCode, $transDate, $cardHolder
+	function getTransactionLog()
+	{	
+		$query = "CALL sp_gettransactionlog(?,?,?,?,?)";	
+		return $this->db->query($query, func_get_args());
+	}	
+	
+	//$brseqno, $date, $status, $trxcode
+	function getBranchLog()
+	{
+		$query = "CALL sp_getbranchlog(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getProcessList()
+	{
+		$query = "CALL sp_getprocesslist()";
+		return $this->db->query($query);
+	}
+	
+	function getTrxListForReport()
+	{
+		$query = "CALL sp_getTrxListForReport()";
+		return $this->db->query($query);
+	}
+	
+	//$reportLog, $branchCode, $datefrom, $dateto
+	function getSumAcquirerPerTerminal()
+	{
+		$query = "CALL sp_getsumacquirerperterminal(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, finswitch, $dateFrom, $dateTo
+	function getSumIssuerPerBranch()
+	{
+		$query = "CALL sp_getsumissuerperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, onuscode, $dateFrom, $dateTo
+	function getSumOnUsPerBranch()
+	{
+		$query = "CALL sp_getsumonusperbranch(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, termtype, onuscode, $dateFrom, $dateTo
+	function getRejectedSumOnUsPerBranch()
+	{
+		$query = "CALL sp_getrejectedsumonusperbranch(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSumOnUsPerTerminal()
+	{
+		$query = "CALL sp_getsumonusperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedSumOnUsPerTerminal()
+	{
+		$query = "CALL sp_getrejectedsumonusperterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatOtherTerminal()
+	{
+		$query = "CALL sp_getourrchatotherterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatOtherTerminal()
+	{
+		$query = "CALL sp_getrejectedourrchatotherterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatOtherBranch()
+	{
+		$query = "CALL sp_getourrchatatotherbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatOtherBranch()
+	{
+		$query = "CALL sp_getrejectedourrchatatotherbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getOurRChatAtOurTerminal()
+	{
+		$query = "CALL sp_getourrchatatourterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+		
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getRejectedOurRChatAtOurTerminal()
+	{
+		$query = "CALL sp_getrejectedourrchatatourterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+			
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSettlementList()
+	{
+		$query = "CALL  sp_getsettlementlist(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+			
+	//$reportLog, $branchCode, onuscode, $dateFrom, $dateTo
+	function getSettlementListPerBranch()
+	{
+		$query = "CALL sp_getsettlementlistperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+		
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTTransferee()
+	{
+		$query = "CALL sp_getibfttransferee(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}	
+					
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTTransactions()
+	{
+		$query = "CALL sp_getibfttransactions(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}		
+				
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getIBFTIssuerTransaction()
+	{
+		$query = "CALL sp_getibftissuertransaction(?,?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $dateTo
+	function getBillsPaymentTransactions()
+	{
+		$query = "CALL sp_getbillspaymenttransactions(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}						
+	//$reportLog, $branchCode, termtype, finswitch, $dateFrom, $dateTo
+	function getRejectedSumIssuerPerBranch()
+	{
+		$query = "CALL sp_getrejectedsumissuerperbranch(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $DateTO
+	function getRejectedSumAcquirerPerTerminal()
+	{
+		$query = "CALL sp_getrejectedsumacquirerperterminal(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $DateTO
+	function getTransactionPerTerminal()
+	{
+		$query = "CALL sp_gettransactionperterminal(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $ONUS_CODE, $dateFrom, $DateTO
+	function getOtherCHAtOurTerminal()
+	{
+		$query = "CALL sp_getotherchatourterminal(?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $dateFrom, $dateTO
+	function getPOSTransactionsPerBranch()
+	{
+		$query = "CALL sp_getpostransactionsperbranch(?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$reportLog, $branchCode, $ONUS_CODE $dateFrom, $dateTO
+	function getAutoloadTransperTerminal()
+	{
+		$query = "CALL sp_getautoloadtransperterminal(?,?,?,?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBARTS()
+	{
+		$query = "CALL sp_gettransactionforbarts(?,'". ONUS_CODE ."')";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBBPRdps()
+	{
+		$query = "SELECT * FROM logtranx a, trxlistx b WHERE a.trxcode = b.trxcode 
+		AND date(dtlog) = ? 
+		AND termtype IN ('BNET','ATM')
+		AND chname IN ('ONUS', '". ONUS_CODE ."')
+		AND msgtype in (51, 52) 
+		AND b.trxtype1 = 'PAY' 
+		ORDER BY dtlog, logseqno";
+		
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//$date
+	function getTransactionForBBPRsum()
+	{
+		$query = "SELECT instcode, SUM(amtath) as totamt, COUNT(*) as totctr,
+		xml1, xml2, xml3, xml4, xml5, xml6
+		FROM logtranx a, trxlistx b
+		WHERE a.trxcode = b.trxcode 
+		AND date(dtlog) = ? 
+		AND termtype IN ('BNET','ATM')
+		AND chname IN ('ONUS', '". ONUS_CODE ."')
+		AND msgtype in (51, 52) 
+		AND b.trxtype1 = 'PAY'
+		GROUP BY instcode
+		ORDER BY dtlog, logseqno";
+		
+		return $this->db->query($query, func_get_args());
+	}
+	
+	//brcode
+	function getATMListForReports()
+	{
+		$query = "CALL sp_getATMListForReports(?)";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getATMAvailabilityList()
+	{
+		$query = "CALL sp_getATMAvailabilityList(?,?,?)";
+		return $this->db->query($query, func_get_args());
+	}
+	 //instcode
+	function getInstDesc()
+	{
+		$query = "SELECT instcode, description FROM bpayinst WHERE instcode = ?";
+		return $this->db->query($query, func_get_args());
+	}
+	
+	function getFitName()
+	{
+		$query = "SELECT isocode, isomnem FROM fitlistx WHERE isocode = ?";
+		return $this->db->query($query, func_get_args());
+	}
+}
+/* End of file reports_model.php */
+/* Location: ./application/models/coreapp/reports_model.php */

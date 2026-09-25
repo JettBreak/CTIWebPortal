@@ -1,0 +1,75 @@
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46| START OF TRACE
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46| REQUESTID: 1318
+TRC:01.17.2017.09.31.46| CLASS: reportlist.POS.POSIssuerTransaction
+TRC:01.17.2017.09.31.46| VOIDCODE: 904
+TRC:01.17.2017.09.31.46| VOIDDESC: Null Error
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46| ERROR MESSAGE: null
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46| TRACE MESSAGE: 
+TRC:01.17.2017.09.31.46| library.param.DataConversion.processData(DataConversi
+TRC:01.17.2017.09.31.46| on.java:948)
+TRC:01.17.2017.09.31.46| reportlist.POS.POSIssuerTransaction.createPDF(POSIssu
+TRC:01.17.2017.09.31.46| erTransaction.java:972)
+TRC:01.17.2017.09.31.46| library.reportclass.ReportGenerator.generateReport(Re
+TRC:01.17.2017.09.31.46| portGenerator.java:580)
+TRC:01.17.2017.09.31.46| library.reportclass.ReportGenerator.processReport(Rep
+TRC:01.17.2017.09.31.46| ortGenerator.java:237)
+TRC:01.17.2017.09.31.46| ReportSystem.main(ReportSystem.java:37)
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46| END OF TRACE
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.31.46|  
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47| START OF TRACE
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47| REQUESTID: 1320
+TRC:01.17.2017.09.34.47| CLASS: reportlist.POS.POSIssuerTransaction
+TRC:01.17.2017.09.34.47| VOIDCODE: 904
+TRC:01.17.2017.09.34.47| VOIDDESC: Null Error
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47| ERROR MESSAGE: null
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47| TRACE MESSAGE: 
+TRC:01.17.2017.09.34.47| library.param.DataConversion.processData(DataConversi
+TRC:01.17.2017.09.34.47| on.java:948)
+TRC:01.17.2017.09.34.47| reportlist.POS.POSIssuerTransaction.createPDF(POSIssu
+TRC:01.17.2017.09.34.47| erTransaction.java:972)
+TRC:01.17.2017.09.34.47| library.reportclass.ReportGenerator.generateReport(Re
+TRC:01.17.2017.09.34.47| portGenerator.java:580)
+TRC:01.17.2017.09.34.47| library.reportclass.ReportGenerator.processReport(Rep
+TRC:01.17.2017.09.34.47| ortGenerator.java:237)
+TRC:01.17.2017.09.34.47| ReportSystem.main(ReportSystem.java:37)
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47| END OF TRACE
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.34.47|  
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10| START OF TRACE
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10| REQUESTID: 1321
+TRC:01.17.2017.09.36.10| CLASS: reportlist.POS.POSIssuerSummary
+TRC:01.17.2017.09.36.10| VOIDCODE: 904
+TRC:01.17.2017.09.36.10| VOIDDESC: Null Error
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10| ERROR MESSAGE: null
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10| TRACE MESSAGE: 
+TRC:01.17.2017.09.36.10| library.param.DataConversion.processData(DataConversi
+TRC:01.17.2017.09.36.10| on.java:948)
+TRC:01.17.2017.09.36.10| reportlist.POS.POSIssuerSummary.createPDF(POSIssuerSu
+TRC:01.17.2017.09.36.10| mmary.java:745)
+TRC:01.17.2017.09.36.10| library.reportclass.ReportGenerator.generateReport(Re
+TRC:01.17.2017.09.36.10| portGenerator.java:580)
+TRC:01.17.2017.09.36.10| library.reportclass.ReportGenerator.processReport(Rep
+TRC:01.17.2017.09.36.10| ortGenerator.java:237)
+TRC:01.17.2017.09.36.10| ReportSystem.main(ReportSystem.java:37)
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10| END OF TRACE
+TRC:01.17.2017.09.36.10|  
+TRC:01.17.2017.09.36.10|  

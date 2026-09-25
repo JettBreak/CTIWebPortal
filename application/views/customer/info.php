@@ -157,8 +157,11 @@
 <script>
 $(function () {
     var b = '#searchBtn',
-        c = '#closebtn'
-        $form = $('form');
+        c = '#closebtn',
+        $form = $('form'),
+        $customerInfo = $('#custInfo'),
+        $tabs = $customerInfo.find('ul.tabs li'),
+        $tabContent = $customerInfo.find('.tab_content');
     initSession('<?php echo $sessionExp; ?>');
     $(DATATABLE).find('tbody tr').die('dblclick');
     oTable = $(DATATABLE).dataTable({
@@ -169,17 +172,17 @@ $(function () {
         'sScrollX': '100%',
         'sPaginationType': 'full_numbers'
     });
-    $(TABCONTENT).hide();
-    $(TABS).first().addClass('active').show();
-    $(TABCONTENT).first().show();
-    $(TABS).click(function () {
+    $tabContent.hide();
+    $tabs.removeClass('active').first().addClass('active');
+    $tabContent.first().show();
+    $tabs.click(function () {
         if (!$(this).hasClass('active')) {
             $form.validationEngine('hideAll');
-            $(TABS).removeClass('active');
+            $tabs.removeClass('active');
             $(this).addClass('active');
-            $(TABCONTENT).hide();
+            $tabContent.hide();
             var tab = $(this).find('a').attr('href');
-            $(tab).show();
+            $customerInfo.find(tab).show();
 			
 			if (tab === '#cardsLinked') {
 				$('#removeBtn').hide();

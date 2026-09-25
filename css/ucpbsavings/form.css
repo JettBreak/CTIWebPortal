@@ -272,6 +272,32 @@ button:hover, button:focus {
 	flex: 1 1 0;
 }
 
+#wrapper .customer-entry-overview {
+	display: flex;
+	align-items: flex-start;
+	gap: 15px;
+}
+
+#wrapper .customer-entry-photo {
+	flex: 0 0 100px;
+	margin: 0;
+}
+
+#wrapper .customer-entry-main {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+#wrapper .customer-entry-name,
+#wrapper .customer-entry-main > .divider {
+	width: 100%;
+}
+
+#wrapper .customer-entry-details {
+	clear: both;
+	width: 100%;
+}
+
 @media (max-width: 720px) {
 	#wrapper .customer-address-contact {
 		display: block;
@@ -290,7 +316,15 @@ button:hover, button:focus {
 		display: block;
 	}
 
+	#wrapper .customer-entry-overview {
+		display: block;
+	}
+
 	#wrapper .customer-personal-photo {
+		margin: 0 0 15px;
+	}
+
+	#wrapper .customer-entry-photo {
 		margin: 0 0 15px;
 	}
 

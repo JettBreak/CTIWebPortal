@@ -2,58 +2,63 @@
     <div id="custNew">
         <h1>New Customer Entry</h1>
         <div id="content"><span class="floatRight hint">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
-            <div id="custPreview" class="imgWrapper floatLeft"><img src="images/nullphoto.jpg" width="100" height="100" alt="Customer picture"/>
-                <div class="uploader"><span>Upload Photo</span>
-                    <input type="file" id="custImage" name="custImage"/>
+            <div class="customer-entry-overview">
+                <div id="custPreview" class="imgWrapper customer-entry-photo"><img src="images/nullphoto.jpg" width="100" height="100" alt="Customer picture"/>
+                    <div class="uploader"><span>Upload Photo</span>
+                        <input type="file" id="custImage" name="custImage"/>
+                    </div>
+                </div>
+                <div class="customer-entry-main">
+                    <strong>Customer Information:</strong>
+                    <table class="customer-entry-name" style="margin-top:10px">
+                        <tr>
+                            <td><label>Prefix:</label></td>
+                            <td><label for="custLastName">Last Name: <span class="red">*</span></label></td>
+                            <td><label for="custFirstName">First Name: <span class="red">*</span></label></td>
+                            <td><label for="custMiddleName">Middle Name:</label></td>
+                            <td><label for="custSuffix">Suffix:</label></td>
+                        </tr>
+                        <tr>
+                            <td><select name="custPrefix" id="custPrefix" style="width:70px">
+                                    <?php echo html_entity_decode($prefixes); ?>
+                                </select></td>
+                            <td><input type="text" name="custLastName" id="custLastName" style="width:122px" maxlength="30" class="validate[required,custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+                            <td><input type="text" name="custFirstName" id="custFirstName" style="width:122px" maxlength="30" class="validate[required,custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+                            <td><input type="text" name="custMiddleName" id="custMiddleName" style="width:122px" maxlength="30" class="validate[custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
+                            <td><input type="text" name="custSuffix" id="custSuffix" style="width:40px" class="lettersOnly" maxlength="4"/></td>
+                        </tr>
+                    </table>
+                    <table class="divider">
+                        <tr>
+                            <td width="110"><label>Gender:</label></td>
+                            <td><?php echo html_entity_decode($gender); ?></td>
+                            <td><label for="custNationality">Nationality:</label></td>
+                            <td><input type="text" name="custNationality" id="custNationality" style="width:150px" class="lettersOnly" maxlength="20"/></td>
+                        </tr>
+                        <tr>
+                            <td><label for="custCivilStatus">Civil Status:</label></td>
+                            <td><select name="custCivilStatus" id="custCivilStatus" style="width:152px">
+                                    <?php echo html_entity_decode($civilStats); ?>
+                                </select></td>
+                            <td><label for="custOccupation">Occupation:</label></td>
+                            <td><input type="text" name="custOccupation" id="custOccupation" style="width:150px" class="lettersOnly" maxlength="30"/></td>
+                        </tr>
+                        <tr>
+                            <td><label for="custBDate">Date of birth:</label></td>
+                            <td><input type="text" name="custBDate" id="custBDate" style="width:140px" class="datePicker" readonly/></td>
+                            <td><label for="custSSS">SSS:</label></td>
+                            <td><input type="text" name="custSSS" id="custSSS" style="width:150px" class="numbersOnly" maxlength="30"/></td>
+                        </tr>
+                        <tr>
+                            <td><label for="custBPlace">Place of birth:</label></td>
+                            <td><input type="text" name="custBPlace" id="custBPlace" style="width:140px" class="alphaNum" maxlength="30"/></td>
+                            <td><label for="custTIN">TIN:</label></td>
+                            <td><input type="text" name="custTIN" id="custTIN" style="width:150px" class="numbersOnly" maxlength="30"/></td>
+                        </tr>
+                    </table>
                 </div>
             </div>
-            <strong>Customer Information:</strong>
-            <table width="80%" style="margin-top:10px">
-                <tr>
-                    <td><label>Prefix:</label></td>
-                    <td><label for="custLastName">Last Name: <span class="red">*</span></label></td>
-                    <td><label for="custFirstName">First Name: <span class="red">*</span></label></td>
-                    <td><label for="custMiddleName">Middle Name:</label></td>
-                    <td><label for="custSuffix">Suffix:</label></td>
-                </tr>
-                <tr>
-                    <td><select name="custPrefix" id="custPrefix" style="width:70px">
-                            <?php echo html_entity_decode($prefixes); ?>
-                        </select></td>
-                    <td><input type="text" name="custLastName" id="custLastName" style="width:122px" maxlength="30" class="validate[required,custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
-                    <td><input type="text" name="custFirstName" id="custFirstName" style="width:122px" maxlength="30" class="validate[required,custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
-                    <td><input type="text" name="custMiddleName" id="custMiddleName" style="width:122px" maxlength="30" class="validate[custom[onlyLetterSpCustom]] alphaNumCustom"/></td>
-                    <td><input type="text" name="custSuffix" id="custSuffix" style="width:40px" class="lettersOnly" maxlength="4"/></td>
-                </tr>
-            </table>
-            <table width="100%" class="divider">
-                <tr>
-                    <td width="110"><label>Gender:</label></td>
-                    <td><?php echo html_entity_decode($gender); ?></td>
-                    <td><label for="custNationality">Nationality:</label></td>
-                    <td><input type="text" name="custNationality" id="custNationality" style="width:150px" class="lettersOnly" maxlength="20"/></td>
-                </tr>
-                <tr>
-                    <td><label for="custCivilStatus">Civil Status:</label></td>
-                    <td><select name="custCivilStatus" id="custCivilStatus" style="width:152px">
-                            <?php echo html_entity_decode($civilStats); ?>
-                        </select></td>
-                    <td><label for="custOccupation">Occupation:</label></td>
-                    <td><input type="text" name="custOccupation" id="custOccupation" style="width:150px" class="lettersOnly" maxlength="30"/></td>
-                </tr>
-                <tr>
-                    <td><label for="custBDate">Date of birth:</label></td>
-                    <td><input type="text" name="custBDate" id="custBDate" style="width:140px" class="datePicker" readonly/></td>
-                    <td><label for="custSSS">SSS:</label></td>
-                    <td><input type="text" name="custSSS" id="custSSS" style="width:150px" class="numbersOnly" maxlength="30"/></td>
-                </tr>
-                <tr>
-                    <td><label for="custBPlace">Place of birth:</label></td>
-                    <td><input type="text" name="custBPlace" id="custBPlace" style="width:140px" class="alphaNum" maxlength="30"/></td>
-                    <td><label for="custTIN">TIN:</label></td>
-                    <td><input type="text" name="custTIN" id="custTIN" style="width:150px" class="numbersOnly" maxlength="30"/></td>
-                </tr>
-            </table>
+            <div class="customer-entry-details">
             <div class="divider customer-address-contact">
                 <table class="customer-address-table">
                     <tr>

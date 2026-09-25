@@ -33,6 +33,10 @@ Copyright (c) 2010 CorewareTech
 	border-radius: 5px;
 }
 
+#wrapper.maintenance-view {
+	min-width: 500px;
+}
+
 #wrapper table {
 	border-collapse: separate;
 	border-spacing: 4px;

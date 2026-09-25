@@ -31,6 +31,7 @@ $(function () {
         $(WRAPPER).width($(WRAPPER).width());
         baseW = $(WRAPPER).width() - $(WRAPPER).width();
         hash = window.location.hash.substring(1);
+        $(WRAPPER).toggleClass('maintenance-view', hash.indexOf('maintenance/') === 0);
         if (hash) {
             requests.push($.ajax({
                 type: 'GET',

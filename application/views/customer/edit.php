@@ -5,13 +5,15 @@
     <div id="custEdit">
         <h1>Update Customer Entry <span class="floatRight">CIF Number: <?php echo $cifseqno; ?></span></h1>
         <div id="content"><span class="floatRight hint">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
-            <div id="custPreview" class="imgWrapper floatLeft"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/>
+            <div class="customer-entry-overview" style="display:flex;align-items:flex-start;gap:15px">
+            <div id="custPreview" class="imgWrapper customer-entry-photo" style="flex:0 0 100px;margin:0"><img src="<?php echo $srcImg; ?>" width="100" height="100" alt="Customer picture"/>
                 <div class="uploader"><span><?php echo $upMsg; ?></span>
                     <input type="file" id="custImage" name="custImage"/>
                 </div>
             </div>
+            <div class="customer-entry-main" style="flex:1 1 0;min-width:0">
             <strong>Customer Information:</strong>
-            <table width="80%" style="margin-top:10px">
+            <table width="100%" style="margin-top:10px">
                 <tr>
                     <td><label for="custPrefix">Prefix:</label></td>
                     <td><label for="custLastName">Last Name: <span class="red">*</span></label></td>
@@ -29,6 +31,8 @@
                     <td><input type="text" name="custSuffix" id="custSuffix" style="width:40px" class="lettersOnly" maxlength="4" value="<?php echo $suffix; ?>"/></td>
                 </tr>
             </table>
+            </div>
+            </div>
             <table width="100%" class="divider">
                 <tr>
                     <td width="110"><label>Gender:</label></td>

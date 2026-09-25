@@ -180,10 +180,10 @@ class Browse extends CI_Controller {
 		$rResult = $db->query( $sQuery );
 		
 		/* Data set length after filtering */
-		$sQuery = "SELECT FOUND_ROWS() as rows";
+		$sQuery = "SELECT FOUND_ROWS() AS total_rows";
 		$rResultFilterTotal = $db->query( $sQuery );
 		$aResultFilterTotal = $rResultFilterTotal->row_array();
-		$iFilteredTotal = $aResultFilterTotal['rows'];
+		$iFilteredTotal = $aResultFilterTotal['total_rows'];
 		
 		/* Total data set length */
 		$sQuery = "SELECT COUNT(".$sIndexColumn.") as count".

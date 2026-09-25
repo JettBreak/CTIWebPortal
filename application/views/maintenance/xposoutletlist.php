@@ -123,7 +123,9 @@ $(function () {
     });
     form.validationEngine('attach');
 	
-	<?php echo $uiToolbar; ?>
+	<?php if (!empty($showToolbarFilters)): ?>
+	.ui-toolbar:even.append(#customToolbar .top.html());
+	<?php endif; ?>
 	
     $(newBtn).click(function () {
         window.location.hash = 'maintenance/xposoutlet';

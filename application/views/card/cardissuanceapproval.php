@@ -153,7 +153,9 @@ $(function() {
         }
 	});
 	
-	<?php echo $uiToolbar; ?>
+	<?php if (!empty($showToolbarFilters)): ?>
+	.ui-toolbar:even.append(#customToolbar .top.html());
+	<?php endif; ?>
 	
 	$(verifyBtn).click(function (e) {
 		messageBox('Approve selected cards?', 'Confirm', 'confirm', function () {

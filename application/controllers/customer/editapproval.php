@@ -71,9 +71,9 @@ class EditApproval extends CI_Controller {
 		}
 		
 		if ($this->core->isHeadOffice()) {
-			$data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+			$data['showToolbarFilters'] = TRUE;
 		} else {
-			$data['uiToolbar'] = NULL;
+			$data['showToolbarFilters'] = FALSE;
 		}
 		
 		$data['sessionExp'] = $this->core->getSessionExp();

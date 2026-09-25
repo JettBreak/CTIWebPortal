@@ -139,7 +139,9 @@ $(function() {
 		}
 	});
 	
-	<?php echo $uiToolbar; ?>
+	<?php if (!empty($showToolbarFilters)): ?>
+	.ui-toolbar:even.append(#customToolbar .top.html());
+	<?php endif; ?>
 	
 	/*$(DATATABLE).find('input:checkbox').die().live('change', function() {
 		if ($(this).is('input:checked') === true) {

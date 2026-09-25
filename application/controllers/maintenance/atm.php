@@ -45,9 +45,9 @@ class ATM extends CI_Controller {
     }
     
     if ($this->core->canMon()) {
-      $data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+      $data['showToolbarFilters'] = TRUE;
     } else {
-      $data['uiToolbar'] = NULL;
+      $data['showToolbarFilters'] = FALSE;
     }
 
       $this->load->model('coreapp/card_model');

@@ -187,7 +187,9 @@ $(function () {
 	$(TABCONTENT).hide(); //hide all content
 	$(TABS).first().addClass('active').show(); //activate first tab
 	$(TABCONTENT).first().show(); //show first tab content
-	<?php echo $uiToolbar; ?>  			
+	<?php if (!empty($showToolbarFilters)): ?>
+	.ui-toolbar:even.append(#customToolbar .top.html());
+	<?php endif; ?>
 	//onClick Event
 	$(TABS).click(function() {
 		if (!$(this).hasClass('active')) {

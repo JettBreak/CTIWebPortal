@@ -66,10 +66,10 @@ class XPOSOutletList extends CI_Controller {
 		//end
 		
 		if ($this->core->canMon()) {
-			$data['uiToolbar'] = "$('.ui-toolbar:even').append($('#customToolbar .top').html());";
+			$data['showToolbarFilters'] = TRUE;
 			$data['initbrcode'] = 0;
 		} else {
-			$data['uiToolbar'] = NULL;
+			$data['showToolbarFilters'] = FALSE;
 			$data['initbrseqno'] = $this->core->getBranchID();
 		}
 		

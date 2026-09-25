@@ -24,6 +24,7 @@
     </span>
 </div>
 <style>
+#wrapper:has(#areaList) { min-width: 500px; }
 .dataTables_scrollBody{min-height:150px !important;max-height:300px !important;}
 </style>
 <script>

@@ -258,8 +258,9 @@ class EditInfo extends CI_Controller {
     
     $this->session->unset_userdata('userOverride');
     $row = $result->row_array();
+    $errno = isset($row['errno']) ? (string) $row['errno'] : '';
     
-    if ($row['errno'] === '0') {
+    if ($errno === '0') {
       $success = TRUE;
       $message = 'Account successfully updated';
       $msgtype = 41;
@@ -375,8 +376,9 @@ class EditInfo extends CI_Controller {
     
     $this->session->unset_userdata('userOverride');
     $row = $result->row_array();
+    $errno = isset($row['errno']) ? (string) $row['errno'] : '';
     
-    if ($row['errno'] === '0') {
+    if ($errno === '0') {
       $success = TRUE;
       $message = 'Account <strong>['. $acctNo .']</strong> removed successfully';
     } else {

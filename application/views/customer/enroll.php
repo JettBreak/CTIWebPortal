@@ -28,36 +28,36 @@
                             <td><input type="text" name="custSuffix" id="custSuffix" style="width:40px" class="lettersOnly" maxlength="4"/></td>
                         </tr>
                     </table>
-                    <table class="divider" style="width:100%">
-                        <tr>
-                            <td width="110"><label>Gender:</label></td>
-                            <td><?php echo html_entity_decode($gender); ?></td>
-                            <td><label for="custNationality">Nationality:</label></td>
-                            <td><input type="text" name="custNationality" id="custNationality" style="width:150px" class="lettersOnly" maxlength="20"/></td>
-                        </tr>
-                        <tr>
-                            <td><label for="custCivilStatus">Civil Status:</label></td>
-                            <td><select name="custCivilStatus" id="custCivilStatus" style="width:152px">
-                                    <?php echo html_entity_decode($civilStats); ?>
-                                </select></td>
-                            <td><label for="custOccupation">Occupation:</label></td>
-                            <td><input type="text" name="custOccupation" id="custOccupation" style="width:150px" class="lettersOnly" maxlength="30"/></td>
-                        </tr>
-                        <tr>
-                            <td><label for="custBDate">Date of birth:</label></td>
-                            <td><input type="text" name="custBDate" id="custBDate" style="width:140px" class="datePicker" readonly/></td>
-                            <td><label for="custSSS">SSS:</label></td>
-                            <td><input type="text" name="custSSS" id="custSSS" style="width:150px" class="numbersOnly" maxlength="30"/></td>
-                        </tr>
-                        <tr>
-                            <td><label for="custBPlace">Place of birth:</label></td>
-                            <td><input type="text" name="custBPlace" id="custBPlace" style="width:140px" class="alphaNum" maxlength="30"/></td>
-                            <td><label for="custTIN">TIN:</label></td>
-                            <td><input type="text" name="custTIN" id="custTIN" style="width:150px" class="numbersOnly" maxlength="30"/></td>
-                        </tr>
-                    </table>
                 </div>
             </div>
+            <table class="divider customer-entry-middle" style="width:100%">
+                <tr>
+                    <td width="110"><label>Gender:</label></td>
+                    <td><?php echo html_entity_decode($gender); ?></td>
+                    <td><label for="custNationality">Nationality:</label></td>
+                    <td><input type="text" name="custNationality" id="custNationality" style="width:150px" class="lettersOnly" maxlength="20"/></td>
+                </tr>
+                <tr>
+                    <td><label for="custCivilStatus">Civil Status:</label></td>
+                    <td><select name="custCivilStatus" id="custCivilStatus" style="width:152px">
+                            <?php echo html_entity_decode($civilStats); ?>
+                        </select></td>
+                    <td><label for="custOccupation">Occupation:</label></td>
+                    <td><input type="text" name="custOccupation" id="custOccupation" style="width:150px" class="lettersOnly" maxlength="30"/></td>
+                </tr>
+                <tr>
+                    <td><label for="custBDate">Date of birth:</label></td>
+                    <td><input type="text" name="custBDate" id="custBDate" style="width:140px" class="datePicker" readonly/></td>
+                    <td><label for="custSSS">SSS:</label></td>
+                    <td><input type="text" name="custSSS" id="custSSS" style="width:150px" class="numbersOnly" maxlength="30"/></td>
+                </tr>
+                <tr>
+                    <td><label for="custBPlace">Place of birth:</label></td>
+                    <td><input type="text" name="custBPlace" id="custBPlace" style="width:140px" class="alphaNum" maxlength="30"/></td>
+                    <td><label for="custTIN">TIN:</label></td>
+                    <td><input type="text" name="custTIN" id="custTIN" style="width:150px" class="numbersOnly" maxlength="30"/></td>
+                </tr>
+            </table>
             <div class="customer-entry-details">
             <div class="divider customer-address-contact">
                 <table class="customer-address-table">

@@ -357,6 +357,8 @@ class Login extends CI_Controller {
 			//save user ID to cache
 			if ($isReset === TRUE) { //User password was reset
 				$_SESSION['userIDx'] = $userID;
+				$_SESSION['userBranchIDx'] = $branchID;
+				$_SESSION['userGroupSeqnox'] = $grpseqno;
 				$_SESSION['minChar'] = $minChar;
 				$_SESSION['sysPwd'] = $pw;
 				//$this->cache->save($this->core->getSessionID() .'userIDx', $userID, CACHE_TTL);

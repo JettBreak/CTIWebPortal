@@ -34,10 +34,18 @@ class SetPW2 extends CI_Controller {
     
     $xml = $this->shortxml;
     $userID = $_SESSION['userIDx'];//$this->userID;
-    $brseqno = $this->core->getBranchID();
+    if (!isset($_SESSION['userBranchIDx']) || !isset($_SESSION['userGroupSeqnox'])) {
+      echo json_encode(array(
+        'success' => FALSE,
+        'message' => 'Your password reset session has expired. Please log in again.'
+      ));
+      return;
+    }
+
+    $brseqno = $_SESSION['userBranchIDx'];
     $ipAddress = $this->core->getIPAddress();
     $workstation = $this->core->getWorkstation();
-    $grpseqno = $this->core->getUserGroup();
+    $grpseqno = $_SESSION['userGroupSeqnox'];
     $userAudit = '';
     $sessionID = '';
     $userPW = $this->core->encrypt($userID, $this->input->post('newPassword', TRUE));
@@ -108,6 +116,8 @@ class SetPW2 extends CI_Controller {
     if ($success) {
       if ($row['errno'] == 0) {
         unset($_SESSION['userIDx']);
+        unset($_SESSION['userBranchIDx']);
+        unset($_SESSION['userGroupSeqnox']);
         unset($_SESSION['sysPwd']);
       } else {
         $success = FALSE;

@@ -190,6 +190,37 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	function _execute($sql)
 	{
+		/*
+		 * Legacy callers often issue several stored procedure calls in a row
+		 * without explicitly freeing each result. MySQL PDO requires every
+		 * rowset from the previous statement to be consumed before the next
+		 * query can run, so release it here before replacing result_id.
+		 */
+		if (is_object($this->result_id) && $this->result_id instanceof PDOStatement)
+		{
+			try
+			{
+				do
+				{
+					$this->result_id->fetchAll(PDO::FETCH_ASSOC);
+				}
+				while ($this->result_id->nextRowset());
+
+				$this->result_id->closeCursor();
+			}
+			catch (Exception $e)
+			{
+				// A caller may already have closed the result; make a best effort.
+				try
+				{
+					$this->result_id->closeCursor();
+				}
+				catch (Exception $ignored)
+				{
+				}
+			}
+		}
+
 		$sql = $this->_prep_query($sql);
 		$result_id = $this->conn_id->query($sql);
 		

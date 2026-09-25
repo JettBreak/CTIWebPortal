@@ -183,7 +183,7 @@ class ChangeStatus extends CI_Controller {
 		
 		$this->session->unset_userdata('userOverride');
 		
-		if ($row['errno'] === '0') {
+		if (isset($row['errno']) && (int) $row['errno'] === 0) {
 			$success = TRUE;
 			$message = 'Account successfully updated';
 		} else {

@@ -225,7 +225,7 @@ class NewEntry extends CI_Controller {
 		$this->session->unset_userdata('userOverride');
 		$row = $result->row_array();
 		
-		if ($row['errno'] === '0') {
+		if (isset($row['errno']) && (int) $row['errno'] === 0) {
 			$success = TRUE;
 			$message = 'Account successfully created<br />Please verify your account';
 		} else {

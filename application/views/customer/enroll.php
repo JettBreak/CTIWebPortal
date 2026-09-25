@@ -1,5 +1,5 @@
 <form id="custNewForm" method="post" enctype="multipart/form-data" target="uploadTarget">
-    <div id="custNew" style="width:850px;max-width:calc(100vw - 32px);box-sizing:border-box">
+    <div id="custNew" style="width:700px;max-width:calc(100vw - 32px);box-sizing:border-box">
         <h1>New Customer Entry</h1>
         <div id="content"><span class="floatRight hint">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
             <div class="customer-entry-overview" style="display:flex;align-items:flex-start;gap:15px">

@@ -54,8 +54,8 @@
                     <td><input type="text" name="custTIN" id="custTIN" style="width:150px" class="numbersOnly" maxlength="30"/></td>
                 </tr>
             </table>
-            <div class="divider">
-                <table width="55%" class="floatLeft">
+            <div class="divider customer-address-contact">
+                <table class="customer-address-table">
                     <tr>
                         <td width="110"><label for="custCountry">Country of Origin:</label></td>
                         <td colspan="3"><select name="custCountry" id="custCountry" style="width:232px">
@@ -92,8 +92,9 @@
                         </td>
                     </tr>
                 </table>
+                <div class="customer-contact-section">
                 <strong>Contact Numbers:</strong>
-                <table width="43%">
+                <table>
                     <tr>
                         <td>&nbsp;</td>
                         <td>Area Code &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Phone No.</td>
@@ -124,6 +125,7 @@
                     </tr>
                     
                 </table>
+                </div>
                 </div>
         </div>
     </div>

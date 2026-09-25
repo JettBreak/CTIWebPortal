@@ -211,6 +211,62 @@ button:hover, button:focus {
 	clear: both;
 }
 
+/* Keep address and contact details side by side in customer forms. */
+#wrapper .customer-address-contact {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+#wrapper .customer-address-table {
+	width: 55%;
+	flex: 0 0 55%;
+}
+
+#wrapper .customer-contact-section {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+#wrapper .customer-contact-section > strong {
+	display: block;
+	margin-bottom: 6px;
+}
+
+#wrapper .customer-contact-section table {
+	width: 100%;
+}
+
+#wrapper .customer-personal-columns {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+#wrapper .customer-personal-column {
+	width: calc(50% - 6px);
+	flex: 1 1 0;
+}
+
+@media (max-width: 720px) {
+	#wrapper .customer-address-contact {
+		display: block;
+	}
+
+	#wrapper .customer-address-table,
+	#wrapper .customer-contact-section {
+		width: 100%;
+	}
+
+	#wrapper .customer-personal-columns {
+		display: block;
+	}
+
+	#wrapper .customer-personal-column {
+		width: 100%;
+	}
+}
+
 #wrapper .idName {
 	color: #fc0;
 	font-size: 1.1em;

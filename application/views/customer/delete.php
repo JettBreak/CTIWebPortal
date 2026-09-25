@@ -27,8 +27,8 @@
                     <td><input type="text" style="width:40px" value="<?php echo $suffix; ?>" readonly/></td>
                 </tr>
             </table>
-            <div class="divider">
-                <table width="50%" class="floatLeft">
+            <div class="divider customer-personal-columns">
+                <table class="customer-personal-column">
                     <tr>
                         <td width="40%">Gender:</td>
                         <td colspan="3"><input type="text" style="width:140px" value="<?php echo $gender; ?>" readonly/></td>
@@ -46,7 +46,7 @@
                         <td><input type="text" style="width:140px" value="<?php echo $bPlace; ?>" readonly/></td>
                     </tr>
                 </table>
-                <table width="50%">
+                <table class="customer-personal-column">
                     <tr>
                         <td>Nationality:</td>
                         <td><input type="text" style="width:150px" value="<?php echo $nationality; ?>" readonly/></td>
@@ -68,7 +68,8 @@
         </form>
         </div>
         <div id="contactInfo" class="tab_content">
-            <table width="60%" class="floatLeft">
+            <div class="customer-address-contact">
+            <table class="customer-address-table">
                 <tr>
                     <td width="30%">Country of Origin:</td>
                     <td colspan="3"><input type="text" style="width:250px" value="<?php echo $country; ?>" readonly/></td>
@@ -96,8 +97,9 @@
                     <td colspan="3"><input type="text" style="width:250px" value="<?php echo $province; ?>" readonly/></td>
                 </tr>
             </table>
+            <div class="customer-contact-section">
             <strong>Contact Numbers:</strong>
-            <table width="40%">
+            <table>
                 <tr>
                     <td>&nbsp;</td>
                     <td>Area Code &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Phone No.</td>
@@ -119,6 +121,8 @@
                     <td><input type="text" style="width:200px" value="<?php echo $email; ?>" readonly/></td>
                 </tr>
             </table>
+            </div>
+            </div>
         </div>
         <div id="cardsLinked" class="tab_content nopadding <?php echo $hidden; ?>" >
             <table class="dataTable">

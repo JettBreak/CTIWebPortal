@@ -1,8 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Misc_model extends CI_Model {
-	function Misc_model()
+	function __construct()
 	{
+		parent::__construct();
 		$this->db = $this->load->database(DB2, TRUE);
 		$this->security = $this->coresecurity;
 		//sets the current database

@@ -26,7 +26,7 @@ class CoreAS {
   var $data   ;
   
   //CONSTRUCTOR default timeout to 20secs
-  function CoreAS( $params ) {
+  function __construct( $params ) {
     $this->host   = $params['host'];
     $this->port   = $params['port'];
     $this->timeout = 3 ; 

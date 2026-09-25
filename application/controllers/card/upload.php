@@ -4,7 +4,7 @@ class Upload extends CI_Controller {
 	
 	private $path, $cardFile;
 	
-	function Upload()
+	function __construct()
 	{
 		parent::__construct();
 		$this->load->helper('file');

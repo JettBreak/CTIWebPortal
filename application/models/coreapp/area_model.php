@@ -1,8 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Area_model extends CI_Model {
-	function Area_model()
+	function __construct()
 	{
+		parent::__construct();
 		$this->db = $this->load->database(DB1, TRUE);
 		$this->security = $this->coresecurity;
 		//sets the current database

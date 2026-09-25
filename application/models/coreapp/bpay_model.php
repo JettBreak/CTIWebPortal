@@ -3,7 +3,8 @@
 class Bpay_model extends CI_Model {
 	private $db, $security;
 	
-	function Bpay_model() {
+	function __construct() {
+		parent::__construct();
 		$this->db = $this->load->database(DB1, TRUE);
 		$this->security = $this->coresecurity;
 		

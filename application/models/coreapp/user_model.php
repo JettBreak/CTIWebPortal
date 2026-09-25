@@ -3,8 +3,9 @@
 class User_model extends CI_Model {
 	//private $db, $security;
 	
-	function User_model()
+	function __construct()
 	{
+		parent::__construct();
 		$this->db = $this->load->database(DB1, TRUE);
 		$this->security = $this->coresecurity;
 		$this->security->_initDb($this->db);

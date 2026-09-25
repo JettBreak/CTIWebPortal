@@ -3,8 +3,9 @@
 class Ipay_model extends CI_Model {
 	public $db, $security;
 
-	function Ipay_model()
+	function __construct()
 	{
+		parent::__construct();
 		$this->db 		= $this->load->database(DB1, TRUE);
 		$this->security = $this->coresecurity;
 		

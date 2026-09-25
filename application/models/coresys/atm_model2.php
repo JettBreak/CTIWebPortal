@@ -3,8 +3,9 @@
 class ATM_model extends CI_Model {
 	private $db, $security;
 	
-	function ATM_model()
+	function __construct()
 	{
+		parent::__construct();
 		$this->db = $this->load->database(DB2, TRUE);
 		$this->security = $this->coresecurity;
 		//sets the current database

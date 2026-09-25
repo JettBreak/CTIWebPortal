@@ -38,6 +38,32 @@
 .dataTables_custom {
 	padding: 4px 0;
 }
+.card-list-toolbar {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: 12px;
+	box-sizing: border-box;
+}
+.card-list-toolbar .dataTables_length,
+.card-list-toolbar .dataTables_filter,
+.card-list-toolbar .dataTables_custom {
+	float: none;
+	margin: 0;
+	white-space: nowrap;
+}
+.card-list-toolbar .dataTables_length select {
+	width: 50px;
+}
+.card-list-toolbar .dataTables_filter {
+	margin-left: auto;
+}
+.card-list-toolbar .dataTables_filter input {
+	width: 120px;
+}
+.card-list-toolbar .dataTables_custom {
+	padding: 0;
+}
 </style>
 
 <script>
@@ -145,20 +171,23 @@ $(function() {
 	});
 	$.fn.dataTableExt.iApiIndex = 0;
 	
-	$('.ui-toolbar:first').append('<div class="dataTables_custom floatLeft" style="margin: 0 0 0 20px">'+
+	var $toolbar = $('.ui-toolbar:first').addClass('card-list-toolbar');
+	var $search = $toolbar.find('.dataTables_filter').detach();
+	$toolbar.append('<div class="dataTables_custom card-list-filter">'+
 		'Status: ' +
-		'<select id="cardStatus" style="width:170px">'+
+		'<select id="cardStatus" style="width:155px">'+
 			'<option value="0">ALL</option>' +
 			<?php echo html_entity_decode($cardStatusList); ?>
 		'</select>' +
 	'</div>'+
-	'<div class="dataTables_custom floatLeft" style="margin: 0 0 0 20px">'+
+	'<div class="dataTables_custom card-list-filter">'+
 		'Card Type: ' +
-		'<select id="cardType" style="width:170px">'+
+		'<select id="cardType" style="width:155px">'+
 			'<option value="-1">ALL</option>' +
 			<?php echo html_entity_decode($cardTypeList); ?>
 		'</select>' +
 	'</div>');
+	$toolbar.append($search);
 	
 	$('#cardStatus, #cardType').change(function () {
 		oTable.fnDraw();

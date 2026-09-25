@@ -54,11 +54,11 @@ class ServiceCodes extends CI_Controller {
     
     $details = array();
     $success = FALSE;
+    $serviceCodes = $result->result_array();
     
-    if ($result->num_rows() > 0) {
+    if (count($serviceCodes) > 0) {
       $success = TRUE;
-      foreach ($result->result_array() as $row)
-      {
+      foreach ($serviceCodes as $row) {
         $details[] = array(
           $row['trxcode'],
           $row['description'],
@@ -67,8 +67,8 @@ class ServiceCodes extends CI_Controller {
       }
       
       //get last bitNo
-      $trxcode = end($result->result_array());
-      $trxcode = intval($trxcode['trxcode']) + 1;
+      $lastServiceCode = end($serviceCodes);
+      $trxcode = intval($lastServiceCode['trxcode']) + 1;
       //end
     } else {
       $trxcode = 10000;

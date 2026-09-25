@@ -85,11 +85,14 @@ class POS extends CI_Controller {
       
       $option = NULL;
       //$areaFirst  = current(array_keys($areaArr));
-      $areaLast   = end(array_keys($areaArr));
+      $areaKeys = array_keys($areaArr);
+      $areaLast = end($areaKeys);
       //$brFirst  = current(array_keys($brArr));
-      $brLast   = end(array_keys($brArr));
+      $branchKeys = array_keys($brArr);
+      $brLast = end($branchKeys);
       //$locFirst   = current(array_keys($locArr));
-      $locLast  = end(array_keys($locArr));
+      $locationKeys = array_keys($locArr);
+      $locLast = end($locationKeys);
       
       /*foreach ($areaArr as $key => $area) {
         $aLine = '|';

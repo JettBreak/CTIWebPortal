@@ -136,7 +136,8 @@ $(function () {
         $(submitBtn).hide();
     }
 	
-    $(submitBtn).click(function (e) {
+	$(submitBtn).click(function (e) {
+		form.attr('action', $(this).val());
         if (form.validationEngine('validate') === true) {
             messageBox('Are all entries correct?', 'Confirm', 'confirm', function () {
 				$(MSGBOX).dialog('close');
@@ -154,6 +155,7 @@ $(function () {
 	
 	
 	$(removeBtn).click(function (e) {
+		form.attr('action', $(this).val());
 		if (form.validationEngine('validate') === true) {
             messageBox('Delete account number <strong>[' + $(accntNo).val() + ']</strong>?', 'Confirm', 'confirm', function () {
 				$(MSGBOX).dialog('close');

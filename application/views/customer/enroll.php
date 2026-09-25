@@ -1,7 +1,7 @@
 <form id="custNewForm" method="post" enctype="multipart/form-data" target="uploadTarget">
     <div id="custNew" style="width:700px;max-width:calc(100vw - 32px);box-sizing:border-box">
         <h1>New Customer Entry</h1>
-        <div id="content"><span class="floatRight hint" style="position:absolute;top:-5px;right:15px;text-align:right">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
+        <div id="content"><span class="floatRight hint" style="position:absolute;top:10px;right:15px;text-align:right">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
             <div class="customer-entry-overview" style="display:flex;align-items:flex-start;gap:15px;padding-top:30px">
                 <div id="custPreview" class="imgWrapper customer-entry-photo" style="flex:0 0 100px;margin:0"><img src="images/nullphoto.jpg" width="100" height="100" alt="Customer picture"/>
                     <div class="uploader"><span>Upload Photo</span>

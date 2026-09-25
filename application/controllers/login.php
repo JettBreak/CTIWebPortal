@@ -68,6 +68,10 @@ class Login extends CI_Controller {
 		);	
 		
 		$row = $result->row_array();
+		if (isset($row['errno']))
+		{
+			$row['errno'] = (string) $row['errno'];
+		}
 
 		//print_r($row);
 		if ($row['errno'] === '0') {
@@ -84,6 +88,10 @@ class Login extends CI_Controller {
 			);
 			
 			$row = $result->row_array();
+			if (isset($row['errno']))
+			{
+				$row['errno'] = (string) $row['errno'];
+			}
 			
 		}
 		

@@ -83,11 +83,11 @@ class AllowsSetup extends CI_Controller {
     
     $details = array();
     $success = FALSE;
+    $allowRows = $result->result_array();
     
-    if ($result->num_rows() > 0) {
+    if (count($allowRows) > 0) {
       $success = TRUE;
-      foreach ($result->result_array() as $row)
-      {
+      foreach ($allowRows as $row) {
         $details[] = array(
           $row['bitno'],
           $row['description'],
@@ -97,9 +97,8 @@ class AllowsSetup extends CI_Controller {
     }
     
     //get last bitNo
-    $bitNo = end($result->result_array());
-    $bitNo = $bitNo['bitno'];
-    $_SESSION['lastBitNo'] = $bitNo;
+    $lastAllow = end($allowRows);
+    $_SESSION['lastBitNo'] = $lastAllow === FALSE ? 0 : $lastAllow['bitno'];
     //end
     
     $result->free_result();

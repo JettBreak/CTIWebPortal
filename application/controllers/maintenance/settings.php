@@ -73,13 +73,16 @@ class Settings extends CI_Controller {
 
     //card type
     $result = $this->card_model->getCardTypeGeneralSettings();
+    $cardTypeRows = $result->result_array();
+    $result->free_result();
+    $result->next_result();
     
     $cardTypes = '';//<option value="0">ALL</option>';
     
     //if ($this->core->isISOCustomer()) {
     $first = NULL;
-    if ($result->num_rows() > 0) {
-      foreach ($result->result_array() as $row) {
+    if (count($cardTypeRows) > 0) {
+      foreach ($cardTypeRows as $row) {
 
         if ($first === NULL) {
           $first = $row;
@@ -100,7 +103,10 @@ class Settings extends CI_Controller {
           $sessionID
         );
         
-        $row = $result->row_array();
+        $accountFormatCount = $result->num_rows();
+        $accountFormatRow = $result->row_array();
+        $result->free_result();
+        $result->next_result();
         
         //$formatValue = NULL;
         //$weights = $xml->getValue('WEIGHTS');
@@ -108,10 +114,10 @@ class Settings extends CI_Controller {
         //$gracePeriod = $xml->getValue('GRACEPERIOD') ? $xml->getValue('GRACEPERIOD') : 0;
         //$minDays = $xml->getValue('MINDAYS') ? $xml->getValue('MINDAYS') : 0;
         
-        if ($result->num_rows() > 0) {
+        if ($accountFormatCount > 0) {
         
-          $xml->setXML($row['xml1']);
-          $formatValue = $row['formatvalue'];
+          $xml->setXML($accountFormatRow['xml1']);
+          $formatValue = $accountFormatRow['formatvalue'];
           $weights = $xml->getValue('WEIGHTS');
           $expYears = $xml->getValue('EXPYEARS') ? $xml->getValue('EXPYEARS') : 0;
           $gracePeriod = $xml->getValue('GRACEPERIOD') ? $xml->getValue('GRACEPERIOD') : 0;
@@ -145,9 +151,6 @@ class Settings extends CI_Controller {
           $trnICCT2 = isset($emvrow['isUseICCTrack2']) ? $emvrow['isUseICCTrack2'] : 0;
 
 
-          $result->free_result();
-          $result->next_result();
-        
         } else {
           $xml->setXML(NULL);
           $formatValue = NULL;
@@ -181,9 +184,6 @@ class Settings extends CI_Controller {
           $data['minDays1'] = $minDays;
         }
       
-        $result->free_result();
-        $result->next_result();
-
         $cardTypes .= '<option formatvalue="'. $formatValue .'" weights="'. $weights .'" expyears="'. $expYears .'" graceperiod="'. $gracePeriod .'" mindays="'. $minDays .'" charlen="'. $charLen .'" value="'. $accttype .'" trnexpr="'.$trnExpr.'" trnicvv="'.$trnICVV.'" trnarqc="'.$trnARQC.'" trnarpc="'.$trnARPC.'" trncntr="'.$trnCntr.'" trntrack2="'.$trnTrack2.'" trnicct2="'.$trnICCT2.'" trncvv="'.$trnCVV.'" servcvv="'.$servCVV.'" servicvv="'.$servICVV.'">'. $description .'</option>';
       }
     } else {

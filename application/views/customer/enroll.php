@@ -2,15 +2,15 @@
     <div id="custNew">
         <h1>New Customer Entry</h1>
         <div id="content"><span class="floatRight hint">Enter customer details then press submit to send<br /><span class="floatRight"><span class="red">*</span> - Required Fields</span></span></span>
-            <div class="customer-entry-overview">
-                <div id="custPreview" class="imgWrapper customer-entry-photo"><img src="images/nullphoto.jpg" width="100" height="100" alt="Customer picture"/>
+            <div class="customer-entry-overview" style="display:flex;align-items:flex-start;gap:15px">
+                <div id="custPreview" class="imgWrapper customer-entry-photo" style="flex:0 0 100px;margin:0"><img src="images/nullphoto.jpg" width="100" height="100" alt="Customer picture"/>
                     <div class="uploader"><span>Upload Photo</span>
                         <input type="file" id="custImage" name="custImage"/>
                     </div>
                 </div>
-                <div class="customer-entry-main">
+                <div class="customer-entry-main" style="flex:1 1 0;min-width:0">
                     <strong>Customer Information:</strong>
-                    <table class="customer-entry-name" style="margin-top:10px">
+                    <table class="customer-entry-name" style="width:100%;margin-top:10px">
                         <tr>
                             <td><label>Prefix:</label></td>
                             <td><label for="custLastName">Last Name: <span class="red">*</span></label></td>
@@ -28,7 +28,7 @@
                             <td><input type="text" name="custSuffix" id="custSuffix" style="width:40px" class="lettersOnly" maxlength="4"/></td>
                         </tr>
                     </table>
-                    <table class="divider">
+                    <table class="divider" style="width:100%">
                         <tr>
                             <td width="110"><label>Gender:</label></td>
                             <td><?php echo html_entity_decode($gender); ?></td>

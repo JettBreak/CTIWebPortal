@@ -577,8 +577,8 @@ class Issuance extends CI_Controller {
 		}	
 		
 		
-		$errNo = $activateresult['errno'];
-		$errMsg =  $activateresult['errmsg'];
+		$errNo = isset($activateresult['errno']) ? (string) $activateresult['errno'] : '';
+		$errMsg = isset($activateresult['errmsg']) ? $activateresult['errmsg'] : '';
 		$embstat = 'N/A';
 		
 		if ($errNo === '0') {
@@ -617,18 +617,7 @@ class Issuance extends CI_Controller {
 
 		echo json_encode(array(
 			'successissuance' => $success,
-			'message' => $message . ' ' . $counter . ' ' . $accountlist . ' ' . $accountdata/*,
-			'embossname' => $embstat,
-			'datacount' => count($data) . '|is4' . $acctdetailcntis4 . 
-			'|is10' . $acctdetailcntis10 . 
-			'|is8' . $acctdetailcntis8 .
-			'|inrow' . $inrowcnt .
-			'|invac' . $invalidacctcnt .
-			'|inabk' . $inacctinfobykey .
-			'|insnf' . $statusnotfound . 
-			'|abkonloop' . $abkonloop .
-			'|infobykeyparams' . $infobykeyparams,
-			'data' => $data*/
+			'message' => $message
 		));
 	}
 }

@@ -67,6 +67,7 @@
             </div>
             </div>
         </div>
+    </div>
         <div id="contactInfo" class="tab_content">
             <div class="customer-address-contact">
             <table class="customer-address-table">
@@ -124,7 +125,7 @@
             </div>
             </div>
         </div>
-        <div id="cardsLinked" class="tab_content nopadding <?php echo $hidden; ?>" >
+        <div id="cardsLinked" class="tab_content nopadding">
             <table class="dataTable">
                 <thead>
                     <tr>

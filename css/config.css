@@ -10,8 +10,14 @@
 	width: 450px;
 }
 
-#custInfo, #custNew, #custEdit, #atmMaintenance, #accountNew {
+#custInfo, #custEdit, #atmMaintenance, #accountNew {
 	width: 700px;
+}
+
+#custNew {
+	width: 850px;
+	max-width: calc(100vw - 32px);
+	box-sizing: border-box;
 }
 
 #accountInfo {

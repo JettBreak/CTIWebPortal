@@ -37,7 +37,7 @@ class Portal extends CI_Controller {
 		
 		//force https
 		if ($inst['https'] === TRUE) {
-			if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
+			if ((!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') && isset($_SERVER['HTTP_HOST'])) {
 				if(!headers_sent()) {
 					header("Status: 301 Moved Permanently");
 					header(sprintf('Location: https://%s%s',$_SERVER['HTTP_HOST'],$_SERVER['REQUEST_URI']));

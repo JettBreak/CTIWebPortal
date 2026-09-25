@@ -19,7 +19,7 @@ class CoreSecurity extends CI_Controller {
 	function _confirmLoggedIn() {
 		$loggedIn  = $this->core->isLoggedIn();
 		
-		$basedir = $_SERVER['REQUEST_URI'];
+		$basedir = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 		
 		/*$public = array(
 			$basedir,

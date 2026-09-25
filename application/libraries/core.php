@@ -487,7 +487,7 @@ class Core {
    */
   function isLoggedIn()
   {
-    return $this->userData['loggedIn'];
+    return isset($this->userData['loggedIn']) && $this->userData['loggedIn'] === TRUE;
   }
   
   // --------------------------------------------------------------------

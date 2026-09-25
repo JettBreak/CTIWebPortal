@@ -364,7 +364,8 @@ class MY_Email extends CI_Email {
 
             foreach ($to as $address) {
 
-                list($key, $name) = each($names);
+                $name = current($names);
+                next($names);
                 $this->phpmailer->addAddress($address, $name);
             }
 
@@ -392,7 +393,8 @@ class MY_Email extends CI_Email {
 
             foreach ($cc as $address) {
 
-                list($key, $name) = each($names);
+                $name = current($names);
+                next($names);
                 $this->phpmailer->addCC($address, $name);
             }
 
@@ -420,7 +422,8 @@ class MY_Email extends CI_Email {
 
             foreach ($bcc as $address) {
 
-                list($key, $name) = each($names);
+                $name = current($names);
+                next($names);
                 $this->phpmailer->addBCC($address, $name);
             }
 

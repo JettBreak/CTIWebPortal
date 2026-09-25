@@ -26,6 +26,7 @@
  * @category	Loader
  * @link		http://codeigniter.com/user_guide/libraries/loader.html
  */
+#[\AllowDynamicProperties]
 class CI_Loader {
 
 	// All these are set automatically. Don't mess with them.
@@ -147,7 +148,7 @@ class CI_Loader {
 		$this->_ci_classes = array();
 		$this->_ci_loaded_files = array();
 		$this->_ci_models = array();
-		$this->_base_classes =& is_loaded();
+		$this->_base_classes = is_loaded();
 
 		$this->_ci_autoloader();
 
@@ -419,7 +420,7 @@ class CI_Loader {
 		//filter HTML (system)
 		if (count($vars) > 0) {
 			foreach ($vars as $key => $val) {
-				$newvar[$key] = htmlentities($val);
+				$newvar[$key] = htmlentities((string) ($val ?? ''), ENT_QUOTES, 'UTF-8');
 			}
 			$vars = $newvar;
 		}

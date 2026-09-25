@@ -259,7 +259,10 @@ if ( ! function_exists('word_censor'))
 			}
 			else
 			{
-				$str = preg_replace("/({$delim})(".str_replace('\*', '\w*?', preg_quote($badword, '/')).")({$delim})/ie", "'\\1'.str_repeat('#', strlen('\\2')).'\\3'", $str);
+				$pattern = "/({$delim})(".str_replace('\*', '\w*?', preg_quote($badword, '/')).")({$delim})/i";
+				$str = preg_replace_callback($pattern, function ($matches) {
+					return $matches[1].str_repeat('#', strlen($matches[2])).$matches[3];
+				}, $str);
 			}
 		}
 

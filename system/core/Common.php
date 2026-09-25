@@ -29,6 +29,23 @@
 
 // ------------------------------------------------------------------------
 
+// PHP 8 removed each(); retain its array-pointer behavior for legacy libraries.
+if (!function_exists('each'))
+{
+	function each(&$array)
+	{
+		$key = key($array);
+		if ($key === NULL)
+		{
+			return FALSE;
+		}
+
+		$value = current($array);
+		next($array);
+		return array(1 => $value, 'value' => $value, 0 => $key, 'key' => $key);
+	}
+}
+
 /**
 * Determines if the current version of PHP is greater then the supplied value
 *
@@ -349,7 +366,7 @@ if ( ! function_exists('show_404'))
 */
 if ( ! function_exists('log_message'))
 {
-	function log_message($level = 'error', $message, $php_error = FALSE)
+	function log_message($level = 'error', $message = '', $php_error = FALSE)
 	{
 		static $_log;
 
@@ -471,16 +488,16 @@ if ( ! function_exists('_exception_handler'))
 {
 	function _exception_handler($severity, $message, $filepath, $line)
 	{
+		if ($severity === E_DEPRECATED || $severity === E_USER_DEPRECATED)
+		{
+			return;
+		}
+
 		 // We don't bother with "strict" notices since they tend to fill up
 		 // the log file with excess information that isn't normally very helpful.
 		 // For example, if you are running PHP 5 and you use version 4 style
 		 // class functions (without prefixes like "public", "private", etc.)
 		 // you'll get notices telling you that these have been deprecated.
-		if ($severity == E_STRICT)
-		{
-			return;
-		}
-
 		$_error =& load_class('Exceptions', 'core');
 
 		// Should we display the error? We'll get the current error_reporting

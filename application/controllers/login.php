@@ -15,7 +15,7 @@ class Login extends CI_Controller {
 	function __construct() {
 		parent::__construct();
 		
-		$this->inst = $_SESSION['inst'];
+		$this->inst = isset($_SESSION['inst']) && is_array($_SESSION['inst']) ? $_SESSION['inst'] : array();
 		
 		//echo print_r($_SESSION);
 	}
@@ -24,9 +24,9 @@ class Login extends CI_Controller {
 	{
 		//echo $_SESSION['inst'];
 		
-		$data['folder']	= $this->inst['css'];
-		$data['bankName'] = $this->inst['bankName'];
-		$data['siteURL'] = $this->inst['siteURL'];
+		$data['folder']	= isset($this->inst['css']) ? $this->inst['css'] : '';
+		$data['bankName'] = isset($this->inst['bankName']) ? $this->inst['bankName'] : '';
+		$data['siteURL'] = isset($this->inst['siteURL']) ? $this->inst['siteURL'] : '';
 		
 		//session_destroy();
 		

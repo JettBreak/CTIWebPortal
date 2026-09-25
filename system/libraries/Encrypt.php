@@ -185,7 +185,7 @@ class CI_Encrypt {
 	 * @param	string
 	 * @return	string
 	 */
-	function encode_from_legacy($string, $legacy_mode = MCRYPT_MODE_ECB, $key = '')
+	function encode_from_legacy($string, $legacy_mode = 'ecb', $key = '')
 	{
 		if ($this->_mcrypt_exists === FALSE)
 		{

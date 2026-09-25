@@ -249,7 +249,8 @@ class Verify extends CI_Controller {
 		$result->free_result();
 		$result->next_result();
 				
-		if ($row['errno'] === '8') {
+		$loginErrorNo = isset($row['errno']) ? (string) $row['errno'] : '';
+		if ($loginErrorNo === '8') {
 			echo json_encode(array(
 				'success' => FALSE,
 				'message' => $row['errmsg'],
@@ -343,8 +344,8 @@ class Verify extends CI_Controller {
 		}
 		
 		$row 	 = $result->row_array();
-		$errNo 	 = $row['errno'];
-		$errMsg  = $row['errmsg'];
+		$errNo 	 = isset($row['errno']) ? (string) $row['errno'] : '';
+		$errMsg  = isset($row['errmsg']) ? $row['errmsg'] : '';
 		$brseqno = $row['brseqno'];
 
 		$cardBIN = $prkey != NULL ? $prkey : $cardBIN;

@@ -100,7 +100,7 @@ $(function () {
     });
 	
 	<?php if (!empty($showToolbarFilters)): ?>
-	.ui-toolbar:even.append(#customToolbar .top.html());
+	$('.ui-toolbar:even').append($('#customToolbar .top').html());
 	<?php endif; ?>
 	
     $(newBtn).click(function () {

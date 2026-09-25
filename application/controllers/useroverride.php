@@ -30,8 +30,8 @@ class Useroverride extends CI_Controller {
 			$result = $user->userOverride($overrideUID, $overridePW, $branchID);
 			$row 	= $result->row_array();
 			
-			$errNo 	= $row['v_errno'];
-			$message = $row['v_errmsg'];
+			$errNo 	= isset($row['v_errno']) ? trim((string) $row['v_errno']) : '';
+			$message = isset($row['v_errmsg']) ? $row['v_errmsg'] : 'Override validation failed';
 			
 			if ($errNo !== '0') {
 				$success = FALSE;

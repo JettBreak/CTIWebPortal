@@ -71,7 +71,8 @@ class Core {
   function encrypt($userID, $pwd)
   {
     //return sha1('coreware:'. $pwd);
-    return sha1($userID .':'. $pwd .':coreware');
+    //return sha1($userID .':'. $pwd .':coreware');
+    return hash('sha256',$userID .':'. $pwd .':coreware');
   }
   
   // --------------------------------------------------------------------

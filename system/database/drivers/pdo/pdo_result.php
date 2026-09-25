@@ -113,8 +113,28 @@ class CI_DB_pdo_result extends CI_DB_result {
 	{
 		if (is_object($this->result_id))
 		{
-			//$this->result_id = FALSE;
-			$this->result_id->closeCursor();
+			/*
+			 * MySQL stored procedures can return additional, often empty,
+			 * result sets after the one consumed by the application. Draining
+			 * every rowset is necessary before PDO will accept another query on
+			 * this connection. closeCursor() alone does not do this reliably
+			 * with all PDO MySQL client/server combinations.
+			 */
+			try
+			{
+				do
+				{
+					$this->result_id->fetchAll(PDO::FETCH_ASSOC);
+				}
+				while ($this->result_id->nextRowset());
+
+				$this->result_id->closeCursor();
+			}
+			catch (Exception $e)
+			{
+				// Still attempt to release the statement after a fetch/drain error.
+				$this->result_id->closeCursor();
+			}
 		}
 	}
 

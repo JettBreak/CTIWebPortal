@@ -98,6 +98,8 @@ class ServiceCharges extends CI_Controller {
       foreach ($resultArr as $row) {
         
         $brseqno = $row['brseqno'];
+        // Keep an identifiable fallback if this branch is missing from the cache/list.
+        $branch = $brseqno;
         
         $xml->setXML($row['servdesc']);
         

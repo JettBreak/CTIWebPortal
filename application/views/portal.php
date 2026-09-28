@@ -23,7 +23,7 @@
 <link rel="shortcut icon" href="images/core.ico">
 <style>
 @import "css/<?php echo $folder; ?>style.css";
-@import "css/<?php echo $folder; ?>form.css";
+@import "css/<?php echo $folder; ?>form.css?v=<?php echo filemtime(dirname(dirname(__DIR__)) . '/css/' . $folder . 'form.css'); ?>";
 @import "css/ui-lightness/jquery-ui.custom.css";
 @import "css/config.css";
 @import "css/datatable.css";
@@ -86,7 +86,7 @@ input[type="checkbox"], input[type="radio"] {
 <script src="js/constants.js"></script>
 <script src="js/core.js"></script>
 <script src="js/modal.js"></script>
-<script src="js/jquery-dynamic_page.js"></script>
+<script src="js/jquery-dynamic_page.js?v=<?php echo filemtime(dirname(dirname(__DIR__)) . '/js/jquery-dynamic_page.js'); ?>"></script>
 <script src="js/tree.js"></script>
 <script src="js/jquery.contextMenu.js"></script>
 <script src="js/jquery.treeview.js"></script>

@@ -38,7 +38,7 @@ Copyright (c) 2010 CorewareTech
 	min-width: 0;
 	max-width: calc(100vw - 32px);
 	box-sizing: border-box;
-	overflow-x: auto;
+	overflow-x: hidden;
 }
 
 #wrapper table {

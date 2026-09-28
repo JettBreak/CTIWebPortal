@@ -75,12 +75,17 @@ $(function () {
 						$(CONTENT).html(data).hide();
                         //$(CONTENT).html('<h1>&nbsp;</h1>').show;
                     }
+                    // A fixed-width view (for example, the ATM list) can be wider than
+                    // the wrapper from the previous page. jQuery's width() reports the
+                    // constrained width, so include the view's natural scroll width.
+                    var contentElement = $(CONTENT)[0];
+                    var contentWidth = Math.max($(CONTENT).outerWidth(), contentElement.scrollWidth);
                     if ($(WRAPPER).is(':hidden') === true) {
 						//$(WRAPPER).width('auto')
                         $(WRAPPER).show();
                     }
                     $(WRAPPER).stop().animate({
-                        width: baseW + $(CONTENT).width() + 'px',
+                        width: baseW + contentWidth + 'px',
                         height: baseH + $(CONTENT).height() + 'px'
                     }, {
                         queue: false,

@@ -22,6 +22,15 @@ class Login extends CI_Controller {
 	
 	function index()
 	{
+		// The login view is normally loaded into the portal shell via AJAX.
+		// A direct visit to /login skips the shell and therefore its CSS/JS.
+		if ( ! $this->input->is_ajax_request())
+		{
+			$this->load->helper('url');
+			redirect($this->config->site_url().'#login');
+			return;
+		}
+
 		//echo $_SESSION['inst'];
 		
 		$data['folder']	= isset($this->inst['css']) ? $this->inst['css'] : '';

@@ -151,6 +151,12 @@ class NewEntry extends CI_Controller {
 		//end
 		
 		//$this->output->cache(CACHE_TTL);
+		$data['custid'] = '';
+		$data['acctnoxml'] = '';
+		$data['custname'] = '';
+		$data['acctStatusDesc'] = 'FOR VERIFICATION';
+		$data['uploadBtn'] = '';
+		$data['sessionExp'] = $this->core->getSessionExp();
 		$data['title'] = 'New Account Entry';
 		$data['formAction'] = 'accounts/newentry/submit';
 		
